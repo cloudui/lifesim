@@ -8,9 +8,10 @@ This file is the shared brief for any coding agent or person picking the project
 
 Last updated 2026-11-10.
 
-- **Done:** the simulation core, highlight detection, a console highlight reel, a tuning harness, determinism tests, a JSON export, and a first browser page with a timeline, a social graph and a circle-size chart.
-- **Not started:** the map view, running the sim in the browser, and the intake form.
-- **Next step:** review the page with the project owner. Speed is deliberately parked until the interactive experience is designed; the page reads lives that were simulated ahead of time.
+- **Done:** the simulation core, highlight detection, a console highlight reel, a tuning harness, determinism tests, a JSON export, and a browser page with three tabs: Walk (pixel art), Map (pixel art) and Circle (the original graph and charts).
+- **Branch:** the pixel views live on `pixel-views`, not yet merged to `main`.
+- **Not started:** running the sim in the browser, the intake form, a phone layout, sound.
+- **Next step:** the project owner reviews the Walk and Map views in a real browser. Product direction is being decided around what makes the site worth exploring; ideas are in `docs/product-ideas.md`. Speed is parked until then; the page reads lives simulated ahead of time.
 
 ## Run it
 
@@ -23,7 +24,8 @@ npm run life -- --seed 7 --ext 0.9 --hobbies run,games --top 40
 npm run harness -- --n 16             # many lives in parallel, aggregate sanity numbers
 npm run harness -- --n 8 --years 15 --set hlMin=30 --set invitePow=2   # try parameter changes without editing code
 npm run export -- --seeds 1,3,5,7     # simulate lives and write public/lives/<seed>.json for the page
-npm run dev                           # open the page (Vite); add ?seed=5&week=1100 to jump to a moment
+npm run dev                           # open the page (Vite); add ?seed=5&tab=walk&week=1100 to jump to a moment
+                                      # ?play&advance=2.5 fast-forwards the animation, for screenshots
 npm test
 npm run typecheck
 ```
@@ -73,7 +75,13 @@ src/cli/life.ts        console highlight reel
 src/cli/harness.ts     many lives in parallel, aggregate numbers
 src/sim/export.ts      LifeResult -> LifeExport, the plain JSON the page reads
 src/cli/export.ts      writes public/lives/<seed>.json and index.json
-index.html, src/web/   the page: timeline, social graph, circle chart, moments feed (vanilla TypeScript, SVG and canvas)
+index.html, src/web/   the page (vanilla TypeScript, SVG and canvas):
+  main.ts              shell, shared timeline and playhead, tabs, the Circle tab
+  walk.ts              Walk tab: the pixel-art walk through life
+  map.ts               Map tab: where everyone is
+  pixel.ts             procedural sprites and glyphs; there are no image assets
+  types.ts             the Scene interface the animated tabs implement
+docs/product-ideas.md  what would make the site magnetic; saved for later
 test/sim.test.ts       determinism and consistency tests
 ```
 
@@ -113,10 +121,18 @@ Getting together with a partner, unlikely origin of a close friend, small world 
 
 ### The page
 
-- **Timeline:** where the protagonist lived as a coloured band, highlights as dots sized by score, life events as diamonds. Drag to scrub; space plays.
-- **Who you know:** the protagonist in the centre, everyone they know placed by closeness (rings are the circle thresholds) and clockwise in the order they met. Colour is the city the person lives in at that moment, diamonds are family, lines are friendships between two friends. Positions are interpolated between quarterly snapshots.
-- **Your circle over time:** the four circle sizes stacked, family excluded.
-- Colours follow the dataviz palette: three city hues, and neutral greys for the ordered circle tiers so the two never clash. Light and dark themes follow the system setting.
+The timeline at the top is shared: a coloured band for where the protagonist lived, highlights as dots sized by score, life events as diamonds. Drag to scrub, space plays, and there is a speed control. Below it are three tabs.
+
+- **Walk** (pixel art): the protagonist walks in place while the city scrolls past. The skyline is the city they live in (a spire for New York, a red bridge for San Francisco, a twin-antenna tower for Chicago), and the sky moves from dawn to dusk across the whole life. Their inner circle walks behind them and their partner beside them. At each highlight time holds still: the person walks up outside the venue (bar, café, park, office or club hall) and they wave. Getting together brings hearts and confetti and both outfits melt into a suit or gown for a year. A move sweeps the new skyline in with a plane overhead. Hair greys with age. A caption under the scene gives the highlight text.
+- **Map** (pixel art): the three cities as islands. Everyone in the world is a faint dot; people the protagonist knows are coloured by closeness; dotted lines run to the inner circle wherever they live; dots fly between islands when someone moves. Hover for details.
+- **Circle**: the protagonist in the centre, everyone they know placed by closeness and clockwise in the order they met, with the circle-size chart, a "now" panel and the moments list.
+
+Notes for anyone changing it:
+
+- All pixel art is drawn in code from a person's id (`pixel.ts`), so there are no assets to license. Scenes draw to a small canvas that CSS scales up with `image-rendering: pixelated`; text is HTML in the VT323 font so it stays crisp.
+- An animated tab implements `Scene` (`types.ts`). It reads the shared playhead through `Ctx` and returns `timeScale() === 0` to hold time still while a moment plays.
+- The pixel views are a game screen and stay dark in both themes. The Circle tab follows the system theme and uses the dataviz palette: three city hues, neutral greys for the ordered circle tiers.
+- The project owner does not want the main experience to look like a dashboard. Circle is kept as an inspection view.
 
 ## Calibration
 
@@ -150,8 +166,8 @@ Known to be off and deliberately not tuned yet: the inner circle is small (about
 ## Roadmap
 
 1. Review console lives and adjust tone, highlight wording and thresholds.
-2. Review the page: what is missing, confusing or dull.
-3. Schematic map view with its own scrubber.
+2. Review the Walk and Map views in a real browser: pacing, charm, what is missing.
+3. Decide the product shape from `docs/product-ideas.md` (the leading idea: short setup, a one-minute pixel life, an end card to share).
 4. Decide how the interactive experience pays for simulation time (precomputed lives, a web worker that streams, a faster core, or a mix), then do the performance work.
 5. Timeline refinements: compress quiet periods.
 6. Short literature pass to tune decay rates, contact frequencies and circle sizes.

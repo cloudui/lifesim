@@ -14,6 +14,7 @@
         </div>
         <div class="controls">
           <label>Life <select id="seed"></select></label>
+          <label>Speed <select id="speed"><option value="1">1×</option><option value="2">2×</option><option value="4">4×</option></select></label>
           <button id="play" type="button">Play</button>
         </div>
       </header>
@@ -27,7 +28,16 @@
         <div id="city-legend" class="legend"></div>
       </section>
 
-      <div class="cols">
+      <nav class="tabs" role="tablist">
+        <button id="tab-walk" role="tab" type="button">Walk</button>
+        <button id="tab-map" role="tab" type="button">Map</button>
+        <button id="tab-circle" role="tab" type="button">Circle</button>
+      </nav>
+
+      <section id="view-walk" class="pixel-view"></section>
+      <section id="view-map" class="pixel-view" hidden></section>
+
+      <div id="view-circle" class="cols" hidden>
         <section class="card">
           <div class="card-head">
             <h2>Who you know</h2>

@@ -18,6 +18,8 @@ export interface Highlight {
   people: number[];
   /** Life events that anchor the timeline and are always shown. */
   scaffold: boolean;
+  /** Venue where it happened, if any. */
+  venue?: number;
 }
 
 export const LEVEL_NAMES = ['stranger', 'acquaintance', 'friend', 'close friend', 'inner circle'];
@@ -159,7 +161,7 @@ export function findHighlights(life: LifeResult): Highlight[] {
         else if (peak === 4) text += ' They ended up in your inner circle.';
         else if (peak === 3) text += ' They became a close friend.';
         else if (peak === 2) text += ' You became friends.';
-        if (score >= 2.5) out.push({ week: e.week, type, score, text, people: [e.other], scaffold: false });
+        if (score >= 2.5) out.push({ week: e.week, type, score, text, people: [e.other], scaffold: false, venue: e.venue });
         break;
       }
       case 'reunion': {
@@ -172,7 +174,7 @@ export function findHighlights(life: LifeResult): Highlight[] {
           : e.ctx === 'work' ? `${name(e.other)} turned up at your workplace, ${vname(e.venue)}`
           : `${name(e.other)} turned up at ${vname(e.venue)}`;
         out.push({
-          week: e.week, type: 'reunion', scaffold: false, people: [e.other],
+          week: e.week, type: 'reunion', scaffold: false, people: [e.other], venue: e.venue,
           score: Math.min(3, e.gap / 156) + e.prevPeak * 7 + (e.ctx === 'outing' ? 0 : 1),
           text: `${how} in ${cities[e.city].name}, for the first time in ${yrs} years. You know them ${origin(tie, e.other)}.`,
         });
@@ -187,7 +189,7 @@ export function findHighlights(life: LifeResult): Highlight[] {
         if (!different || e.sa < L[2] || e.sb < L[2]) break;
         if (e.via === life.ego) {
           out.push({
-            week: e.week, type: 'introduced', scaffold: false, people: [e.a, e.b],
+            week: e.week, type: 'introduced', scaffold: false, people: [e.a, e.b], venue: e.venue,
             score: 1.5 + e.sa + e.sb + (different ? 1.5 : 0),
             text: `You introduced ${name(e.a)} and ${name(e.b)} to each other at ${vname(e.venue)}.`,
           });
@@ -196,7 +198,7 @@ export function findHighlights(life: LifeResult): Highlight[] {
             ? ` You know ${name(e.a).split(' ')[0]} ${origin(ta, e.a)} and ${name(e.b).split(' ')[0]} ${origin(tb, e.b)}.`
             : '';
           out.push({
-            week: e.week, type: 'friendsMet', scaffold: false, people: [e.a, e.b],
+            week: e.week, type: 'friendsMet', scaffold: false, people: [e.a, e.b], venue: e.venue,
             score: 2.5 + e.sa + e.sb + (different ? 2 : 0) + (e.ctx === 'outing' ? 0 : 1),
             text: `Two of your friends, ${name(e.a)} and ${name(e.b)}, met at ${vname(e.venue)} without you.${explain}`,
           });

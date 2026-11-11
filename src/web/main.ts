@@ -3,7 +3,11 @@
 
 import type { LifeExport, PersonExport } from '../sim/export';
 import { formatOdds, LEVEL_NAMES } from '../sim/highlights';
+import '@fontsource/vt323';
+import { createMap } from './map';
 import './style.css';
+import type { Ctx, Scene, View } from './types';
+import { createWalk } from './walk';
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 const SVG = 'http://www.w3.org/2000/svg';
@@ -15,22 +19,16 @@ function el(name: string, attrs: Record<string, string | number> = {}, text?: st
 }
 const css = (name: string) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 
-interface View {
-  data: LifeExport;
-  people: Map<number, PersonExport>;
-  /** Fixed angle for each person, clockwise by when they met the protagonist. */
-  angle: Map<number, number>;
-  totalWeeks: number;
-  /** Per snapshot: how many non-family people sit in each tier, innermost first. */
-  tiers: number[][];
-}
-
 let view: View;
 let week = 0;
 let playing = false;
 let hoverId = -1;
 let lastFrame = 0;
-const WEEKS_PER_SECOND = 70;
+let speed = 1;
+type Tab = 'walk' | 'map' | 'circle';
+let tab: Tab = 'walk';
+/** Weeks of life per second of playback. The pixel views run slower so moments can land. */
+const RATE: Record<Tab, number> = { walk: 30, map: 45, circle: 70 };
 
 // ------------------------------------------------------------------ helpers
 
@@ -530,13 +528,28 @@ function updateNow(): void {
 
 // --------------------------------------------------------------------- loop
 
+const ctx: Ctx = {
+  view: () => view,
+  week: () => week,
+  playing: () => playing,
+  yearOf, ageAt, cityAt, levelOf, strengthsAt, snapIndex, personTip, showTip,
+  hideTip: () => hideTip(),
+};
+const scenes: Partial<Record<Tab, Scene>> = {
+  walk: createWalk($('view-walk'), ctx),
+  map: createMap($('view-map'), ctx),
+};
+
+/** The user jumped to a point in time. */
 function setWeek(w: number): void {
   week = Math.min(view.totalWeeks, Math.max(0, w));
+  for (const s of Object.values(scenes)) s.seek();
   render();
 }
 
 function render(): void {
   updateTimeline();
+  if (tab !== 'circle') return;
   const x = areaScale(week);
   areaPlayhead.setAttribute('x1', String(x));
   areaPlayhead.setAttribute('x2', String(x));
@@ -545,32 +558,50 @@ function render(): void {
 }
 
 function setPlaying(on: boolean): void {
+  if (on && week >= view.totalWeeks) setWeek(0);
   playing = on;
   $('play').textContent = on ? 'Pause' : 'Play';
-  if (on) {
-    if (week >= view.totalWeeks) week = 0;
-    lastFrame = performance.now();
-    requestAnimationFrame(frame);
-  }
 }
 
-function frame(now: number): void {
-  if (!playing) return;
+function setTab(next: Tab): void {
+  tab = next;
+  for (const t of ['walk', 'map', 'circle'] as Tab[]) {
+    $(`view-${t}`).hidden = t !== tab;
+    $(`tab-${t}`).setAttribute('aria-selected', String(t === tab));
+  }
+  if (view) buildAll();
+}
+
+function tick(dt: number): void {
+  if (!view) return;
+  const scene = scenes[tab];
+  if (playing) {
+    const hold = scene ? scene.timeScale() === 0 : false;
+    if (!hold) {
+      week = Math.min(view.totalWeeks, week + dt * speed * RATE[tab]);
+      render();
+      if (week >= view.totalWeeks) setPlaying(false);
+    }
+  }
+  scene?.frame(dt * speed);
+}
+
+function loop(now: number): void {
   const dt = Math.min(0.1, (now - lastFrame) / 1000);
   lastFrame = now;
-  setWeek(week + dt * WEEKS_PER_SECOND);
-  if (week >= view.totalWeeks) setPlaying(false);
-  else requestAnimationFrame(frame);
+  tick(dt);
+  requestAnimationFrame(loop);
 }
 
 function buildAll(): void {
   buildTimeline();
-  buildArea();
+  if (tab === 'circle') buildArea();
   render();
 }
 
 async function load(seed: number): Promise<void> {
-  setPlaying(false);
+  playing = false;
+  $('play').textContent = 'Play';
   const data = (await (await fetch(`lives/${seed}.json`)).json()) as LifeExport;
   const people = new Map(data.people.map((p) => [p.id, p]));
   const order = [...data.people].sort((a, b) => a.met - b.met || a.id - b.id);
@@ -601,11 +632,14 @@ async function load(seed: number): Promise<void> {
     data.cities.map((c, i) => `<span><i class="swatch" style="background:var(--city-${i})"></i>${esc(c)}</span>`).join('') +
     '<span><i class="mark diamond"></i>move, new job or new partner</span>';
   buildFeed();
+  for (const sc of Object.values(scenes)) sc.reset();
   buildAll();
-  history.replaceState(null, '', `?seed=${seed}${week ? `&week=${Math.round(week)}` : ''}`);
+  history.replaceState(null, '', `?seed=${seed}&tab=${tab}${week ? `&week=${Math.round(week)}` : ''}`);
 }
 
 async function main(): Promise<void> {
+  // Read the address before load() tidies it.
+  const query = new URLSearchParams(location.search);
   const index = (await (await fetch('lives/index.json')).json()) as { seed: number; name: string }[];
   const select = $<HTMLSelectElement>('seed');
   select.innerHTML = index.map((l) => `<option value="${l.seed}">${esc(l.name)} (seed ${l.seed})</option>`).join('');
@@ -614,6 +648,10 @@ async function main(): Promise<void> {
   select.value = String(seed);
   select.addEventListener('change', () => load(Number(select.value)));
   $('play').addEventListener('click', () => setPlaying(!playing));
+  $<HTMLSelectElement>('speed').addEventListener('change', (ev) => (speed = Number((ev.target as HTMLSelectElement).value)));
+  for (const t of ['walk', 'map', 'circle'] as Tab[]) $(`tab-${t}`).addEventListener('click', () => setTab(t));
+  const wantedTab = new URLSearchParams(location.search).get('tab') as Tab | null;
+  setTab(wantedTab && ['walk', 'map', 'circle'].includes(wantedTab) ? wantedTab : 'walk');
   window.addEventListener('keydown', (ev) => {
     if (ev.target instanceof HTMLSelectElement) return;
     if (ev.code === 'Space') {
@@ -627,8 +665,16 @@ async function main(): Promise<void> {
     clearTimeout(resizeTimer);
     resizeTimer = window.setTimeout(buildAll, 120);
   });
-  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => drawGraph());
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+    for (const sc of Object.values(scenes)) sc.reset();
+    render();
+  });
   await load(seed);
+  if (query.has('play')) setPlaying(true);
+  // Testing aid: ?play&advance=2.5 runs the animation forward that many seconds before showing it.
+  for (let i = 0, n = Math.round(Number(query.get('advance') ?? 0) * 30); i < n; i++) tick(1 / 30);
+  lastFrame = performance.now();
+  requestAnimationFrame(loop);
 }
 
 main().catch((err) => {

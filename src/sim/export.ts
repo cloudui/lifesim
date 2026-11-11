@@ -29,6 +29,14 @@ export interface PersonExport {
   cities: [number, number][];
 }
 
+export interface VenueExport {
+  id: number;
+  name: string;
+  /** work, club, or for open venues: bar, cafe or park. */
+  kind: 'work' | 'club' | 'bar' | 'cafe' | 'park';
+  city: number;
+}
+
 export interface SnapshotExport {
   week: number;
   /** [person, strength x 100] for everyone the protagonist knows at this point. */
@@ -60,6 +68,10 @@ export interface LifeExport {
   };
   people: PersonExport[];
   highlights: Highlight[];
+  /** Venues referenced by highlights. */
+  venues: VenueExport[];
+  /** Everyone in the world: [id, [week, city][]]. Used by the map to show the whole population. */
+  population: [number, [number, number][]][];
   snapshots: SnapshotExport[];
   stats: LifeStats;
 }
@@ -105,6 +117,14 @@ export function exportLife(life: LifeResult, top = 90): LifeExport {
     };
   });
 
+  const highlights = selectReel(findHighlights(life), top);
+  const venueIds = new Set(highlights.map((h) => h.venue ?? -1).filter((v) => v >= 0));
+  const venueList: VenueExport[] = [...venueIds].map((id) => {
+    const v = venues[id];
+    const kind = v.kind !== 'hangout' ? v.kind : v.name.endsWith('Park') ? 'park' : v.name.endsWith('Café') ? 'cafe' : 'bar';
+    return { id, name: v.name, kind, city: v.city };
+  });
+
   const partnerEvent = events.find((e) => e.t === 'partner');
   return {
     seed: life.seed, startYear: life.startYear, years: life.years, levels: L,
@@ -115,7 +135,9 @@ export function exportLife(life: LifeResult, top = 90): LifeExport {
       partner: me.partner, partnerWeek: partnerEvent ? partnerEvent.week : null,
     },
     people,
-    highlights: selectReel(findHighlights(life), top),
+    highlights,
+    venues: venueList,
+    population: agents.map((a) => [a.id, cityTimeline(a.id)] as [number, [number, number][]]),
     snapshots,
     stats: computeStats(life),
   };
