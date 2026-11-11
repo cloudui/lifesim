@@ -16,7 +16,7 @@ const SQUASH = 0.68;
 const TRANSIT_WEEKS = 20;
 const TIER_COLORS = ['#4fa8ff', '#f2f6ff', '#ffd166', '#ff7b54'];
 const TIER_SIZES = [2, 2, 3, 4];
-const OUTLINE = '#0b1420';
+const OUTLINE = 'rgba(11,20,32,0.45)';
 
 function spot(id: number, city: number): [number, number] {
   const c = CITIES[city];
@@ -129,8 +129,7 @@ export function createMap(root: HTMLElement, ctx: Ctx): Scene {
       const kin = p.kin && (id !== d.ego.partner || isPartner);
       if (kin) {
         g.fillStyle = OUTLINE;
-        g.fillRect(ix - 2, iy - 1, 5, 3);
-        g.fillRect(ix - 1, iy - 2, 3, 5);
+        g.fillRect(ix - 1, iy - 1, 3, 3);
         g.fillStyle = '#ff9ecb';
         g.fillRect(ix - 1, iy, 3, 1);
         g.fillRect(ix, iy - 1, 1, 3);
@@ -140,7 +139,8 @@ export function createMap(root: HTMLElement, ctx: Ctx): Scene {
         const size = TIER_SIZES[lv - 1];
         const o = size >> 1;
         g.fillStyle = OUTLINE;
-        g.fillRect(ix - o - 1, iy - o - 1, size + 2, size + 2);
+        g.fillRect(ix - o, iy - o - 1, size, size + 2);
+        g.fillRect(ix - o - 1, iy - o, size + 2, size);
         g.fillStyle = TIER_COLORS[lv - 1];
         g.fillRect(ix - o, iy - o, size, size);
       }
