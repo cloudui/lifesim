@@ -43,6 +43,15 @@ function levelOf(s: number): number {
   const L = view.data.levels;
   return s >= L[3] ? 4 : s >= L[2] ? 3 : s >= L[1] ? 2 : s >= L[0] ? 1 : 0;
 }
+function partnerAt(w: number): { id: number; from: number | null } | null {
+  for (const p of view.data.ego.partners) {
+    if ((p.from === null || w >= p.from) && (p.to === null || w < p.to)) return p;
+  }
+  return null;
+}
+function wasPartner(id: number): boolean {
+  return view.data.ego.partners.some((p) => p.id === id);
+}
 /** Index of the last snapshot at or before week w. */
 function snapIndex(w: number): number {
   const s = view.data.snapshots;
@@ -364,13 +373,13 @@ function drawGraph(): void {
   // People.
   nodesDrawn = [];
   const labels: { x: number; y: number; text: string; strong: boolean; rank: number }[] = [];
-  const partner = view.data.ego.partner;
+  const partner = partnerAt(week)?.id ?? -1;
   for (const [id, p] of pos) {
     const person = view.people.get(id)!;
     const lv = levelOf(p.s);
     const r = 3 + lv * 0.9;
-    const isPartner = id === partner && (view.data.ego.partnerWeek === null || week >= view.data.ego.partnerWeek);
-    const kin = person.kin && (id !== partner || isPartner);
+    const isPartner = id === partner;
+    const kin = isPartner || (person.kin && !wasPartner(id));
     ctx.globalAlpha = p.s < L[0] ? 0.35 : hoverId >= 0 && id !== hoverId && !linked.has(id) ? 0.4 : 1;
     ctx.fillStyle = cityColors[cityAt(person.cities, week)] ?? ink3;
     ctx.strokeStyle = surface;
@@ -443,8 +452,9 @@ function drawGraph(): void {
 function personTip(id: number): string {
   const p = view.people.get(id)!;
   const s = strengthsAt(week).get(id) ?? 0;
-  const isPartner = id === view.data.ego.partner && (view.data.ego.partnerWeek === null || week >= view.data.ego.partnerWeek);
-  const role = isPartner ? 'your partner' : p.kin && id !== view.data.ego.partner ? 'family' : LEVEL_NAMES[levelOf(s)];
+  const isPartner = id === partnerAt(week)?.id;
+  const isEx = view.data.ego.partners.some((x) => x.id === id && x.to !== null && week >= x.to);
+  const role = isPartner ? 'your partner' : isEx ? 'a former partner' : p.kin && !wasPartner(id) ? 'family' : LEVEL_NAMES[levelOf(s)];
   const how =
     p.ctx === 'family' ? 'Family'
     : p.ctx === 'childhood' ? 'You grew up together'
@@ -506,7 +516,8 @@ function buildFeed(): void {
 function updateNow(): void {
   const d = view.data;
   const t = view.tiers[snapIndex(week)];
-  const partner = d.ego.partner >= 0 && (d.ego.partnerWeek === null || week >= d.ego.partnerWeek) ? view.people.get(d.ego.partner)?.name ?? '—' : 'Single';
+  const withNow = partnerAt(week);
+  const partner = withNow ? view.people.get(withNow.id)?.name ?? '—' : 'Single';
   const tile = (k: string, v: string | number, cls = '') => `<div class="tile ${cls}"><div class="k">${k}</div><div class="v ${typeof v === 'string' && v.length > 9 ? 'small' : ''}">${esc(String(v))}</div></div>`;
   $('now').innerHTML =
     tile('Year', yearOf(week)) + tile('Age', ageAt(week)) + tile('Lives in', d.cities[cityAt(d.ego.cities, week)]) + tile('Partner', partner) +
@@ -532,7 +543,7 @@ const ctx: Ctx = {
   view: () => view,
   week: () => week,
   playing: () => playing,
-  yearOf, ageAt, cityAt, levelOf, strengthsAt, snapIndex, personTip, showTip,
+  yearOf, ageAt, cityAt, levelOf, strengthsAt, snapIndex, partnerAt, wasPartner, personTip, showTip,
   hideTip: () => hideTip(),
 };
 const scenes: Partial<Record<Tab, Scene>> = {
@@ -630,7 +641,7 @@ async function load(seed: number): Promise<void> {
     `Over ${data.years} years: met ${data.stats.metDuringLife} people, ${data.stats.becameClose} became close friends, moved ${data.stats.moves} times.`;
   $('city-legend').innerHTML =
     data.cities.map((c, i) => `<span><i class="swatch" style="background:var(--city-${i})"></i>${esc(c)}</span>`).join('') +
-    '<span><i class="mark diamond"></i>move, new job or new partner</span>';
+    '<span><i class="mark diamond"></i>move, new job, new partner or breakup</span>';
   buildFeed();
   for (const sc of Object.values(scenes)) sc.reset();
   buildAll();

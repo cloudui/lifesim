@@ -63,9 +63,11 @@ console.log(
     `${stats.becameInner} inner circle.`,
 );
 console.log(`Moved ${stats.moves} times, changed jobs ${stats.jobs} times, made ${stats.familyVisits} trips to see family.`);
-if (stats.partneredAt !== null) console.log(`Got together with ${world.agents[me.partner].name} at ${stats.partneredAt}.`);
-else if (me.partner >= 0) console.log(`Already with ${world.agents[me.partner].name} when the story starts.`);
+if (stats.partneredAt !== null) console.log(`First got together with someone at ${stats.partneredAt}.`);
+else if (life.start.partner >= 0) console.log(`Already with ${world.agents[life.start.partner].name} when the story starts.`);
 else console.log('Never found a partner.');
+if (stats.breakups) console.log(`Went through ${stats.breakups} breakup${stats.breakups === 1 ? '' : 's'}.`);
+console.log(me.partner >= 0 ? `Ends the story with ${world.agents[me.partner].name}.` : 'Ends the story single.');
 console.log(`Typical circle: ${circle(roundCircle(stats.avgCircle))}.`);
 console.log(`Ends with ${circle(stats.endCircle)}, living in ${city(me.city)}.`);
 

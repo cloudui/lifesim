@@ -31,6 +31,11 @@ export interface LifeStats {
   familyVisits: number;
   /** Protagonist's age when they got together with a partner; null if they never did. */
   partneredAt: number | null;
+  /** How many times the protagonist and a partner split up. */
+  breakups: number;
+  /** Across the whole world during the story: couples formed, and couples that split. */
+  worldCouples: number;
+  worldBreakups: number;
   /** Protagonist's circle (excluding family) averaged over the whole life. */
   avgCircle: CircleCounts;
   startCircle: CircleCounts;
@@ -83,13 +88,15 @@ export function computeStats(life: LifeResult): LifeStats {
   let jobs = 0;
   let familyVisits = 0;
   let partneredAt: number | null = null;
+  let breakups = 0;
   const kept: number[] = [];
   const friendSince = new Map<number, number>();
   const durations: number[] = [];
   for (const e of life.events) {
     if (e.t === 'job') jobs++;
     else if (e.t === 'visit') familyVisits++;
-    else if (e.t === 'partner') partneredAt = life.startYear + Math.floor(e.week / 52) - life.world.agents[life.ego].birthYear;
+    else if (e.t === 'breakup') breakups++;
+    else if (e.t === 'partner' && partneredAt === null) partneredAt = life.startYear + Math.floor(e.week / 52) - life.world.agents[life.ego].birthYear;
     else if (e.t === 'move' && e.who === life.ego) {
       moves++;
       const before = [...life.snapshots].reverse().find((s) => s.week <= e.week);
@@ -114,6 +121,7 @@ export function computeStats(life: LifeResult): LifeStats {
 
   return {
     metDuringLife, becameFriends, becameClose, becameInner, moves, jobs, familyVisits, partneredAt, avgCircle,
+    breakups, worldCouples: life.sim.couplesFormed, worldBreakups: life.sim.breakups,
     startCircle: circles[0], endCircle: circles[circles.length - 1],
     moveRetention: kept.length ? kept.reduce((a, b) => a + b, 0) / kept.length : null,
     medianFriendshipYears: durations.length ? durations[Math.floor(durations.length / 2)] : null,

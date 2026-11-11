@@ -7,7 +7,7 @@ import type { LifeResult, Tie } from './sim';
 
 export type HighlightType =
   | 'move' | 'job' | 'met' | 'smallWorld' | 'nearMiss' | 'reunion' | 'friendsMet' | 'introduced'
-  | 'fade' | 'rekindle' | 'friendMoved' | 'friendArrived' | 'hobby' | 'partner';
+  | 'fade' | 'rekindle' | 'friendMoved' | 'friendArrived' | 'hobby' | 'partner' | 'breakup';
 
 export interface Highlight {
   week: number;
@@ -81,6 +81,10 @@ export function findHighlights(life: LifeResult): Highlight[] {
   // Busy people cross paths with everyone, so a near miss has to stand out for this particular life.
   const misses = events.flatMap((e) => (e.t === 'met' ? [e.nearMisses] : [])).sort((a, b) => a - b);
   const nearMissBar = Math.max(20, misses.length ? misses[Math.floor(misses.length * 0.97)] : 0);
+
+  // Drifting apart from a former partner is covered by the breakup itself.
+  const partners = new Set<number>(life.start.partner >= 0 ? [life.start.partner] : []);
+  for (const e of events) if (e.t === 'partner') partners.add(e.other);
 
   const faded = new Set<number>();
   const wasClose = new Set<number>();
@@ -215,9 +219,18 @@ export function findHighlights(life: LifeResult): Highlight[] {
         });
         break;
       }
+      case 'breakup': {
+        const years = Math.round(e.weeks / 52);
+        const span = e.weeks >= 1040 ? 'many years' : years < 1 ? 'less than a year' : years === 1 ? 'a year' : `${years} years`;
+        out.push({
+          week: e.week, type: 'breakup', score: 9, scaffold: true, people: [e.other],
+          text: `You and ${name(e.other)} went your separate ways after ${span} together.`,
+        });
+        break;
+      }
       case 'level': {
         const tie = ties.get(e.other);
-        if (!tie || tie.kin) break;
+        if (!tie || tie.kin || partners.has(e.other)) break;
         if (e.to >= 3) {
           if (faded.has(e.other)) {
             faded.delete(e.other);

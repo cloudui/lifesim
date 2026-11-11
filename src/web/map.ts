@@ -101,7 +101,7 @@ export function createMap(root: HTMLElement, ctx: Ctx): Scene {
 
     const strengths = ctx.strengthsAt(week);
     const L = d.levels;
-    const partnered = d.ego.partner >= 0 && (d.ego.partnerWeek === null || week >= d.ego.partnerWeek);
+    const partnerId = ctx.partnerAt(week)?.id ?? -1;
     const me = position(d.ego.id, d.ego.cities, week);
     const counts = [0, 0, 0];
 
@@ -125,8 +125,8 @@ export function createMap(root: HTMLElement, ctx: Ctx): Scene {
       const iy = Math.round(y);
       counts[ctx.cityAt(p.cities, week)]++;
       const lv = ctx.levelOf(s);
-      const isPartner = id === d.ego.partner && partnered;
-      const kin = p.kin && (id !== d.ego.partner || isPartner);
+      const isPartner = id === partnerId;
+      const kin = isPartner || (p.kin && !ctx.wasPartner(id));
       if (kin) {
         g.fillStyle = OUTLINE;
         g.fillRect(ix - 1, iy - 1, 3, 3);

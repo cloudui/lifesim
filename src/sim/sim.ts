@@ -20,7 +20,10 @@ export interface Tie {
    * Any interaction raises it and it fades within months.
    */
   k: number;
+  /** Week of the last interaction of any kind. */
   last: number;
+  /** Week they last spent time together in person. */
+  seen: number;
   met: number;
   /** Venue where they met, or -1. */
   venue: number;
@@ -59,7 +62,8 @@ export type SimEvent =
   | { t: 'friendsMet'; week: number; a: number; b: number; venue: number; ctx: Ctx; via: number; sa: number; sb: number }
   | { t: 'hobby'; week: number; from: number; to: number; via: number }
   | { t: 'club'; week: number; venue: number; via: number }
-  | { t: 'partner'; week: number; other: number };
+  | { t: 'partner'; week: number; other: number }
+  | { t: 'breakup'; week: number; other: number; weeks: number };
 
 export interface Snapshot {
   week: number;
@@ -86,6 +90,8 @@ export interface StartProfile {
   clubs: number[];
   hobbies: number[];
   age: number;
+  /** Partner when the story starts, or -1. */
+  partner: number;
 }
 
 export interface LifeResult {
@@ -110,7 +116,7 @@ const R = {
   MOVE: 1, DEST: 2, JOB: 3, WORK_PICK: 4, REFER: 5, VISIT: 6, VISIT_WHO: 7, WORK: 8, CLUB: 9, JOIN: 10,
   JOIN_PICK: 11, DRIFT: 12, DRIFT_PICK: 13, HOST: 14, SIZE: 15, INVITE: 16, ACCEPT: 17, INTRO: 18, SOLO: 19,
   HANG: 20, MIX: 21, MIX_ACC: 22, FAMILY: 23, CALL: 24, CALL_PICK: 25, SPARK: 26, ORDER: 27, REFER_PICK: 28,
-  JOIN_FOLLOW: 29, DRIFT_FOLLOW: 30, AWAY_HANG: 31, PARTNER: 32, PLUS_ONE: 33,
+  JOIN_FOLLOW: 29, DRIFT_FOLLOW: 30, AWAY_HANG: 31, PARTNER: 32, PLUS_ONE: 33, MSG: 34, MSG_PICK: 35, BREAKUP: 36,
 } as const;
 
 const CTX_INDEX: Record<Ctx, number> = Object.fromEntries(CTX_LIST.map((c, i) => [c, i])) as Record<Ctx, number>;
@@ -134,7 +140,12 @@ export class Sim {
   events: SimEvent[] = [];
   contacts: number[] = [];
   snapshots: Snapshot[] = [];
+  /** Couples formed and couples that broke up, across the whole world, since logging started. */
+  couplesFormed = 0;
+  breakups = 0;
 
+  /** Week each agent's current relationship status began: when they got together, or when they became single. */
+  private since: Int32Array;
   private att: number[][];
   private loc: Int32Array;
   private outCount: Uint8Array;
@@ -167,10 +178,13 @@ export class Sim {
     this.loc = new Int32Array(N);
     this.outCount = new Uint8Array(N);
     this.lastMove = new Int32Array(N).fill(-1e6);
+    this.since = new Int32Array(N).fill(-1e6);
+    // Couples who exist when the world is generated have been together for a long time.
+    for (const a of world.agents) if (a.partner >= 0) this.since[a.id] = startWeek - 1040;
     for (const t of world.seedTies) {
       const tie: Tie = {
         // Family and childhood friends start as depth with no recent contact.
-        a: t.a, b: t.b, d: t.s, k: 0, last: startWeek, met: Math.min(t.met, startWeek), venue: -1, ctx: t.ctx,
+        a: t.a, b: t.b, d: t.s, k: 0, last: startWeek, seen: startWeek, met: Math.min(t.met, startWeek), venue: -1, ctx: t.ctx,
         p: 1, n: 0, peak: t.s, dp: t.s, kin: t.kin, via: -1, c: compat(world.agents[t.a], world.agents[t.b]),
       };
       this.adj[t.a].set(t.b, tie);
@@ -340,13 +354,13 @@ export class Sim {
       const c = compat(A, B);
       const spark = P.sparkMax * this.r(R.SPARK, a, b) ** P.sparkPow * Math.min(1.5, c / 0.3);
       // A first impression counts as depth: a few first meetings matter straight away.
-      tie = { a, b, d: spark, k: 0, last: w, met: w, venue, ctx, p, n: 0, peak: 0, dp: spark, kin: false, via, c };
+      tie = { a, b, d: spark, k: 0, last: w, seen: w, met: w, venue, ctx, p, n: 0, peak: 0, dp: spark, kin: false, via, c };
       this.adj[a].set(b, tie);
       this.adj[b].set(a, tie);
     } else {
-      if (this.logging && egoInvolved && !tie.kin && ctx !== 'call' && w - tie.last >= P.reunionGap) {
+      if (this.logging && egoInvolved && !tie.kin && ctx !== 'call' && ctx !== 'message' && w - tie.seen >= P.reunionGap) {
         this.events.push({
-          t: 'reunion', week: w, other: a === this.ego ? b : a, venue, ctx, gap: w - tie.last, prevPeak: tie.peak,
+          t: 'reunion', week: w, other: a === this.ego ? b : a, venue, ctx, gap: w - tie.seen, prevPeak: tie.peak,
           city: this.loc[this.ego],
         });
       }
@@ -374,6 +388,11 @@ export class Sim {
         cap = P.familyContact;
         if (tie.d < P.familyCap) tie.d += P.familyGain * (P.familyCap - tie.d);
         break;
+      case 'message':
+        gain = P.msgGain;
+        cap = P.msgCap;
+        if (tie.d < tie.dp) tie.d += P.msgHold * (tie.dp - tie.d);
+        break;
       default:
         gain = P.callGain;
         cap = P.callCap;
@@ -381,6 +400,7 @@ export class Sim {
     }
     if (tie.k < cap) tie.k += gain * (cap - tie.k);
     tie.last = w;
+    if (ctx !== 'call' && ctx !== 'message') tie.seen = w;
     tie.n++;
     if (tie.d > tie.dp) tie.dp = tie.d;
     const s = tie.d + (1 - tie.d) * tie.k;
@@ -392,7 +412,7 @@ export class Sim {
       }
       if (this.logging) this.onMet(tie);
     }
-    if (this.logging && egoInvolved) {
+    if (this.logging && egoInvolved && ctx !== 'message') {
       this.contacts.push(w, a === this.ego ? b : a, venue, CTX_INDEX[ctx]);
     }
   }
@@ -634,6 +654,36 @@ export class Sim {
     }
     if (this.r(R.DRIFT, a.id) < P.hobbyDrift) this.driftHobby(a);
     if (a.partner < 0) this.seekPartner(a);
+    else if (a.partner > a.id) this.maybeBreakUp(a);
+  }
+
+  /** A couple may split. Newer and less compatible couples are the most likely to. */
+  private maybeBreakUp(a: Agent): void {
+    const P = this.P;
+    if (P.breakupRate <= 0) return;
+    const b = this.world.agents[a.partner];
+    const tie = this.adj[a.id].get(b.id);
+    if (!tie) return;
+    const weeks = this.week - this.since[a.id];
+    const rate = P.breakupRate * 2 * (1 - tie.c) * Math.exp(-weeks / 52 / P.breakupSettle);
+    if (this.r(R.BREAKUP, a.id) >= rate / 52) return;
+    a.partner = -1;
+    b.partner = -1;
+    a.family.splice(a.family.indexOf(b.id), 1);
+    b.family.splice(b.family.indexOf(a.id), 1);
+    this.since[a.id] = this.since[b.id] = this.week;
+    // They stop being family to each other, and most of what they had goes with it.
+    this.settle(tie);
+    tie.kin = false;
+    tie.d *= P.breakupKeep;
+    tie.k *= P.breakupKeep;
+    tie.dp = tie.d;
+    if (this.logging) {
+      this.breakups++;
+      if (a.id === this.ego || b.id === this.ego) {
+        this.events.push({ t: 'breakup', week: this.week, other: a.id === this.ego ? b.id : a.id, weeks });
+      }
+    }
   }
 
   /** A single person may get together with a close, compatible friend who is also single. */
@@ -641,6 +691,7 @@ export class Sim {
     const P = this.P;
     const age = this.yr - a.birthYear;
     if (age < P.partnerMinAge || age > P.partnerMaxAge || this.r(R.PARTNER, a.id) >= P.partnerSeek) return;
+    if (this.week - this.since[a.id] < P.breakupCooldown) return;
     const agents = this.world.agents;
     const fo = this.fo[a.id];
     const fs = this.fs[a.id];
@@ -651,6 +702,7 @@ export class Sim {
       if (fk[i] || fs[i] < P.levels[2]) continue;
       const o = agents[fo[i]];
       if (o.partner >= 0 || o.city !== a.city || this.yr - o.birthYear < P.partnerMinAge) continue;
+      if (this.week - this.since[o.id] < P.breakupCooldown) continue;
       if (Math.abs(o.birthYear - a.birthYear) > P.partnerAgeGap) continue;
       const t = this.adj[a.id].get(o.id);
       if (!t || t.kin || t.c < P.partnerCompat) continue;
@@ -668,6 +720,8 @@ export class Sim {
     // A partner is treated as family from here on: slow decay, regular time together.
     this.settle(best);
     best.kin = true;
+    this.since[a.id] = this.since[b.id] = this.week;
+    if (this.logging) this.couplesFormed++;
     if (this.logging && (a.id === this.ego || b.id === this.ego)) {
       this.events.push({ t: 'partner', week: this.week, other: a.id === this.ego ? b.id : a.id });
     }
@@ -877,6 +931,41 @@ export class Sim {
     this.interact(id, pick, 'call', -1, 1, -1);
   }
 
+  /** Text a few of the people you are closest to, wherever they live. */
+  private message(a: Agent): void {
+    const P = this.P;
+    const id = a.id;
+    if (P.msgRate <= 0 || this.r(R.MSG, id) >= P.msgRate * (0.4 + 0.6 * a.ext)) return;
+    const cand = this.cand;
+    const wts = this.wts;
+    cand.length = 0;
+    wts.length = 0;
+    let W = 0;
+    const fo = this.fo[id];
+    const fs = this.fs[id];
+    for (let i = 0; i < fo.length; i++) {
+      const s = fs[i];
+      if (s < P.msgMin) continue;
+      cand.push(fo[i]);
+      wts.push(s * s);
+      W += s * s;
+    }
+    for (let k = 0; k < P.msgCount && W > 1e-9; k++) {
+      let u = this.r(R.MSG_PICK, id, k) * W;
+      let idx = -1;
+      for (let i = 0; i < cand.length; i++) {
+        if (wts[i] <= 0) continue;
+        idx = i;
+        u -= wts[i];
+        if (u <= 0) break;
+      }
+      if (idx < 0) break;
+      W -= wts[idx];
+      wts[idx] = 0;
+      this.interact(id, cand[idx], 'message', -1, 1, -1);
+    }
+  }
+
   // ------------------------------------------------------------ bookkeeping
 
   private refreshAgent(a: number): void {
@@ -991,6 +1080,7 @@ export class Sim {
     for (const ven of venues) this.mixVenue(ven);
     for (const a of agents) this.familyTime(a);
     for (const a of agents) this.call(a);
+    for (const a of agents) this.message(a);
 
     this.tick++;
     for (let a = this.tick % 8; a < N; a += 8) this.refreshAgent(a);
@@ -1026,7 +1116,7 @@ export function runLife(opt: LifeOptions): LifeResult {
   while (sim.week < 0) sim.step();
   const e = world.agents[world.ego];
   const start: StartProfile = {
-    city: e.city, work: e.work, clubs: [...e.clubs], hobbies: [...e.hobbies], age: startYear - e.birthYear,
+    city: e.city, work: e.work, clubs: [...e.clubs], hobbies: [...e.hobbies], age: startYear - e.birthYear, partner: e.partner,
   };
   sim.startLogging();
   for (let w = 0; w < years * 52; w++) sim.step();

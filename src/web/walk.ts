@@ -360,9 +360,11 @@ export function createWalk(root: HTMLElement, ctx: Ctx): Scene {
     // Who walks with you: your inner circle behind, your partner beside you.
     const strengths = ctx.strengthsAt(week);
     const L = d.levels;
-    const partnered = d.ego.partner >= 0 && (d.ego.partnerWeek === null || week >= d.ego.partnerWeek);
+    const current = ctx.partnerAt(week);
+    const partnered = current !== null;
+    const partnerId = current?.id ?? -1;
     const inner = [...strengths.entries()]
-      .filter(([id, s]) => s >= L[3] && id !== d.ego.partner && !v.people.get(id)?.kin)
+      .filter(([id, s]) => s >= L[3] && id !== partnerId && !v.people.get(id)?.kin)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 5)
       .map(([id]) => id);
@@ -379,7 +381,7 @@ export function createWalk(root: HTMLElement, ctx: Ctx): Scene {
     const greyOf = (born: number) => Math.min(1, Math.max(0, (yearNow - born - 45) / 22));
 
     // Formal outfits for the year after getting together, melting in and out.
-    const pw = d.ego.partnerWeek;
+    const pw = current ? current.from : null;
     const outfit = (id: number): { outfit: Outfit; melt?: { to: Outfit; t: number } } => {
       if (pw === null || pw === undefined) return { outfit: 'casual' };
       const formal = lookFor(id).formal;
@@ -403,10 +405,10 @@ export function createWalk(root: HTMLElement, ctx: Ctx): Scene {
         pose: walking ? 'walk' : 'stand', frame: step + slot, outfit: 'casual', grey: greyOf(person.born), alpha: a,
       });
     }
-    if (partnered && d.ego.partner >= 0 && !(active && active.kind === 'partner')) {
-      const p = v.people.get(d.ego.partner);
-      drawPerson(g, EGO_X - 15, GROUND, lookFor(d.ego.partner), {
-        pose: walking ? 'walk' : 'stand', frame: step + 1, ...outfit(d.ego.partner), grey: p ? greyOf(p.born) : 0,
+    if (partnered && !(active && active.kind === 'partner')) {
+      const p = v.people.get(partnerId);
+      drawPerson(g, EGO_X - 15, GROUND, lookFor(partnerId), {
+        pose: walking ? 'walk' : 'stand', frame: step + 1, ...outfit(partnerId), grey: p ? greyOf(p.born) : 0,
       });
     }
     drawPerson(g, EGO_X, GROUND, lookFor(d.ego.id), { pose, frame: step, ...outfit(d.ego.id), grey: greyOf(d.ego.born) });
@@ -446,7 +448,7 @@ export function createWalk(root: HTMLElement, ctx: Ctx): Scene {
     // Text lives in HTML so it stays crisp.
     const t = v.tiers[ctx.snapIndex(week)];
     hudLeft.textContent = `${yearNow} · AGE ${ctx.ageAt(week)} · ${d.cities[city].toUpperCase()}`;
-    hudRight.textContent = `INNER ${t[0]} · CLOSE ${t[1]} · FRIENDS ${t[2]}` + (partnered ? ` · ♥ ${v.people.get(d.ego.partner)?.name.split(' ')[0] ?? ''}` : '');
+    hudRight.textContent = `INNER ${t[0]} · CLOSE ${t[1]} · FRIENDS ${t[2]}` + (partnered ? ` · ♥ ${v.people.get(partnerId)?.name.split(' ')[0] ?? ''}` : '');
     if (!active) {
       let last = -1;
       for (let i = 0; i < d.highlights.length && d.highlights[i].week <= week; i++) last = i;

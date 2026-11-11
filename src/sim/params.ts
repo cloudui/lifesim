@@ -74,6 +74,15 @@ export const DEFAULT_PARAMS = {
   // A call restores this share of faded depth. It cannot add depth that was never there.
   callHold: 0.05,
 
+  // --- Messaging. Each week a person texts a few of the people they are closest to, wherever they live.
+  // It keeps contact ticking over and holds faded depth, but builds nothing new. Set msgRate to 0 to turn it off.
+  msgRate: 0.8,
+  msgCount: 2,
+  msgMin: 0.15,
+  msgGain: 0.05,
+  msgCap: 0.2,
+  msgHold: 0.02,
+
   // --- First impressions: a new tie gets a one-off bonus of sparkMax * u^sparkPow.
   sparkMax: 0.3,
   sparkPow: 4,
@@ -112,6 +121,14 @@ export const DEFAULT_PARAMS = {
   partnerCompat: 0.45,
   partnerAgeGap: 8,
   partnerMaxAge: 60,
+  // Breakups. Chance per year = breakupRate * 2 * (1 - compatibility) * exp(-years together / breakupSettle).
+  // Set breakupRate to 0 to turn them off.
+  breakupRate: 0.08,
+  breakupSettle: 8,
+  // Share of the pair's depth and contact that survives a breakup.
+  breakupKeep: 0.25,
+  // Weeks before someone newly single looks for a partner again.
+  breakupCooldown: 52,
 
   // --- Hobbies and clubs (weekly rates).
   clubJoin: 0.1,

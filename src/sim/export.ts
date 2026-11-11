@@ -65,9 +65,11 @@ export interface LifeExport {
     novelty: number;
     hobbies: string[];
     cities: [number, number][];
-    /** Partner's id, or -1. `partnerWeek` is null if they were together before the story started. */
-    partner: number;
-    partnerWeek: number | null;
+    /**
+     * Every partner in order. `from` is null if they were together before the story started;
+     * `to` is null if they are still together at the end.
+     */
+    partners: { id: number; from: number | null; to: number | null }[];
   };
   people: PersonExport[];
   highlights: Highlight[];
@@ -128,14 +130,19 @@ export function exportLife(life: LifeResult, top = 90): LifeExport {
     return { id, name: v.name, kind, city: v.city };
   });
 
-  const partnerEvent = events.find((e) => e.t === 'partner');
+  const partners: LifeExport['ego']['partners'] = [];
+  if (life.start.partner >= 0) partners.push({ id: life.start.partner, from: null, to: null });
+  for (const e of events) {
+    if (e.t === 'partner') partners.push({ id: e.other, from: e.week, to: null });
+    else if (e.t === 'breakup' && partners.length) partners[partners.length - 1].to = e.week;
+  }
   return {
     seed: life.seed, startYear: life.startYear, years: life.years, levels: L,
     cities: world.cities.map((c) => c.name),
     ego: {
       id: me.id, name: me.name, born: me.birthYear, hometown: me.hometown, trait: descriptor(me), ext: me.ext,
       novelty: me.novelty, hobbies: life.start.hobbies.map((h) => CLUBS[h].hobby), cities: cityTimeline(me.id),
-      partner: me.partner, partnerWeek: partnerEvent ? partnerEvent.week : null,
+      partners,
     },
     people,
     highlights,

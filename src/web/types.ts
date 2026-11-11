@@ -21,6 +21,10 @@ export interface Ctx {
   levelOf(s: number): number;
   strengthsAt(w: number): Map<number, number>;
   snapIndex(w: number): number;
+  /** The protagonist's partner at week w, or null. `from` is null if they were together before the story. */
+  partnerAt(w: number): { id: number; from: number | null } | null;
+  /** Whether this person is or ever was the protagonist's partner. */
+  wasPartner(id: number): boolean;
   personTip(id: number): string;
   showTip(html: string, x: number, y: number): void;
   hideTip(): void;

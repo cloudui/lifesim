@@ -16,7 +16,7 @@ function num(name: string, dflt: number): number {
 }
 
 const KEYS: (keyof CircleCounts)[] = ['inner', 'close', 'friend', 'acquaintance'];
-const TYPES = ['met', 'smallWorld', 'nearMiss', 'reunion', 'friendsMet', 'introduced', 'fade', 'rekindle', 'friendMoved', 'friendArrived', 'hobby'];
+const TYPES = ['met', 'smallWorld', 'nearMiss', 'reunion', 'friendsMet', 'introduced', 'fade', 'rekindle', 'friendMoved', 'friendArrived', 'hobby', 'breakup'];
 
 interface Row {
   seconds: number;
@@ -57,6 +57,8 @@ function oneLife(seed: number, years: number, params: Record<string, number | nu
       'age when partnered': st.partneredAt,
       'ever partnered (share of lives)': st.partneredAt === null ? 0 : 1,
       'younger generation partnered (share)': youngPartnered,
+      'breakups (protagonist)': st.breakups,
+      'world: breakups per couple formed (share)': st.worldCouples ? st.worldBreakups / st.worldCouples : null,
       'friends kept 2y after a move': st.moveRetention,
       'median friendship length (y)': st.medianFriendshipYears,
       'convenience friends (share of friends)': st.convenienceShare,

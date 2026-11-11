@@ -2,8 +2,9 @@
 // CLUBS; no simulation code changes.
 
 /** The context an interaction happened in. */
-export type Ctx = 'work' | 'club' | 'hangout' | 'outing' | 'family' | 'call' | 'childhood';
-export const CTX_LIST: Ctx[] = ['work', 'club', 'hangout', 'outing', 'family', 'call', 'childhood'];
+export type Ctx = 'work' | 'club' | 'hangout' | 'outing' | 'family' | 'call' | 'childhood' | 'message';
+// Append only: positions are written into the contact log.
+export const CTX_LIST: Ctx[] = ['work', 'club', 'hangout', 'outing', 'family', 'call', 'childhood', 'message'];
 
 export interface ClubActivity {
   id: string;
