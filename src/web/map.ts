@@ -14,7 +14,9 @@ const CITIES = [
 ];
 const SQUASH = 0.68;
 const TRANSIT_WEEKS = 20;
-const TIER_COLORS = ['#6f8098', '#c2d2e6', '#ffd166', '#ff7b54'];
+const TIER_COLORS = ['#4fa8ff', '#f2f6ff', '#ffd166', '#ff7b54'];
+const TIER_SIZES = [2, 2, 3, 4];
+const OUTLINE = '#0b1420';
 
 function spot(id: number, city: number): [number, number] {
   const c = CITIES[city];
@@ -104,7 +106,7 @@ export function createMap(root: HTMLElement, ctx: Ctx): Scene {
     const counts = [0, 0, 0];
 
     // Everyone else, faintly.
-    g.fillStyle = 'rgba(255,255,255,0.2)';
+    g.fillStyle = 'rgba(255,255,255,0.14)';
     for (const [id, tl] of d.population) {
       if (id === d.ego.id || (strengths.get(id) ?? 0) >= L[0]) continue;
       const [x, y] = position(id, tl, week);
@@ -126,14 +128,21 @@ export function createMap(root: HTMLElement, ctx: Ctx): Scene {
       const isPartner = id === d.ego.partner && partnered;
       const kin = p.kin && (id !== d.ego.partner || isPartner);
       if (kin) {
+        g.fillStyle = OUTLINE;
+        g.fillRect(ix - 2, iy - 1, 5, 3);
+        g.fillRect(ix - 1, iy - 2, 3, 5);
         g.fillStyle = '#ff9ecb';
         g.fillRect(ix - 1, iy, 3, 1);
         g.fillRect(ix, iy - 1, 1, 3);
         if (isPartner) drawGlyph(g, 'heart', ix - 3, iy - 9 + Math.round(Math.sin(clock * 4)), '#ff5d8f');
       } else {
+        // A dark rim keeps each dot readable over the island and over the faint crowd.
+        const size = TIER_SIZES[lv - 1];
+        const o = size >> 1;
+        g.fillStyle = OUTLINE;
+        g.fillRect(ix - o - 1, iy - o - 1, size + 2, size + 2);
         g.fillStyle = TIER_COLORS[lv - 1];
-        const size = lv >= 4 ? 3 : lv >= 2 ? 2 : 1;
-        g.fillRect(ix - (size >> 1), iy - (size >> 1), size, size);
+        g.fillRect(ix - o, iy - o, size, size);
       }
       if (lv >= 4 || isPartner) lines.push([x, y]);
       drawn.push({ id, x, y });
