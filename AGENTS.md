@@ -28,7 +28,12 @@ npm run dev                           # open the page (Vite); add ?seed=5&tab=wa
                                       # ?play&advance=2.5 fast-forwards the animation, for screenshots
 npm test
 npm run typecheck
+npm run build                         # static site in dist/
 ```
+
+## Deploy
+
+GitHub Pages, via `.github/workflows/deploy.yml`: every push to `main` typechecks, builds and publishes `dist/`. The repo's Pages source must be set to "GitHub Actions". `vite.config.ts` sets `base: './'`, so the same build works under `username.github.io/<repo>/` and at the root of a custom domain. The site shows only the lives committed in `public/lives/`; run `npm run export` and commit to add more.
 
 `life` flags: `--seed`, `--years` (default 40), `--top` (how many highlights), and protagonist overrides `--ext`, `--novelty`, `--circle` (each 0 to 1) and `--hobbies` (ids from `src/sim/activities.ts`).
 
@@ -45,6 +50,7 @@ npm run typecheck
 |---|---|---|
 | Language | TypeScript. The sim core has no DOM or Node dependencies. | Runs in Node for the console and unchanged in the browser later. |
 | Backend | None. | Nothing needs one yet. |
+| Hosting | GitHub Pages, static build deployed by GitHub Actions. | Free, and the page is static files plus precomputed lives. |
 | Starting point | Adulthood, not birth. | Simpler. Agents already carry birth year, hometown, family and a `stage` field so childhood can be added as new stages. |
 | Starting network | Family ties and childhood friends are seeded, then the normal rules run for a 5-year burn-in before the story starts. | The starting circle comes from the same rules as everything after it. |
 | The protagonist | A camera, not a special agent. Every rule applies to all agents. | Makes reunions and "friends met without you" possible, and keeps multi-user open. |
