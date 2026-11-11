@@ -1,16 +1,20 @@
 // Every tunable number in the model lives here. Time unit is one week.
 
 export const DEFAULT_PARAMS = {
-  // --- Tie decay. Half-life in weeks grows with how strong the tie ever got.
-  hlMin: 40,
-  hlMax: 260,
+  // --- A tie has two parts. Contact is how much two people have seen of each other lately;
+  // depth is how much they matter to each other. Closeness = depth + (1 - depth) * contact.
+  // Contact fades with this half-life, in weeks, whatever the tie.
+  hlContact: 26,
+  // Depth fades far more slowly. Its half-life in weeks grows with how deep the tie ever got.
+  hlMin: 80,
+  hlMax: 400,
   hlPow: 1,
   // Long-held ties fade more slowly: half-life is multiplied by 1 + hlPerYear * years known, up to hlAgeMax.
   hlPerYear: 0.08,
   hlAgeMax: 3,
   hlKin: 800,
 
-  // --- Circle thresholds on tie strength: acquaintance, friend, close friend, inner circle.
+  // --- Circle thresholds on closeness: acquaintance, friend, close friend, inner circle.
   levels: [0.05, 0.18, 0.4, 0.62],
 
   // --- Mixing at work.
@@ -31,12 +35,16 @@ export const DEFAULT_PARAMS = {
   hangGain: 0.05,
   hangCap: 0.25,
 
-  // --- Plans with friends. The only context that can build a tie all the way up.
+  // --- Plans with friends. The only context, besides family time, that builds depth.
   outingGain: 0.1,
-  outingCap: 1,
-  // How close two people can get depends on their fit: ceiling = capBase + capCompat * compatibility.
+  outingContact: 0.5,
+  depthGain: 0.04,
+  // How deep two people can get depends on their fit: ceiling = capBase + capCompat * compatibility, at most depthMax.
   capBase: 0.3,
   capCompat: 0.75,
+  depthMax: 0.95,
+  // Seeing an old friend again restores this share of the depth that had faded.
+  rekindle: 0.2,
   // Chance someone's partner comes along to plans.
   plusOne: 0.4,
   introChance: 0.7,
@@ -53,6 +61,8 @@ export const DEFAULT_PARAMS = {
 
   // --- Family and long-distance contact.
   familyGain: 0.12,
+  familyContact: 0.5,
+  // Ceiling on depth between relatives.
   familyCap: 0.9,
   familyDinner: 0.25,
   visitRate: 0.05,
@@ -60,7 +70,9 @@ export const DEFAULT_PARAMS = {
   callExt: 0.35,
   callMin: 0.15,
   callGain: 0.04,
-  callCap: 0.6,
+  callCap: 0.3,
+  // A call restores this share of faded depth. It cannot add depth that was never there.
+  callHold: 0.05,
 
   // --- First impressions: a new tie gets a one-off bonus of sparkMax * u^sparkPow.
   sparkMax: 0.3,

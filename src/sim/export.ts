@@ -23,7 +23,10 @@ export interface PersonExport {
   via: string | null;
   /** The model's chance they met in that particular week. */
   p: number;
+  /** Highest closeness the two ever reached. */
   peak: number;
+  /** Highest depth the two ever reached. */
+  depth: number;
   compat: number;
   /** [week, city] each time their home city changes, starting at week 0. */
   cities: [number, number][];
@@ -39,8 +42,8 @@ export interface VenueExport {
 
 export interface SnapshotExport {
   week: number;
-  /** [person, strength x 100] for everyone the protagonist knows at this point. */
-  nodes: [number, number][];
+  /** [person, closeness x 100, depth x 100] for everyone the protagonist knows at this point. */
+  nodes: [number, number, number][];
   /** Friendships between two of the protagonist's friends. */
   edges: [number, number][];
 }
@@ -102,7 +105,7 @@ export function exportLife(life: LifeResult, top = 90): LifeExport {
     people.push({
       id, name: a.name, born: a.birthYear, trait: descriptor(a), hobbies: a.hobbies.map((h) => CLUBS[h].hobby),
       kin: t.kin, met: t.met, ctx: t.ctx, venue: t.venue >= 0 ? venues[t.venue].name : null,
-      via: t.via >= 0 ? agents[t.via].name : null, p: t.p, peak: Math.round(t.peak * 100) / 100,
+      via: t.via >= 0 ? agents[t.via].name : null, p: t.p, peak: Math.round(t.peak * 100) / 100, depth: Math.round(t.dp * 100) / 100,
       compat: Math.round(t.c * 100) / 100, cities: cityTimeline(id),
     });
   }
@@ -112,7 +115,7 @@ export function exportLife(life: LifeResult, top = 90): LifeExport {
     const friendly = new Set(s.nodes.filter(([, x]) => x >= L[1]).map(([o]) => o));
     return {
       week: s.week,
-      nodes: s.nodes.map(([o, x]) => [o, Math.round(x * 100)] as [number, number]),
+      nodes: s.nodes.map(([o, x, d]) => [o, Math.round(x * 100), Math.round(d * 100)] as [number, number, number]),
       edges: s.edges.filter(([a, b]) => friendly.has(a) && friendly.has(b)).map(([a, b]) => [a, b] as [number, number]),
     };
   });

@@ -6,12 +6,12 @@ This file is the shared brief for any coding agent or person picking the project
 
 ## Status
 
-Last updated 2026-11-10.
+Last updated 2026-11-11.
 
 - **Done:** the simulation core, highlight detection, a console highlight reel, a tuning harness, determinism tests, a JSON export, and a browser page with three tabs: Walk (pixel art), Map (pixel art) and Circle (the original graph and charts).
-- **Branch:** the pixel views live on `pixel-views`, not yet merged to `main`.
+- **Branch:** the pixel views are merged to `main`. The depth and contact tie model is on `tie-depth`.
 - **Not started:** running the sim in the browser, the intake form, a phone layout, sound.
-- **Next step:** the project owner reviews the Walk and Map views in a real browser. Product direction is being decided around what makes the site worth exploring; ideas are in `docs/product-ideas.md`. Speed is parked until then; the page reads lives simulated ahead of time.
+- **Next step:** a closeness chart per friend (click a person, see depth and contact over time) to check the new tie model by eye. Product direction is being decided around what makes the site worth exploring; ideas are in `docs/product-ideas.md`. Speed is parked until then; the page reads lives simulated ahead of time.
 
 ## Run it
 
@@ -60,6 +60,7 @@ GitHub Pages, via `.github/workflows/deploy.yml`: every push to `main` typecheck
 | Life events in V0 | Moving city, changing job and getting together with a partner, for everyone. | A job change is a move that only reassigns the workplace. Partners were added because the strongest adult tie was missing. Breakups, children, school stages and death are later. |
 | Compatibility | Every pair has a friendship index from 0 to 1: half personality similarity (four axes), the rest closeness in age and shared hobbies. | It sets how readily strangers talk, the first-impression bonus, and how close two people can ever get. It also gives the reel a reason for each friendship. |
 | Age | Openness to new people and how often people go out decline from 25. Long-held ties fade more slowly. | Older adults see friends less often but stay close to them. |
+| Ties | Two numbers per tie, depth and contact, instead of one strength. | Separates friends of convenience from lasting ones, lets older adults stay close while seeing people less, and gives calls a role. |
 | Tuning | Do not fine-tune numbers until the structure is more complete. | Each structural change moves them again. Fix only what is clearly broken. |
 | Traits | Extraversion, hobbies, social circle seed, novelty-seeking, plus four personality axes (humour, homebody or adventurous, listener or talker, spontaneous or planner). | Each drives one visible rule. Introversion is the low end of extraversion. |
 | Interestingness | Improbability times consequence, not improbability alone. | Every specific meeting with a stranger is unlikely, so rarity alone is noise. |
@@ -105,12 +106,15 @@ The data flow is one-way: `runLife(options)` returns a `LifeResult` holding the 
 
 ### Ties
 
-- Strength is 0 to 1. Each interaction closes a fraction of the gap to that context's ceiling. Work, clubs and chance meetings have low ceilings; only chosen time together (plans with friends) can build a tie all the way up. That, plus a weekly limit on outings, is the social budget.
-- Strength decays exponentially without contact. The half-life grows with how strong the tie ever got, so old close friends fade slowly and brief acquaintances fade fast. Family decays very slowly.
-- A new tie gets a one-off "spark" bonus, larger for compatible pairs, so a few first meetings matter straight away.
-- The ceiling on chosen time together rises with compatibility, so only well-matched pairs reach the inner circle.
+- A tie has two numbers, each 0 to 1. **Contact** is how much two people have seen of each other lately. **Depth** is how much they matter to each other. Closeness is `depth + (1 - depth) * contact`, and everything that asks "how close are they" (circles, invitations, calls) reads closeness.
+- Every interaction raises contact towards that context's ceiling. Work, clubs and chance meetings have low ceilings. Contact fades with a half-life of about six months.
+- Only chosen time together (plans with friends) and family time build depth, slowly. The ceiling on depth rises with compatibility, so only well-matched pairs get deep. That, plus a weekly limit on outings, is the social budget.
+- Depth fades over years. Its half-life grows with how deep the tie ever got and how long the two have known each other. Family depth barely fades.
+- A friend of convenience has contact and little depth: they drop away within a year of the job or club ending. A deep friend stays close through years of silence.
+- Seeing an old friend again restores part of the depth that had faded. A call does the same on a smaller scale, and cannot add depth that was never there.
+- A new tie gets a one-off "spark" of depth, larger for compatible pairs, so a few first meetings matter straight away.
 - A partner is treated as family from the day they get together: slow decay and time together every week. They are also added to each other's `family` list. In-laws are not modelled.
-- Circles are thresholds on strength: acquaintance, friend, close friend, inner circle (`levels` in `params.ts`).
+- Circles are thresholds on closeness: acquaintance, friend, close friend, inner circle (`levels` in `params.ts`).
 - Ties between other people are forgotten once negligible. The protagonist's ties are kept forever so reunions can be detected.
 
 ### Highlight types
@@ -144,25 +148,27 @@ Notes for anyone changing it:
 
 `npm run harness` prints circle sizes against rough human targets of 5 / 15 / 50 / 150 (inner circle, close, friend, acquaintance, cumulative), plus lifetime totals and highlight counts. It only needs to be roughly human, not exact.
 
-Latest run, 2026-11-10: 12 lives of 40 years, seeds 1 to 12, default parameters, after compatibility, age effects and partners were added.
+Latest run, 2026-11-11: 8 lives of 40 years, seeds 1 to 8, default parameters, after ties were split into depth and contact. The previous run (12 lives, single-strength ties) is in the right-hand column.
 
-| Measure | Result |
-|---|---|
-| Circle sizes, everyone in the world at the end (mean) | 1.9 / 15.2 / 52.4 / 90 |
-| Protagonist's circle averaged over their life (mean) | 2.0 / 14.2 / 50.9 / 104 |
-| New people met in 40 years | 304 on average; 133 became friends, 29 close, 3 inner circle |
-| Moves / job changes | 1.8 / 3.1 per life |
-| Trips to see family | 92 per life |
-| Protagonists who got together with a partner during the story | 75%, median age 26 |
-| Younger generation with a partner at the end | 89% |
-| Friends still friends two years after a move | 76% |
-| Median length of a friendship that ended | 3.3 years |
+| Measure | Result | Before the split |
+|---|---|---|
+| Circle sizes, everyone in the world at the end (mean) | 3.4 / 14.7 / 38.7 / 68 | 1.9 / 15.2 / 52.4 / 90 |
+| Protagonist's circle averaged over their life (mean) | 2.3 / 11.4 / 32.2 / 70 | 2.0 / 14.2 / 50.9 / 104 |
+| New people met in 40 years | 244 on average; 100 became friends, 22 close, 2 inner circle | 304; 133, 29, 3 |
+| Moves / job changes | 1.9 / 2.9 per life | 1.8 / 3.1 |
+| Trips to see family | 77 per life | 92 |
+| Protagonists who got together with a partner during the story | 50% (4 of 8), median age 32 | 75%, median age 26 |
+| Younger generation with a partner at the end | 89% | 89% |
+| Friends still friends two years after a move | 70% | 76% |
+| Median length of a friendship that ended | 1.4 years | 3.3 years |
+| Friends of convenience (friends with little depth) | 16% of friends | not measured |
+| Deep friends (close on depth alone, no recent contact needed) | 8.8 on average | not measured |
 
-Known to be off and deliberately not tuned yet: the inner circle is small (about 2, target 5), too many friendships survive a move, 304 people met in 40 years is low for a real life, and 29 close friends over a lifetime is still high churn.
+Known to be off and deliberately not tuned yet: the outer circles are now too small (68 acquaintances, target 150), friendships flap in and out of the friend level (median length 1.4 years), too many friendships still survive a move, only 16% of friends are friends of convenience, and 244 people met in 40 years is low. With 8 lives the partner figures are noisy.
 
 ## Known limitations
 
-- **Speed:** a 40-year life takes roughly 30 to 45 seconds on a laptop. The cost is memory-bound: tie objects and per-person maps are scattered, so the hot loops miss the cache. The identified fix is to store ties in flat typed arrays; it has not been done. For the browser, run the sim in a web worker and stream events so the timeline can play as it simulates.
+- **Speed:** a 40-year life takes roughly 35 to 55 seconds on a laptop. The cost is memory-bound: tie objects and per-person maps are scattered, so the hot loops miss the cache. The identified fix is to store ties in flat typed arrays; it has not been done. For the browser, run the sim in a web worker and stream events so the timeline can play as it simulates.
 - **No death or life stages:** age only lowers sociability, and people stop going to work at 67 (added after the calibration run above, so those numbers predate it). Parents never die, so a "life" is 40 years of adulthood.
 - **Partners are simple:** no breakups, no children, no in-laws, and partners are always chosen from existing close friends in the same city.
 - **Small cities:** 500 to 800 people stand in for each real city, so friends of friends overlap heavily and near-miss and small-world criteria are deliberately strict.

@@ -10,8 +10,16 @@ import { DEFAULT_CITIES, generateWorld, type Agent, type CityConfig, type EgoOve
 export interface Tie {
   a: number;
   b: number;
-  /** Strength in [0, 1] as of week `last`; decays lazily from there. */
-  s: number;
+  /**
+   * Depth in [0, 1] as of week `last`: how much the two matter to each other. Built slowly,
+   * only by chosen time together, and fades over years.
+   */
+  d: number;
+  /**
+   * Contact in [0, 1] as of week `last`: how much they have seen of each other lately.
+   * Any interaction raises it and it fades within months.
+   */
+  k: number;
   last: number;
   met: number;
   /** Venue where they met, or -1. */
@@ -20,7 +28,10 @@ export interface Tie {
   /** The model's chance that this pair met in that particular week. */
   p: number;
   n: number;
+  /** Highest closeness the tie ever reached. */
   peak: number;
+  /** Highest depth the tie ever reached. */
+  dp: number;
   kin: boolean;
   /** Who introduced them, or -1. */
   via: number;
@@ -53,8 +64,8 @@ export type SimEvent =
 export interface Snapshot {
   week: number;
   city: number;
-  /** [person, strength] for everyone the protagonist currently knows. */
-  nodes: [number, number][];
+  /** [person, closeness, depth] for everyone the protagonist currently knows. */
+  nodes: [number, number, number][];
   /** [a, b, strength] friendships among those people. */
   edges: [number, number, number][];
 }
@@ -89,8 +100,8 @@ export interface LifeResult {
   /** Flat rows of [week, person, venue, ctxIndex] for every interaction the protagonist had. */
   contacts: number[];
   snapshots: Snapshot[];
-  /** Everyone the protagonist has ever known, with strength as of the final week. */
-  ties: Map<number, Tie & { now: number }>;
+  /** Everyone the protagonist has ever known, with closeness and depth as of the final week. */
+  ties: Map<number, Tie & { now: number; depthNow: number }>;
   sim: Sim;
 }
 
@@ -158,8 +169,9 @@ export class Sim {
     this.lastMove = new Int32Array(N).fill(-1e6);
     for (const t of world.seedTies) {
       const tie: Tie = {
-        a: t.a, b: t.b, s: t.s, last: startWeek, met: Math.min(t.met, startWeek), venue: -1, ctx: t.ctx,
-        p: 1, n: 0, peak: t.s, kin: t.kin, via: -1, c: compat(world.agents[t.a], world.agents[t.b]),
+        // Family and childhood friends start as depth with no recent contact.
+        a: t.a, b: t.b, d: t.s, k: 0, last: startWeek, met: Math.min(t.met, startWeek), venue: -1, ctx: t.ctx,
+        p: 1, n: 0, peak: t.s, dp: t.s, kin: t.kin, via: -1, c: compat(world.agents[t.a], world.agents[t.b]),
       };
       this.adj[t.a].set(t.b, tie);
       this.adj[t.b].set(t.a, tie);
@@ -177,17 +189,41 @@ export class Sim {
     return this.startYear + Math.floor(week / 52);
   }
 
-  /** Current strength of a tie, after decay since its last interaction. */
-  cur(t: Tie): number {
-    const gap = this.week - t.last;
-    if (gap <= 0) return t.s;
+  /** Half-life of a tie's depth in weeks: longer for deeper and longer-held ties, very long for family. */
+  private depthHalfLife(t: Tie): number {
     const P = this.P;
-    let hl = P.hlKin;
-    if (!t.kin) {
-      const known = 1 + (P.hlPerYear * (t.last - t.met)) / 52;
-      hl = (P.hlMin + (P.hlMax - P.hlMin) * t.peak ** P.hlPow) * (known > P.hlAgeMax ? P.hlAgeMax : known);
-    }
-    return t.s * Math.exp((-LN2 * gap) / hl);
+    if (t.kin) return P.hlKin;
+    const known = 1 + (P.hlPerYear * (t.last - t.met)) / 52;
+    return (P.hlMin + (P.hlMax - P.hlMin) * t.dp ** P.hlPow) * (known > P.hlAgeMax ? P.hlAgeMax : known);
+  }
+
+  /** Current depth of a tie, after decay since its last interaction. */
+  depth(t: Tie): number {
+    const gap = this.week - t.last;
+    return gap <= 0 || t.d === 0 ? t.d : t.d * Math.exp((-LN2 * gap) / this.depthHalfLife(t));
+  }
+
+  /** Current contact of a tie, after decay since its last interaction. */
+  contact(t: Tie): number {
+    const gap = this.week - t.last;
+    return gap <= 0 ? t.k : t.k * Math.exp((-LN2 * gap) / this.P.hlContact);
+  }
+
+  /**
+   * Current closeness of a tie: depth, plus recent contact filling part of what is left.
+   * Circles, invitations and everything else that asks "how close are they" read this.
+   */
+  cur(t: Tie): number {
+    const d = this.depth(t);
+    return d + (1 - d) * this.contact(t);
+  }
+
+  /** Bring a tie's stored depth and contact up to this week. */
+  private settle(t: Tie): void {
+    if (this.week <= t.last) return;
+    t.d = this.depth(t);
+    t.k = this.contact(t);
+    t.last = this.week;
   }
 
   levelOf(s: number): number {
@@ -303,7 +339,8 @@ export class Sim {
       const B = this.world.agents[b];
       const c = compat(A, B);
       const spark = P.sparkMax * this.r(R.SPARK, a, b) ** P.sparkPow * Math.min(1.5, c / 0.3);
-      tie = { a, b, s: spark, last: w, met: w, venue, ctx, p, n: 0, peak: 0, kin: false, via, c };
+      // A first impression counts as depth: a few first meetings matter straight away.
+      tie = { a, b, d: spark, k: 0, last: w, met: w, venue, ctx, p, n: 0, peak: 0, dp: spark, kin: false, via, c };
       this.adj[a].set(b, tie);
       this.adj[b].set(a, tie);
     } else {
@@ -313,26 +350,45 @@ export class Sim {
           city: this.loc[this.ego],
         });
       }
-      tie.s = this.cur(tie);
+      this.settle(tie);
     }
+    // Every context raises contact towards its own ceiling. Only chosen time together and
+    // family time build depth; a call can restore depth that has faded but cannot add new depth.
     let gain: number;
     let cap: number;
     switch (ctx) {
       case 'work': gain = P.workGain; cap = P.workCap; break;
       case 'club': { const c = CLUBS[this.world.venues[venue].hobby]; gain = c.gain; cap = c.cap; break; }
       case 'hangout': gain = P.hangGain; cap = P.hangCap; break;
-      case 'outing': gain = P.outingGain; cap = Math.min(P.outingCap, P.capBase + P.capCompat * tie.c); break;
-      case 'family': gain = P.familyGain; cap = P.familyCap; break;
-      default: gain = P.callGain; cap = P.callCap;
+      case 'outing': {
+        gain = P.outingGain;
+        cap = P.outingContact;
+        // Old friends pick up where they left off, then keep building up to what their fit allows.
+        if (tie.d < tie.dp) tie.d += P.rekindle * (tie.dp - tie.d);
+        const dcap = Math.min(P.depthMax, P.capBase + P.capCompat * tie.c);
+        if (tie.d < dcap) tie.d += P.depthGain * (dcap - tie.d);
+        break;
+      }
+      case 'family':
+        gain = P.familyGain;
+        cap = P.familyContact;
+        if (tie.d < P.familyCap) tie.d += P.familyGain * (P.familyCap - tie.d);
+        break;
+      default:
+        gain = P.callGain;
+        cap = P.callCap;
+        if (tie.d < tie.dp) tie.d += P.callHold * (tie.dp - tie.d);
     }
-    if (tie.s < cap) tie.s += gain * (cap - tie.s);
+    if (tie.k < cap) tie.k += gain * (cap - tie.k);
     tie.last = w;
     tie.n++;
-    if (tie.s > tie.peak) tie.peak = tie.s;
+    if (tie.d > tie.dp) tie.dp = tie.d;
+    const s = tie.d + (1 - tie.d) * tie.k;
+    if (s > tie.peak) tie.peak = s;
     if (isNew) {
-      if (tie.s >= P.cacheMin) {
-        this.fo[a].push(b); this.fs[a].push(tie.s); this.fm[a].push(w); this.fk[a].push(false);
-        this.fo[b].push(a); this.fs[b].push(tie.s); this.fm[b].push(w); this.fk[b].push(false);
+      if (s >= P.cacheMin) {
+        this.fo[a].push(b); this.fs[a].push(s); this.fm[a].push(w); this.fk[a].push(false);
+        this.fo[b].push(a); this.fs[b].push(s); this.fm[b].push(w); this.fk[b].push(false);
       }
       if (this.logging) this.onMet(tie);
     }
@@ -610,8 +666,7 @@ export class Sim {
     a.family.push(b.id);
     b.family.push(a.id);
     // A partner is treated as family from here on: slow decay, regular time together.
-    best.s = this.cur(best);
-    best.last = this.week;
+    this.settle(best);
     best.kin = true;
     if (this.logging && (a.id === this.ego || b.id === this.ego)) {
       this.events.push({ t: 'partner', week: this.week, other: a.id === this.ego ? b.id : a.id });
@@ -882,12 +937,12 @@ export class Sim {
 
   private snapshot(): void {
     const L = this.P.levels;
-    const nodes: [number, number][] = [];
+    const nodes: [number, number, number][] = [];
     const set = new Set<number>();
     for (const [o, t] of this.adj[this.ego]) {
       const s = this.cur(t);
       if (s >= L[0]) {
-        nodes.push([o, s]);
+        nodes.push([o, s, this.depth(t)]);
         set.add(o);
       }
     }
@@ -976,8 +1031,8 @@ export function runLife(opt: LifeOptions): LifeResult {
   sim.startLogging();
   for (let w = 0; w < years * 52; w++) sim.step();
   sim.finish();
-  const ties = new Map<number, Tie & { now: number }>();
-  for (const [o, t] of sim.adj[world.ego]) ties.set(o, { ...t, now: sim.cur(t) });
+  const ties = new Map<number, Tie & { now: number; depthNow: number }>();
+  for (const [o, t] of sim.adj[world.ego]) ties.set(o, { ...t, now: sim.cur(t), depthNow: sim.depth(t) });
   return {
     seed: opt.seed, startYear, years, params, world, ego: world.ego, start,
     events: sim.events, contacts: sim.contacts, snapshots: sim.snapshots, ties, sim,

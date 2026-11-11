@@ -39,6 +39,10 @@ export interface LifeStats {
   moveRetention: number | null;
   /** Median years a friendship stayed at friend level or better; null if none ended. */
   medianFriendshipYears: number | null;
+  /** Of the protagonist's friends, averaged over the life: the share with little depth, close only through regular contact. */
+  convenienceShare: number;
+  /** People outside the family whose depth alone, with no recent contact, would still make them a close friend. Averaged over the life. */
+  avgDeep: number;
 }
 
 export function computeStats(life: LifeResult): LifeStats {
@@ -62,6 +66,19 @@ export function computeStats(life: LifeResult): LifeStats {
     inner: avg((c) => c.inner), close: avg((c) => c.close), friend: avg((c) => c.friend), acquaintance: avg((c) => c.acquaintance),
   };
 
+  let friendRows = 0;
+  let shallowRows = 0;
+  let deepRows = 0;
+  for (const snap of life.snapshots) {
+    for (const [o, x, d] of snap.nodes) {
+      if (kin.has(o)) continue;
+      if (d >= L[2]) deepRows++;
+      if (x < L[1]) continue;
+      friendRows++;
+      if (d < L[1]) shallowRows++;
+    }
+  }
+
   let moves = 0;
   let jobs = 0;
   let familyVisits = 0;
@@ -80,7 +97,7 @@ export function computeStats(life: LifeResult): LifeStats {
       if (before && after) {
         const friends = before.nodes.filter(([o, s]) => !kin.has(o) && s >= L[1] && life.world.agents[o].city !== e.to);
         if (friends.length) {
-          const later = new Map(after.nodes);
+          const later = new Map(after.nodes.map(([o, x]) => [o, x] as [number, number]));
           kept.push(friends.filter(([o]) => (later.get(o) ?? 0) >= L[1]).length / friends.length);
         }
       }
@@ -100,5 +117,7 @@ export function computeStats(life: LifeResult): LifeStats {
     startCircle: circles[0], endCircle: circles[circles.length - 1],
     moveRetention: kept.length ? kept.reduce((a, b) => a + b, 0) / kept.length : null,
     medianFriendshipYears: durations.length ? durations[Math.floor(durations.length / 2)] : null,
+    convenienceShare: friendRows ? shallowRows / friendRows : 0,
+    avgDeep: deepRows / Math.max(1, life.snapshots.length),
   };
 }

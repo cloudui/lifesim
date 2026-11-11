@@ -32,6 +32,11 @@ describe('life simulation', () => {
     for (const t of life.ties.values()) {
       expect(t.now).toBeGreaterThanOrEqual(0);
       expect(t.peak).toBeLessThanOrEqual(1);
+      // Closeness is depth plus some share of what is left, so it can never be below depth.
+      expect(t.depthNow).toBeGreaterThanOrEqual(0);
+      expect(t.depthNow).toBeLessThanOrEqual(t.now + 1e-9);
+      expect(t.dp).toBeLessThanOrEqual(1);
+      expect(t.k).toBeLessThanOrEqual(1);
       expect(t.p).toBeGreaterThan(0);
       expect(t.p).toBeLessThanOrEqual(1);
     }

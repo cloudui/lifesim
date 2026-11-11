@@ -59,6 +59,8 @@ function oneLife(seed: number, years: number, params: Record<string, number | nu
       'younger generation partnered (share)': youngPartnered,
       'friends kept 2y after a move': st.moveRetention,
       'median friendship length (y)': st.medianFriendshipYears,
+      'convenience friends (share of friends)': st.convenienceShare,
+      'deep friends, close on depth alone': st.avgDeep,
     },
   };
 }
