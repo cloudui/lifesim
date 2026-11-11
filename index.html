@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Life Connections Sim</title>
+  </head>
+  <body>
+    <div id="app">
+      <header class="top">
+        <div class="who">
+          <h1 id="title">Loading…</h1>
+          <p id="subtitle"></p>
+        </div>
+        <div class="controls">
+          <label>Life <select id="seed"></select></label>
+          <button id="play" type="button">Play</button>
+        </div>
+      </header>
+
+      <section class="card">
+        <div class="card-head">
+          <h2>Timeline</h2>
+          <span class="hint">Bigger dots are less likely or more consequential moments. Drag to scrub, or press space to play.</span>
+        </div>
+        <div id="timeline" class="chart"></div>
+        <div id="city-legend" class="legend"></div>
+      </section>
+
+      <div class="cols">
+        <section class="card">
+          <div class="card-head">
+            <h2>Who you know</h2>
+            <span class="hint">Closer to the centre is closer to you. People are placed clockwise in the order you met them.</span>
+          </div>
+          <div id="graph-wrap"><canvas id="graph"></canvas></div>
+          <div class="legend">
+            <span><i class="mark round"></i>friend</span>
+            <span><i class="mark diamond"></i>family or partner</span>
+            <span><i class="mark line"></i>they know each other</span>
+            <span class="muted">Colour is the city they live in.</span>
+          </div>
+        </section>
+
+        <div class="side">
+          <section class="card">
+            <div id="now" class="tiles"></div>
+          </section>
+          <section class="card">
+            <div class="card-head"><h2>Your circle over time</h2></div>
+            <div id="area" class="chart"></div>
+            <div id="tier-legend" class="legend"></div>
+          </section>
+          <section class="card feed-card">
+            <div class="card-head"><h2>Moments</h2></div>
+            <ol id="feed"></ol>
+          </section>
+        </div>
+      </div>
+    </div>
+    <div id="tip" role="tooltip" hidden></div>
+    <script type="module" src="/src/web/main.ts"></script>
+  </body>
+</html>
