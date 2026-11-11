@@ -11,7 +11,7 @@ Last updated 2026-11-11.
 - **Done:** the simulation core, highlight detection, a console highlight reel, a tuning harness, determinism tests, a JSON export, and a browser page with three tabs: Walk (pixel art), Map (pixel art) and Circle (the original graph and charts).
 - **Branch:** the pixel views are merged to `main`. The depth and contact tie model is on `tie-depth`.
 - **Not started:** running the sim in the browser, the intake form, a phone layout, sound.
-- **Next step:** a closeness chart per friend (click a person, see depth and contact over time) to check the new tie model by eye. Product direction is being decided around what makes the site worth exploring; ideas are in `docs/product-ideas.md`. Speed is parked until then; the page reads lives simulated ahead of time.
+- **Next step:** review the closeness chart on a few friends to judge the tie model by eye. Product direction is being decided around what makes the site worth exploring; ideas are in `docs/product-ideas.md`. Speed is parked until then; the page reads lives simulated ahead of time.
 
 ## Run it
 
@@ -87,6 +87,7 @@ index.html, src/web/   the page (vanilla TypeScript, SVG and canvas):
   walk.ts              Walk tab: the pixel-art walk through life
   map.ts               Map tab: where everyone is
   pixel.ts             procedural sprites and glyphs; there are no image assets
+  person.ts            the person card: you and one other person as two lines over time
   types.ts             the Scene interface the animated tabs implement
 docs/product-ideas.md  what would make the site magnetic; saved for later
 test/sim.test.ts       determinism and consistency tests
@@ -136,6 +137,8 @@ The timeline at the top is shared: a coloured band for where the protagonist liv
 - **Walk** (pixel art): the protagonist walks in place while the city scrolls past. The skyline is the city they live in (a spire for New York, a red bridge for San Francisco, a twin-antenna tower for Chicago), and the sky moves from dawn to dusk across the whole life. Their inner circle walks behind them and their partner beside them. At each highlight time holds still: the person walks up outside the venue (bar, café, park, office or club hall) and they wave. Getting together brings hearts and confetti and both outfits melt into a suit or gown for a year. A move sweeps the new skyline in with a plane overhead. Hair greys with age. A caption under the scene gives the highlight text.
 - **Map** (pixel art): the three cities as islands. Everyone in the world is a faint dot; people the protagonist knows are coloured by closeness; dotted lines run to the inner circle wherever they live; dots fly between islands when someone moves. Hover for details.
 - **Circle**: the protagonist in the centre, everyone they know placed by closeness and clockwise in the order they met, with the circle-size chart, a "now" panel and the moments list.
+
+Clicking a person in the Map or Circle tab opens a card (`person.ts`) with the two of you drawn as two lines over time: close together when you are close, drifting apart when you are not. A dotted pair shows where you would be on depth alone, without regular contact. Dots along the top are the moments you shared; drag the chart to scrub. `?person=<id>` or `?person=closest` opens it from the address bar.
 
 Notes for anyone changing it:
 

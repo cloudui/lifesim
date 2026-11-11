@@ -22,6 +22,8 @@ export interface Ctx {
   strengthsAt(w: number): Map<number, number>;
   snapIndex(w: number): number;
   personTip(id: number): string;
+  /** Open the card showing the protagonist and this person over time. */
+  openPerson(id: number): void;
   showTip(html: string, x: number, y: number): void;
   hideTip(): void;
 }
