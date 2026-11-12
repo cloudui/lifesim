@@ -191,4 +191,7 @@ Later, in no fixed order: intake form to set traits and rerun or compare lives; 
 
 ## Explicitly out of scope for V0
 
-Polished art and animation, the intake form, extra traits such as money, life events beyond moving, job changes and partnering, and a backend.
+Polished art and animation, the intake form, extra traits such as money, life events beyond moving, job changes and partnering, and a backend. This can change if we are realizing it's mature enough, not a strict requirement.
+
+## Note
+You as the AI own the codebase. Feel free to make sweeping changes and code modifications to fit the necessary problems at hand. Don't have allegiance to the code already written in this repository. 
