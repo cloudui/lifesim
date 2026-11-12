@@ -89,6 +89,8 @@ export interface WorldOptions {
   startYear: number;
   cities: CityConfig[];
   ego?: EgoOverrides;
+  /** The protagonist's age when the story starts (default 18). */
+  startAge?: number;
 }
 
 export interface CityConfig {
@@ -224,6 +226,9 @@ export function generateWorld(opt: WorldOptions): World {
     clubsByCityHobby.push(byHobby);
   }
 
+  const startAge = opt.startAge ?? 18;
+  // The youngest people in the world are the protagonist's age, and never older than 22.
+  const youngest = Math.min(22, startAge);
   // --- People, generated as families so everyone has kin and a hometown.
   const agents: Agent[] = [];
   const usedPeople = new Set<string>();
@@ -273,7 +278,7 @@ export function generateWorld(opt: WorldOptions): World {
       const nParents = st.next() < 0.8 ? 2 : 1;
       const nKids = 1 + st.int(3);
       const kidAges: number[] = [];
-      for (let i = 0; i < nKids; i++) kidAges.push(22 + st.int(17));
+      for (let i = 0; i < nKids; i++) kidAges.push(youngest + st.int(39 - youngest));
       const oldest = Math.max(...kidAges);
       const fam: number[] = [];
       const parents: Agent[] = [];
@@ -292,7 +297,8 @@ export function generateWorld(opt: WorldOptions): World {
         if (cities.length > 1 && st.next() < 0.3) {
           let c = st.int(cities.length - 1);
           if (c >= city.id) c++;
-          k.city = c;
+          // Nobody has left home before they are 20.
+          if (age >= 20) k.city = c;
         }
         fam.push(k.id);
       }
@@ -303,7 +309,8 @@ export function generateWorld(opt: WorldOptions): World {
   }
 
   // --- The protagonist: a young adult picked by the seed. Same rules as everyone else.
-  const young = agents.filter((a) => a.grewUpHere && opt.startYear - a.birthYear <= 26);
+  // The protagonist is one of the youngest adults: 18 or 19 by default, living where they grew up.
+  const young = agents.filter((a) => a.grewUpHere && opt.startYear - a.birthYear <= (startAge < 22 ? startAge + 1 : 26) && (startAge >= 22 || a.city === a.hometown));
   const ego = (young.length ? st.pick(young) : st.pick(agents)).id;
   if (opt.ego) {
     const e = agents[ego];

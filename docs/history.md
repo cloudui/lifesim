@@ -4,6 +4,13 @@ What was added, when, and why, newest first. `AGENTS.md` describes the project a
 
 ## 2026-11-12
 
+### Busy periods, and the story starts at 18
+
+- **What:** for a year after a move, a new job or a new partner, a person has less time for plans (70% of usual). The protagonist is now 18 or 19 when the story starts and lives where they grew up; the youngest people in the world are that age too. Under-18s, who only exist in the warm-up years, do not work or move on their own. `--start-age 25` gives the old start.
+- **Why:** busy periods were the other half of "nothing is sudden". The start at 18 answers a finding from the retelling: most of a cast was already close on the first page, so their beginnings were never seen.
+- **Result:** in a typical life now only one or two cast members are there from the first page (family aside), and everyone else is met on screen. A first, harsher setting for busy periods delayed partnering by a decade and was softened; the numbers are in `AGENTS.md`.
+- **Open:** the story now covers ages 18 to 58, not 25 to 65. See `docs/open-questions.md`.
+
 ### Endings: falling out, fading when out of sight, and death
 
 - **What:** three rules, each with an off switch.

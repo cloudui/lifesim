@@ -29,7 +29,9 @@ interface Row {
 
 function oneLife(seed: number, years: number, params: Record<string, number | number[]>): Row {
   const t0 = Date.now();
-  const life = runLife({ seed, years, params });
+  // startAge is a life option, not a parameter, but it is handy to set it the same way: --set startAge=25.
+  const { startAge, ...rest } = params as Record<string, number | number[]> & { startAge?: number };
+  const life = runLife({ seed, years, params: rest, startAge });
   const seconds = (Date.now() - t0) / 1000;
   const st = computeStats(life);
   const pop: Record<string, number[]> = { inner: [], close: [], friend: [], acquaintance: [] };

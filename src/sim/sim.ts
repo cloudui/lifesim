@@ -89,6 +89,8 @@ export interface LifeOptions {
   years?: number;
   burnInYears?: number;
   startYear?: number;
+  /** The protagonist's age when the story starts. 18 by default; 22 or more gives the older, already-settled start. */
+  startAge?: number;
   cities?: CityConfig[];
   params?: Partial<Params>;
   ego?: EgoOverrides;
@@ -172,6 +174,8 @@ export class Sim {
   private loc: Int32Array;
   private outCount: Uint8Array;
   private lastMove: Int32Array;
+  /** Week until which each agent has less time for friends, after a move, a new job or a new partner. */
+  private busyUntil: Int32Array;
   private logging = false;
   private tick = 0;
   private yr = 0;
@@ -200,6 +204,7 @@ export class Sim {
     this.loc = new Int32Array(N);
     this.outCount = new Uint8Array(N);
     this.lastMove = new Int32Array(N).fill(-1e6);
+    this.busyUntil = new Int32Array(N).fill(-1e6);
     this.since = new Int32Array(N).fill(-1e6);
     // Couples who exist when the world is generated have been together for a long time.
     for (const a of world.agents) if (a.partner >= 0) this.since[a.id] = startWeek - 1040;
@@ -297,6 +302,11 @@ export class Sim {
     // People mostly fall into conversation with others near their own age.
     const age = 0.25 + 0.75 * Math.exp(-Math.abs(a.birthYear - b.birthYear) / 12);
     return e * age * this.openness(a) * this.openness(b) * (0.2 + compat(a, b));
+  }
+
+  /** How much of their usual time for plans someone has right now. */
+  private free(id: number): number {
+    return this.week < this.busyUntil[id] ? this.P.busyFactor : 1;
   }
 
   private maxOut(a: Agent): number {
@@ -600,6 +610,7 @@ export class Sim {
     a.haunts = [];
     a.city = dest;
     this.lastMove[a.id] = this.week;
+    this.busyUntil[a.id] = this.week + this.P.busyWeeks;
     a.work = this.pickWork(a, dest, -1).v;
     this.world.venues[a.work].members.push(a.id);
     if (this.logging) {
@@ -681,6 +692,7 @@ export class Sim {
       this.die(a);
       return;
     }
+    if (age < P.adultAge) return;
     const moveRate = age < 30 ? P.moveYoung : age < 45 ? P.moveMid : P.moveOld;
     const settled = this.week - this.lastMove[a.id] >= P.moveCooldown;
     if (settled && this.world.cities.length > 1 && this.r(R.MOVE, a.id) < moveRate / 52) {
@@ -694,6 +706,7 @@ export class Sim {
       const from = a.work;
       const next = this.pickWork(a, a.city, from);
       if (next.v === from) return;
+      this.busyUntil[a.id] = this.week + P.busyWeeks;
       this.removeMember(from, a.id);
       a.work = next.v;
       this.world.venues[next.v].members.push(a.id);
@@ -778,7 +791,8 @@ export class Sim {
     if (a.died >= 0) return;
     const P = this.P;
     const venues = this.world.venues;
-    if (this.yr - a.birthYear < P.retireAge && this.r(R.WORK, a.id) < P.workAttend) this.addAtt(a.work, a.id);
+    const age = this.yr - a.birthYear;
+    if (age >= P.adultAge && age < P.retireAge && this.r(R.WORK, a.id) < P.workAttend) this.addAtt(a.work, a.id);
     for (const c of a.clubs) {
       if (this.r(R.CLUB, a.id, c) < CLUBS[venues[c].hobby].attend) this.addAtt(c, a.id);
     }
@@ -856,6 +870,7 @@ export class Sim {
     this.settle(best);
     best.kin = true;
     this.since[a.id] = this.since[b.id] = this.week;
+    this.busyUntil[a.id] = this.busyUntil[b.id] = this.week + P.busyWeeks;
     if (this.logging) this.couplesFormed++;
     if (this.logging && (a.id === this.ego || b.id === this.ego)) {
       this.events.push({ t: 'partner', week: this.week, other: a.id === this.ego ? b.id : a.id });
@@ -870,7 +885,7 @@ export class Sim {
     const here = this.loc[id];
     const away = here !== h.city;
     if (this.outCount[id] >= this.maxOut(h)) return;
-    const pHost = away ? P.hostAway : (P.hostBase + P.hostExt * h.ext) * this.activity(h);
+    const pHost = away ? P.hostAway : (P.hostBase + P.hostExt * h.ext) * this.activity(h) * this.free(id);
     if (this.r(R.HOST, id) >= pHost) return;
     const cand = this.cand;
     const wts = this.wts;
@@ -917,7 +932,7 @@ export class Sim {
       const pInvite = Math.min(1, (m * wts[idx]) / W0);
       W -= wts[idx];
       wts[idx] = 0;
-      const pAccept = Math.min(1, P.acceptBase + P.acceptStrength * str[idx]);
+      const pAccept = Math.min(1, P.acceptBase + P.acceptStrength * str[idx]) * this.free(o);
       if (this.outCount[o] < this.maxOut(agents[o]) && this.r(R.ACCEPT, o, id) < pAccept) {
         group.push(o);
         probs.push(pInvite * pAccept);
@@ -963,7 +978,7 @@ export class Sim {
       if (this.r(R.AWAY_HANG, id) < 0.7) this.addAtt(this.pickHangout(a, here, 0), id);
       return;
     }
-    const active = this.activity(a);
+    const active = this.activity(a) * this.free(id);
     if (this.r(R.SOLO, id, 0) < (P.soloBase + P.soloExt * a.ext) * active) {
       const v = this.pickHangout(a, here, 0);
       this.addAtt(v, id);
@@ -1251,7 +1266,7 @@ export function runLife(opt: LifeOptions): LifeResult {
   const burnIn = opt.burnInYears ?? 5;
   const startYear = opt.startYear ?? 2026;
   const params: Params = { ...DEFAULT_PARAMS, ...opt.params };
-  const world = generateWorld({ seed: opt.seed, startYear, cities: opt.cities ?? DEFAULT_CITIES, ego: opt.ego });
+  const world = generateWorld({ seed: opt.seed, startYear, cities: opt.cities ?? DEFAULT_CITIES, ego: opt.ego, startAge: opt.startAge });
   const sim = new Sim(world, opt.seed, params, startYear, -burnIn * 52);
   // Burn-in: the same rules run for a few years so the starting network is not hand-made.
   while (sim.week < 0) sim.step();

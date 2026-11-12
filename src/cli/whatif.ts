@@ -17,7 +17,8 @@ const seed = num('seed') ?? 1;
 const years = num('years');
 const n = num('n') ?? 2;
 
-const base = runLife({ seed, years });
+const startAge = num('start-age');
+const base = runLife({ seed, years, startAge });
 const arcs = findArcs(base);
 const { agents, cities, venues } = base.world;
 const L = base.params.levels;
@@ -46,7 +47,7 @@ if (!picks.length) console.log('\nNobody in the cast was met during the story, s
 for (const pick of picks) {
   const odds = pick.odds !== null ? ` (${formatOdds(pick.odds)} that week)` : '';
   console.log(`\n── What if you had not met ${pick.name} in ${year(pick.met)}?${odds} ──`);
-  const alt = runLife({ seed, years, skipMeeting: { week: pick.met, other: pick.id } });
+  const alt = runLife({ seed, years, startAge, skipMeeting: { week: pick.met, other: pick.id } });
   const altArcs = findArcs(alt);
 
   // Did you meet anyway?

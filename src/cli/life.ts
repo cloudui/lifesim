@@ -19,6 +19,7 @@ const t0 = Date.now();
 const life = runLife({
   seed,
   years: num('years'),
+  startAge: num('start-age'),
   ego: { ext: num('ext'), novelty: num('novelty'), circleSeed: num('circle'), hobbies: arg('hobbies')?.split(',') },
 });
 const ms = Date.now() - t0;

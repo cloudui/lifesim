@@ -152,8 +152,9 @@ export function findArcs(life: LifeResult, opt: ArcOptions = {}): ArcsResult {
   /** After the two end up in different cities at `from`: the week they next share a city, or the end. */
   const apartUntil = (id: number, from: number): number => {
     const weeks = [...(moves.get(id) ?? []), ...(moves.get(ego) ?? [])].map((e) => e.week).filter((w) => w > from).sort((a, b) => a - b);
-    for (const w of weeks) if (cityAt(id, w) === cityAt(ego, w)) return w;
-    return endWeek;
+    const end = ties.get(id)!.gone >= 0 ? ties.get(id)!.gone : endWeek;
+    for (const w of weeks) if (w < end && cityAt(id, w) === cityAt(ego, w)) return w;
+    return end;
   };
 
   // --- Partners over the story.
@@ -264,7 +265,7 @@ export function findArcs(life: LifeResult, opt: ArcOptions = {}): ArcsResult {
     else if (closeQ > 0 && endS < L[2] && endWeek - closeTo >= 156) shape = 'cooled';
     else if (closeFrom >= endWeek * 0.6 && endS >= L[2]) shape = 'late';
     else if (closeFrom - knownFrom >= 260 && endS >= L[2]) shape = 'slow';
-    else if (closeQ > 0 && closeQ >= 0.6 * snapshots.length && endS >= L[1]) shape = 'constant';
+    else if (closeQ > 0 && closeQ >= 0.6 * snapshots.length && endS >= L[2]) shape = 'constant';
     return { shape, closeFrom, closeTo, score };
   };
   const roleOf = (id: number): ArcRole => {
@@ -330,7 +331,7 @@ export function findArcs(life: LifeResult, opt: ArcOptions = {}): ArcsResult {
     const apart = (from: number): string => {
       const until = apartUntil(id, from);
       const n = s ? s.weeks.filter((w) => w > from && w <= until).length : 0;
-      if (until >= endWeek) return n ? ` You saw each other ${times(n)} after that.` : ' You never saw each other again.';
+      if (until >= (t.gone >= 0 ? t.gone : endWeek)) return n ? ` You saw each other ${times(n)} after that.` : ' You never saw each other again.';
       const y = Math.round((until - from) / 52);
       const yrs = y < 1 ? 'months' : y === 1 ? 'year' : `${y} years`;
       return n ? ` In the ${yrs} you lived apart you saw each other ${times(n)}.` : ` In the ${yrs} you lived apart you did not see each other once.`;
@@ -476,7 +477,7 @@ export function findArcs(life: LifeResult, opt: ArcOptions = {}): ArcsResult {
         : ', less than once a year';
       const calls = s.calls >= 10 ? `${mostly || rhythm ? ',' : ''} and spoke on the phone ${s.calls} times` : '';
       middle.push(`Over ${known >= life.years ? `the ${life.years}` : known} years you saw each other ${times(s.n)}${rhythm}${mostly}${calls}.`);
-      if (c.role === 'family' && s.decade.length >= 2) {
+      if (c.role === 'family' && s.decade.length >= 2 && t.gone < 0) {
         const a = s.decade[0] ?? 0;
         const z = s.decade[s.decade.length - 1] ?? 0;
         if (a > z * 1.5 && a >= 10) middle.push(`${a} of those were in the first ten years and ${z} in the last ten.`);

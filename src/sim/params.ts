@@ -159,6 +159,13 @@ export const DEFAULT_PARAMS = {
   deathBase: 0.00005,
   deathGrowth: 0.09,
 
+  // --- Busy periods. For busyWeeks after a move, a new job or a new partner, a person makes, accepts and
+  // goes out on plans busyFactor times as often. Set busyFactor to 1 to turn it off.
+  busyWeeks: 52,
+  busyFactor: 0.7,
+  // Before this age people do not work, change jobs or move on their own. They still have family, friends and clubs.
+  adultAge: 18,
+
   // --- Hobbies and clubs (weekly rates).
   clubJoin: 0.1,
   hobbyDrift: 0.002,

@@ -11,7 +11,7 @@ Last updated 2026-11-12.
 - **Done:** the simulation core with endings (falling out, fading when out of sight, death), highlight detection, a retelling by people and a what-if rerun (both console experiments), a console highlight reel, a tuning harness, determinism tests, a JSON export, and a full-screen browser game with five tabs: Walk (pixel art), Map (pixel art), Circle, People and Journal.
 - **Branch:** everything is on `main`: the pixel views, the depth and contact tie model, messaging, breakups, the person card and the full-screen game layout.
 - **Not started:** running the sim in the browser, the intake form, a phone layout, sound.
-- **Next step:** the story is told through people, and friendships now end as well as begin. Being worked through in order: busy periods and a less settled start (engine); less text and making it clear who is who (page). `docs/experience.md` is the working draft of the experience, meant to be tried and changed. `docs/open-questions.md` lists the big questions waiting for the project owner. `npm run whatif` reruns a life with one meeting left out; it is console only. Speed is parked; the page reads lives simulated ahead of time. Phone layout is parked until the owner asks for it.
+- **Next step:** the story is told through people, friendships end as well as begin, and the story starts at 18. Being worked on: less text and making it clear who is who on the page. After that, from the lists in `docs/history.md` and the roadmap: travel and going home, influence from partner and friends, and what-if on the page. `docs/experience.md` is the working draft of the experience, meant to be tried and changed. `docs/open-questions.md` lists the big questions waiting for the project owner. `npm run whatif` reruns a life with one meeting left out; it is console only. Speed is parked; the page reads lives simulated ahead of time. Phone layout is parked until the owner asks for it.
 
 ## Run it
 
@@ -37,7 +37,7 @@ npm run build                         # static site in dist/
 
 GitHub Pages, via `.github/workflows/deploy.yml`: every push to `main` typechecks, builds and publishes `dist/`. The repo's Pages source must be set to "GitHub Actions". `vite.config.ts` sets `base: './'`, so the same build works under `username.github.io/<repo>/` and at the root of a custom domain. The site shows only the lives committed in `public/lives/`; run `npm run export` and commit to add more.
 
-`life` flags: `--seed`, `--years` (default 40), `--top` (how many highlights), and protagonist overrides `--ext`, `--novelty`, `--circle` (each 0 to 1) and `--hobbies` (ids from `src/sim/activities.ts`).
+`life` flags: `--seed`, `--years` (default 40), `--start-age` (default 18; also on `people`, `whatif` and `export`), `--top` (how many highlights), and protagonist overrides `--ext`, `--novelty`, `--circle` (each 0 to 1) and `--hobbies` (ids from `src/sim/activities.ts`).
 
 ## Principles
 
@@ -53,7 +53,7 @@ GitHub Pages, via `.github/workflows/deploy.yml`: every push to `main` typecheck
 | Language | TypeScript. The sim core has no DOM or Node dependencies. | Runs in Node for the console and unchanged in the browser later. |
 | Backend | None. | Nothing needs one yet. |
 | Hosting | GitHub Pages, static build deployed by GitHub Actions. | Free, and the page is static files plus precomputed lives. |
-| Starting point | Adulthood, not birth. | Simpler. Agents already carry birth year, hometown, family and a `stage` field so childhood can be added as new stages. |
+| Starting point | The protagonist is 18 or 19, living where they grew up. Not birth. | At 18 the only people already in a life are family and the friends you grew up with, so every adult friendship begins on screen. `startAge` of 22 or more gives the older, already-settled start used before 2026-11-12. Childhood itself is still not simulated. |
 | Starting network | Family ties and childhood friends are seeded, then the normal rules run for a 5-year burn-in before the story starts. | The starting circle comes from the same rules as everything after it. |
 | The protagonist | A camera, not a special agent. Every rule applies to all agents. | Makes reunions and "friends met without you" possible, and keeps multi-user open. |
 | World size | About 2,000 people across New York, San Francisco and Chicago, with real neighbourhood names. Every venue and person is invented. | In a few hundred people you eventually meet everyone and nothing is surprising. |
@@ -133,6 +133,8 @@ The data flow is one-way: `runLife(options)` returns a `LifeResult` holding the 
 - Out of sight: once two people who are not family have gone two years without being in the same room, depth fades up to four times faster (never faster than a brand-new tie, so this only removes the staying power of deep, long-held ties), and calls and messages hold a quarter as much. Seeing each other again resets it. `apartFade=1` turns it off.
 - When someone dies they leave every list and every other person's ties. The protagonist keeps the tie as a memory, with the week of death on it, and it no longer counts in any circle. Death follows a mortality curve (about 1% a year at 60, 7% at 80, 16% at 90). The protagonist is exempt. `deathRate=0` turns it off.
 - Nobody dies or falls out during the five warm-up years before the story.
+- Busy periods: for a year after a move, a new job or a new partner, a person makes, accepts and goes out on plans 70% as often. `busyFactor=1` turns it off.
+- Under 18 (which only happens in the warm-up years) people do not work, change jobs or move on their own. They still have family, friends and clubs.
 - Circles are thresholds on closeness: acquaintance, friend, close friend, inner circle (`levels` in `params.ts`).
 - Ties between other people are forgotten once negligible. The protagonist's ties are kept forever so reunions can be detected.
 
@@ -250,6 +252,12 @@ What this shows. Out-of-sight fading is the big one: far more friendships end, m
 
 Now clearly off and not tuned: circles are too small at every level (26 friends and 58 acquaintances for the protagonist; targets 50 and 150). See `docs/open-questions.md`.
 
+### Busy periods and starting at 18
+
+2026-11-12, the same 8 lives (seeds 1 to 8). Busy periods were first tried at half as many plans for 18 months. That pushed the protagonist's age at partnering from 27 to 38, because partners come from close friends and close friends come from plans. At 70% for a year the age is about 32, everyone still finds a partner, and the protagonist's circle is about a tenth smaller (2.0 / 8.8 / 25.5 / 59 against 2.6 / 10.3 / 28.7 / 67 with busy periods off).
+
+Starting at 18 in place of about 25: the protagonist meets more people over the story (about 330 against 220) and moves and changes job more, as a younger person would. Circle sizes are about the same. The story covers ages 18 to 58.
+
 ## Known limitations
 
 - **Speed:** a 40-year life takes roughly 35 to 55 seconds on a laptop. The cost is memory-bound: tie objects and per-person maps are scattered, so the hot loops miss the cache. The identified fix is to store ties in flat typed arrays; it has not been done. For the browser, run the sim in a web worker and stream events so the timeline can play as it simulates.
@@ -261,9 +269,9 @@ Now clearly off and not tuned: circles are too small at every level (26 friends 
 
 ## Roadmap
 
-### Next: busy periods (conflict is done)
+### Done on 2026-11-12: conflict and busy periods
 
-Conflict was built on 2026-11-12 as falling out and making up, together with fading when out of sight and death; see "Ties" above and the calibration table. The note below is kept for the measurement that led to it. Busy periods are still to do.
+Conflict was built as falling out and making up, together with fading when out of sight and death. Busy periods followed, and the story now starts at 18. See "Ties" above and the calibration tables. The note below is kept for the measurement that led to this work.
 
 Measured on 2026-11-12 across the five exported lives (about 1,050 friendships of two years or more, closeness on a 0 to 100 scale): nearly half move less than 15 points in total, only 14% move 30 or more, and the typical change from one quarter to the next is 1.5 points. People do change circle (about 31 become close friends per life and 36% of those later fall to acquaintance or below), but the fall is a slide over years and only 7 of 55 came back. Nothing in the model is sudden.
 

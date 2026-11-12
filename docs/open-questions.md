@@ -2,6 +2,12 @@
 
 Big questions that came up while building, newest first. Each one says what was done in the meantime, so nothing is blocked. Delete an entry once it is decided, and record the decision in `AGENTS.md` or `docs/experience.md`.
 
+## From starting at 18 (2026-11-12)
+
+1. **How long should a story be?** It still runs 40 years, which is now ages 18 to 58. That drops the years in which parents and older friends die and retirement begins. Running to 65 or 70 means 47 to 52 years, about a quarter more simulation time per life. *In the meantime:* 40 years.
+
+2. **What 18 to 22 looks like.** There is no college; an 18-year-old gets a job like everyone else. College as a path (dense new friendships, then everyone scatters) would make those years much richer. It is on the engine list under background and archetypes.
+
 ## From the endings work (2026-11-12)
 
 1. **Circles are now clearly too small.** Once friendships can actually end, the average person has about 26 friends and 58 acquaintances (targets 50 and 150; before endings it was 34 and 71). The fix is probably on the making side: people meet and keep too few casual friends. *In the meantime:* left alone, as the brief says not to tune until the structure settles. Is roughly-human circle size important enough to do a calibration pass soon?
@@ -20,4 +26,4 @@ Big questions that came up while building, newest first. Each one says what was 
 
 7. **One alternative life or many, for "what if".** One rerun is a vivid story but chaotic: a meeting delayed by a week can change who is close decades later, so it cannot honestly say "because of Axel". Many reruns give odds ("in 31 of 100 lives you still end up with Dmitri") but cost a lot of simulation.
 
-8. **Lives start settled.** Most of each cast is already close when the story begins. See the "less settled start" entry in `docs/history.md` for what was tried.
+8. **Lives start settled.** Addressed by starting at 18; kept here in case the older start is wanted back for some lives.

@@ -57,7 +57,7 @@ What we learned:
 
 - **It reads better.** Ten people with a beginning, a middle and an ending are easier to care about than 95 moments. The chains of who led to whom are the most interesting new thing.
 - **The simulation rarely gave an ending** (since addressed: friendships now end by falling out, fading when out of sight, and death)**.** In seed 7, of the 39 people who were ever close friends, almost all who became close stayed close for the full 40 years. There is very little falling away, falling out, or loss. The retelling can only tell the endings that exist. This is the strongest argument yet for the realism work below.
-- **Lives are too settled at the start.** Much of each cast is already close "from the first page", so their beginnings are never seen.
+- **Lives were too settled at the start** (since addressed: the story now starts at 18)**.** Much of each cast is already close "from the first page", so their beginnings are never seen.
 - **Family arcs are thin.** Parents live to 105 and nothing happens to them. The good material is in the counts ("153 of those visits were in the first ten years and 43 in the last ten").
 - **"What if" works and is dramatic.** Undo one 1-in-47,000 meeting in seed 7 and the protagonist ends up with a different partner in a different city, and never meets 157 of the people from the original life.
 - **"What if" is also chaotic.** Delaying a meeting by a single week can change who you are close to decades later. One rerun shows *a* different life; it does not prove the meeting *caused* the difference. Saying "because of Axel" honestly would need many reruns. **Open:** whether to show one alternative life as a story, or many as odds.
@@ -79,7 +79,7 @@ These are the realism gaps that most limit the story. Not ranked; each is judged
 
 Eventually the person sets a handful of knobs so the life resembles their own, or someone else's they would like to see. A first guess at the knobs: where you grew up, family roots elsewhere, path or archetype, how outgoing, how adventurous (travel included), a few hobbies.
 
-Start at 18 for now. Childhood can come later as a short prologue, for instance to appeal to younger people.
+The story starts at 18, built on 2026-11-12. Childhood can come later as a short prologue, for instance to appeal to younger people.
 
 **Open:** which knobs change a life enough to be worth asking.
 
