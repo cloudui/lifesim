@@ -90,6 +90,7 @@ index.html, src/web/   the page (vanilla TypeScript, SVG and canvas):
   person.ts            the person card: you and one other person as two lines over time
   types.ts             the Scene interface the animated tabs implement
 docs/product-ideas.md  what would make the site magnetic; saved for later
+docs/history.md        what was added, when and why, newest first; add an entry for each change in behaviour
 test/sim.test.ts       determinism and consistency tests
 ```
 
@@ -141,7 +142,7 @@ The timeline at the top is shared: a coloured band for where the protagonist liv
 - **Map** (pixel art): the three cities as islands. Everyone in the world is a faint dot; people the protagonist knows are coloured by closeness; dotted lines run to the inner circle wherever they live; dots fly between islands when someone moves. Hover for details.
 - **Circle**: the protagonist in the centre, everyone they know placed by closeness and clockwise in the order they met, with the circle-size chart, a "now" panel and the moments list.
 
-Clicking a person in the Map or Circle tab opens a card (`person.ts`) with the two of you drawn as two lines over time: close together when you are close, drifting apart when you are not. A dotted pair shows where you would be on depth alone, without regular contact. Dots along the top are the moments you shared; drag the chart to scrub. `?person=<id>` or `?person=closest` opens it from the address bar.
+Clicking a person in the Map or Circle tab opens a card (`person.ts`) with the two of you drawn as two lines over time: close together when you are close, drifting apart when you are not. A dotted pair shows where you would be on depth alone, without regular contact. The scale is shared by everyone and gives each circle the same height, so a change of circle is a visible step. Dots along the top are the moments you shared; drag the chart to scrub. `?person=<id>` or `?person=closest` opens it from the address bar.
 
 Notes for anyone changing it:
 
@@ -209,7 +210,7 @@ Measured on 2026-11-12 across the five exported lives (about 1,050 friendships o
 
 1. **Conflict.** Two people can fall out. The chance should depend on both personalities and on the relationship: how close they are, how long they have known each other, how much time they spend together. A fight opens a rift, a sharp drop in depth and a stop to plans together, that may be mended later or may not. Needs: a rule in the weekly loop, a `SimEvent` and highlight wording for the fight and for making up, a light tone, and an off switch so its effect can be measured the way messaging and breakups were.
 2. **Busy periods.** A new job, a new partner or a move cuts someone's time for friends for a year or two, so contact drops across the board and then recovers.
-3. After both: look at the person card again. If friendships still read as flat, rescale the chart so each circle takes equal height on one shared scale.
+3. After both: look at the person card again (its chart was rescaled by circle on 2026-11-12).
 
 ### After that
 

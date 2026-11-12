@@ -16,7 +16,7 @@ function el(name: string, attrs: Record<string, string | number> = {}, text?: st
 const W = 420;
 const H = 182;
 const LEFT = 10;
-const RIGHT = 58;
+const RIGHT = 62;
 const TOP = 34;
 const BOTTOM = 26;
 const MID = TOP + (H - TOP - BOTTOM) / 2;
@@ -40,8 +40,9 @@ export function createPersonCard(root: HTMLElement, ctx: Ctx, seek: (week: numbe
     <div class="pc-head"></div>
     <div class="pc-chart"></div>
     <div class="legend pc-legend">
-      <span><i class="pc-key solid"></i>how close you are</span>
-      <span><i class="pc-key dotted"></i>without regular contact</span>
+      <span><i class="pc-key"></i>you</span>
+      <span><i class="pc-key them"></i><span class="pc-name"></span></span>
+      <span><i class="pc-key dotted"></i>where you would be without regular contact</span>
     </div>`;
   const head = root.querySelector<HTMLElement>('.pc-head')!;
   const chart = root.querySelector<HTMLElement>('.pc-chart')!;
@@ -52,7 +53,17 @@ export function createPersonCard(root: HTMLElement, ctx: Ctx, seek: (week: numbe
   let x = (w: number) => w;
   let invert = (px: number) => px;
 
-  const half = (closeness: number) => TOUCH + GAP * (1 - Math.min(1, Math.max(0, closeness)));
+  // One shared scale for everyone, with each circle given the same height, so moving from
+  // one circle to the next is a visible step. A stranger is at 0 and the two lines touch at 1.
+  const scaled = (closeness: number): number => {
+    const stops = [0, ...ctx.view().data.levels, 1];
+    const c = Math.min(1, Math.max(0, closeness));
+    for (let i = 1; i < stops.length; i++) {
+      if (c <= stops[i]) return (i - 1 + (c - stops[i - 1]) / (stops[i] - stops[i - 1])) / (stops.length - 1);
+    }
+    return 1;
+  };
+  const half = (closeness: number) => TOUCH + GAP * (1 - scaled(closeness));
 
   function build(): void {
     const v = ctx.view();
@@ -79,6 +90,15 @@ export function createPersonCard(root: HTMLElement, ctx: Ctx, seek: (week: numbe
       svg.append(el('text', { x: x(w), y: H - 8, class: 'pc-tick', 'text-anchor': w === 0 ? 'start' : 'middle' }, `${ctx.yearOf(w)} · ${ctx.ageAt(w)}`));
     }
 
+    // Where each circle begins, as faint guides on both sides, named once on the left.
+    v.data.levels.forEach((level, i) => {
+      const g = half(level);
+      for (const sign of [-1, 1]) {
+        svg.append(el('line', { x1: LEFT, x2: W - RIGHT, y1: MID + sign * g, y2: MID + sign * g, class: 'pc-band' }));
+      }
+      svg.append(el('text', { x: W - RIGHT + 5, y: MID - g + 3, class: 'pc-band-label' }, LEVEL_NAMES[i + 1]));
+    });
+
     const path = (sign: number, key: 's' | 'd') =>
       series.map((p, i) => `${i ? 'L' : 'M'}${x(p.week).toFixed(1)},${(MID + sign * half(p[key])).toFixed(1)}`).join('');
     if (series.length > 1) {
@@ -86,11 +106,6 @@ export function createPersonCard(root: HTMLElement, ctx: Ctx, seek: (week: numbe
       svg.append(el('path', { d: path(1, 'd'), class: 'pc-line pc-depth pc-them' }));
       svg.append(el('path', { d: path(-1, 's'), class: 'pc-line pc-you' }));
       svg.append(el('path', { d: path(1, 's'), class: 'pc-line pc-them' }));
-      const last = series[series.length - 1];
-      const lx = x(last.week) + 6;
-      const gap = Math.max(half(last.s), 7);
-      svg.append(el('text', { x: lx, y: MID - gap + 4, class: 'pc-label' }, 'You'));
-      svg.append(el('text', { x: lx, y: MID + gap + 4, class: 'pc-label' }, person.name.split(' ')[0]));
     }
     if (person.met > 0) {
       svg.append(el('text', { x: x(from), y: TOP - 16, class: 'pc-tick', 'text-anchor': x(from) > W - RIGHT - 40 ? 'end' : 'start' }, `met ${ctx.yearOf(from)}`));
@@ -147,6 +162,7 @@ export function createPersonCard(root: HTMLElement, ctx: Ctx, seek: (week: numbe
   function update(): void {
     if (id < 0) return;
     head.innerHTML = ctx.personTip(id);
+    root.querySelector('.pc-name')!.textContent = ctx.view().people.get(id)?.name.split(' ')[0] ?? '';
     if (playhead) {
       const px = x(ctx.week());
       playhead.setAttribute('x1', String(px));
