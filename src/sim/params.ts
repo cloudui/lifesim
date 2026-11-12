@@ -130,6 +130,35 @@ export const DEFAULT_PARAMS = {
   // Weeks before someone newly single looks for a partner again.
   breakupCooldown: 52,
 
+  // --- Falling out. Each time two friends who matter to each other spend chosen time together there is a small
+  // chance they fall out: fightRate * (1.4 - compatibility) / (1 + years known / fightSettle). Set fightRate to 0
+  // to turn it off.
+  fightRate: 0.006,
+  // Only friendships at least this deep can break this way.
+  fightMinDepth: 0.2,
+  fightSettle: 8,
+  // Share of depth and contact lost on the day.
+  fightDrop: 0.6,
+  // While they are not speaking they do not spend time together. Each week their paths would have crossed,
+  // once mendAfter weeks have passed, they make up with chance mendRate * (0.5 + compatibility).
+  mendAfter: 26,
+  mendRate: 0.04,
+  // Making up brings depth back to this share of what it was before.
+  mendKeep: 0.7,
+
+  // --- Out of sight. Once two people who are not family have gone apartGrace weeks without being in the same
+  // room, depth fades up to apartFade times faster (never faster than a brand-new tie would, so this only removes
+  // the staying power of deep, long-held ties) and calls and messages hold apartFade times less of it.
+  // Set apartFade to 1 to turn it off.
+  apartGrace: 104,
+  apartFade: 4,
+
+  // --- Death. Chance per year = deathRate * deathBase * exp(deathGrowth * age): about 1% at 60, 7% at 80,
+  // 16% at 90. The protagonist is exempt. Set deathRate to 0 to turn it off.
+  deathRate: 1,
+  deathBase: 0.00005,
+  deathGrowth: 0.09,
+
   // --- Hobbies and clubs (weekly rates).
   clubJoin: 0.1,
   hobbyDrift: 0.002,

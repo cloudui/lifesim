@@ -89,7 +89,8 @@ export function createPersonCard(root: HTMLElement, ctx: Ctx, seek: (week: numbe
     x = (w) => LEFT + (w / total) * (W - LEFT - RIGHT);
     invert = (px) => ((px - LEFT) / (W - LEFT - RIGHT)) * total;
     series = v.data.snapshots
-      .filter((s) => s.week >= from)
+      // The lines stop where the person's life does.
+      .filter((s) => s.week >= from && (person.died === null || s.week <= person.died))
       .map((s) => {
         const n = s.nodes.find((row) => row[0] === id);
         return { week: s.week, s: n ? n[1] / 100 : 0, d: n ? n[2] / 100 : 0 };

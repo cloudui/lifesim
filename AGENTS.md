@@ -8,10 +8,10 @@ This file is the shared brief for any coding agent or person picking the project
 
 Last updated 2026-11-12.
 
-- **Done:** the simulation core, highlight detection, a retelling by people and a what-if rerun (both console experiments), a console highlight reel, a tuning harness, determinism tests, a JSON export, and a full-screen browser game with five tabs: Walk (pixel art), Map (pixel art), Circle, People and Journal.
+- **Done:** the simulation core with endings (falling out, fading when out of sight, death), highlight detection, a retelling by people and a what-if rerun (both console experiments), a console highlight reel, a tuning harness, determinism tests, a JSON export, and a full-screen browser game with five tabs: Walk (pixel art), Map (pixel art), Circle, People and Journal.
 - **Branch:** everything is on `main`: the pixel views, the depth and contact tie model, messaging, breakups, the person card and the full-screen game layout.
 - **Not started:** running the sim in the browser, the intake form, a phone layout, sound.
-- **Next step:** make the story about people, not events. `docs/experience.md` is the working draft of the core experience (meant to be tried and changed, not followed to the letter). A life is now retold as a cast of 7 to 14 people plus a catalog of everyone, in the People tab, on the person card and in the console (`npm run people`). `npm run whatif` reruns a life with one meeting left out; it is console only. What it showed: the retelling reads better, but the simulation rarely gives a friendship an ending, so the realism work (falling out, drifting, ageing and loss, travel, roots, influence) is what the story needs next. The timeline scrubber has a lane per cast member, so scrubbing shows who was in your life when. Open on the page: it is text heavy, and a first-time visitor has no easy way to tell who is who (ideas: lead with roles, let people rename the key people, one line of story at a time in the dialogue box). Wider ideas are in `docs/product-ideas.md`. Speed is parked; the page reads lives simulated ahead of time.
+- **Next step:** the story is told through people, and friendships now end as well as begin. Being worked through in order: busy periods and a less settled start (engine); less text and making it clear who is who (page). `docs/experience.md` is the working draft of the experience, meant to be tried and changed. `docs/open-questions.md` lists the big questions waiting for the project owner. `npm run whatif` reruns a life with one meeting left out; it is console only. Speed is parked; the page reads lives simulated ahead of time. Phone layout is parked until the owner asks for it.
 
 ## Run it
 
@@ -59,7 +59,7 @@ GitHub Pages, via `.github/workflows/deploy.yml`: every push to `main` typecheck
 | World size | About 2,000 people across New York, San Francisco and Chicago, with real neighbourhood names. Every venue and person is invented. | In a few hundred people you eventually meet everyone and nothing is surprising. |
 | Time step | One week. Each week an agent samples venue visits from their routine. | Nothing in the planned views needs finer resolution. |
 | Randomness | Keyed, not sequential: each draw is a hash of seed, purpose, week, agent and index. | A life replays exactly from its seed, and adding a rule does not shift the draws of existing rules. |
-| Life events in V0 | Moving city, changing job, getting together with a partner and breaking up, for everyone. | A job change is a move that only reassigns the workplace. Partners were added because the strongest adult tie was missing. Children, school stages and death are later. |
+| Life events in V0 | Moving city, changing job, getting together with a partner and breaking up, falling out and making up, and dying, for everyone except that the protagonist does not die. | A job change is a move that only reassigns the workplace. Partners were added because the strongest adult tie was missing. Falling out and death were added because friendships had no endings. Children and school stages are later. |
 | Compatibility | Every pair has a friendship index from 0 to 1: half personality similarity (four axes), the rest closeness in age and shared hobbies. | It sets how readily strangers talk, the first-impression bonus, and how close two people can ever get. It also gives the reel a reason for each friendship. |
 | Age | Openness to new people and how often people go out decline from 25. Long-held ties fade more slowly. | Older adults see friends less often but stay close to them. |
 | Ties | Two numbers per tie, depth and contact, instead of one strength. | Separates friends of convenience from lasting ones, lets older adults stay close while seeing people less, and gives calls a role. |
@@ -98,6 +98,7 @@ index.html, src/web/   the page (vanilla TypeScript, SVG and canvas):
   person.ts            the person card: you and one other person as two lines over time
   types.ts             the Scene interface the animated tabs implement
 docs/experience.md     the core experience we are aiming for; a working draft, open to change
+docs/open-questions.md big questions waiting for the project owner, with what was done in the meantime
 docs/product-ideas.md  what would make the site magnetic; saved for later
 docs/history.md        what was added, when and why, newest first; add an entry for each change in behaviour
 test/sim.test.ts       determinism and consistency tests
@@ -107,7 +108,7 @@ The data flow is one-way: `runLife(options)` returns a `LifeResult` holding the 
 
 ### What happens each week
 
-1. Life events: each agent may move city or change job. A partner moves with them.
+1. Life events: each agent may die, move city or change job. A partner moves with them.
 2. Some agents travel to see family in another city for the week.
 3. Everyone else follows their routine (a couple may also split here): work, the clubs they belong to, and looking for a club for a hobby they have no club for. Hobbies occasionally change, often copied from a friend. A single person aged 24 or over may get together with a close, compatible, single friend.
 4. Plans with friends: an agent invites a few friends who are in town, favouring close ones and brand-new ones. Partners often come along, which is how people get to know each other's friends. Everyone in the group spends time together, and people who did not know each other may be introduced.
@@ -128,12 +129,16 @@ The data flow is one-way: `runLife(options)` returns a `LifeResult` holding the 
 - A new tie gets a one-off "spark" of depth, larger for compatible pairs, so a few first meetings matter straight away.
 - A partner is treated as family from the day they get together: slow decay and time together every week. They are also added to each other's `family` list. In-laws are not modelled.
 - A couple may split. The yearly chance is highest for new and poorly matched couples and falls the longer they stay together. The two stop being family, keep a quarter of their depth and contact, and wait a year before looking for someone new. `breakupRate=0` turns breakups off.
+- Two friends may fall out. It can happen whenever two friends who matter to each other spend chosen time together, more readily for a poor fit and a young friendship. They lose most of their depth and contact and stop seeing each other: any time their paths would cross, they either make up or keep their distance. Making up restores 70% of the depth they had. Family and partners do not fall out. `fightRate=0` turns it off.
+- Out of sight: once two people who are not family have gone two years without being in the same room, depth fades up to four times faster (never faster than a brand-new tie, so this only removes the staying power of deep, long-held ties), and calls and messages hold a quarter as much. Seeing each other again resets it. `apartFade=1` turns it off.
+- When someone dies they leave every list and every other person's ties. The protagonist keeps the tie as a memory, with the week of death on it, and it no longer counts in any circle. Death follows a mortality curve (about 1% a year at 60, 7% at 80, 16% at 90). The protagonist is exempt. `deathRate=0` turns it off.
+- Nobody dies or falls out during the five warm-up years before the story.
 - Circles are thresholds on closeness: acquaintance, friend, close friend, inner circle (`levels` in `params.ts`).
 - Ties between other people are forgotten once negligible. The protagonist's ties are kept forever so reunions can be detected.
 
 ### Highlight types
 
-Getting together with a partner, breaking up, unlikely origin of a close friend, small world (a new friend already knows someone from another part of your life), near miss (crossed paths many times before speaking), reunion after years, two close friends meeting without you, friends you introduced, drifting apart, growing close again, a friend moving away or into your city, picking up a hobby. Moves, job changes, getting together and breaking up are always shown as the scaffold of the timeline. New people are introduced with their age and most pronounced trait, and close friendships say what the two clicked over.
+Getting together with a partner, breaking up, falling out, making up, the death of family, a partner or a friend, unlikely origin of a close friend, small world (a new friend already knows someone from another part of your life), near miss (crossed paths many times before speaking), reunion after years, two close friends meeting without you, friends you introduced, drifting apart, growing close again, a friend moving away or into your city, picking up a hobby. Moves, job changes, getting together, breaking up and deaths in the family are always shown as the scaffold of the timeline. New people are introduced with their age and most pronounced trait, and close friendships say what the two clicked over.
 
 ### People and what-if (experiments)
 
@@ -222,10 +227,33 @@ What this shows: messaging is a small, steady effect. Circles grow by 5 to 10%, 
 
 Known to be off and deliberately not tuned yet: the outer circles are too small (about 70 acquaintances, target 150), friendships flap in and out of the friend level (median length 1.4 years), too many friendships still survive a move, only about 15% of friends are friends of convenience, about 300 people met in 40 years is low, and half of new couples split.
 
+### Endings, switched on and off
+
+2026-11-12: 8 lives of 40 years, seeds 1 to 8. Each column is the same 8 lives. "All on" is the default.
+
+| Measure | All on | No falling out | No out-of-sight fading | No death | All three off |
+|---|---|---|---|---|---|
+| Circle sizes, whole world at the end | 2.9 / 11.2 / 26.6 / 44 | 3.0 / 11.7 / 27.2 / 45 | 3.1 / 14.9 / 40.1 / 67 | 3.3 / 11.6 / 25.5 / 44 | 3.5 / 15.5 / 40.5 / 69 |
+| Protagonist's circle over their life | 2.3 / 9.9 / 25.8 / 58 | 2.5 / 9.9 / 26.5 / 56 | 2.7 / 11.8 / 33.9 / 71 | 2.4 / 9.0 / 24.2 / 53 | 2.5 / 12.5 / 33.7 / 71 |
+| Fallings-out per protagonist, and made up | 3.6, 1.1 | 0 | 2.4, 0.6 | 2.1, 1.0 | 0 |
+| Fallings-out made up, whole world | 26% | none | 29% | 27% | none |
+| Deaths of family and friends per protagonist | 12.8 | 12.1 | 15.1 | 0 | 0 |
+| Share of the world that dies | 59% | 59% | 59% | 0 | 0 |
+| Friends still friends two years after a move | 58% | 60% | 74% | 65% | 76% |
+| "Drifted apart" highlights per life | 17.1 | 20.8 | 6.6 | 18.3 | 7.3 |
+| "Grew close again" highlights per life | 2.5 | 2.8 | 0.6 | 2.1 | 0.6 |
+| Reunions per life | 12.3 | 12.6 | 7.0 | 13.0 | 8.4 |
+| Deep friends (close on depth alone) | 6.6 | 6.7 | 8.7 | 6.4 | 9.4 |
+| Friends of convenience | 25% | 20% | 19% | 24% | 14% |
+
+What this shows. Out-of-sight fading is the big one: far more friendships end, more come back, and fewer survive a move (58%, down from 76%, which the earlier notes called too high). It is also what shrinks the circles. Falling out is a small number of sharp events, about a third of them mended. Death removes most of the older generation, as it would. With all three off the simulation is identical to what it was before, which a test checks.
+
+Now clearly off and not tuned: circles are too small at every level (26 friends and 58 acquaintances for the protagonist; targets 50 and 150). See `docs/open-questions.md`.
+
 ## Known limitations
 
 - **Speed:** a 40-year life takes roughly 35 to 55 seconds on a laptop. The cost is memory-bound: tie objects and per-person maps are scattered, so the hot loops miss the cache. The identified fix is to store ties in flat typed arrays; it has not been done. For the browser, run the sim in a web worker and stream events so the timeline can play as it simulates.
-- **No death or life stages:** age only lowers sociability, and people stop going to work at 67 (added after the calibration run above, so those numbers predate it). Parents never die, so a "life" is 40 years of adulthood.
+- **No life stages, and nobody new arrives:** age lowers sociability, people stop going to work at 67, and people die. Nobody is born or moves in from outside, so about 59% of the world dies over a 40-year story and the protagonist's world ages with them. The protagonist never dies, so a "life" is always 40 years of adulthood.
 - **Partners are simple:** no children, no in-laws, a breakup changes nothing about mutual friends or where anyone lives, and partners are always chosen from existing close friends in the same city.
 - **Small cities:** 500 to 800 people stand in for each real city, so friends of friends overlap heavily and near-miss and small-world criteria are deliberately strict.
 - **Probabilities are approximate** for chance meetings at open venues and for introductions.
@@ -233,7 +261,9 @@ Known to be off and deliberately not tuned yet: the outer circles are too small 
 
 ## Roadmap
 
-### Next: conflict and busy periods
+### Next: busy periods (conflict is done)
+
+Conflict was built on 2026-11-12 as falling out and making up, together with fading when out of sight and death; see "Ties" above and the calibration table. The note below is kept for the measurement that led to it. Busy periods are still to do.
 
 Measured on 2026-11-12 across the five exported lives (about 1,050 friendships of two years or more, closeness on a 0 to 100 scale): nearly half move less than 15 points in total, only 14% move 30 or more, and the typical change from one quarter to the next is 1.5 points. People do change circle (about 31 become close friends per life and 36% of those later fall to acquaintance or below), but the fall is a slide over years and only 7 of 55 came back. Nothing in the model is sudden.
 

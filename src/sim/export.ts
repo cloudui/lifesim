@@ -31,6 +31,8 @@ export interface PersonExport {
   compat: number;
   /** [week, city] each time their home city changes, starting at week 0. */
   cities: [number, number][];
+  /** Week they died, or null. */
+  died: number | null;
 }
 
 /** One person's part in the story: who they were to the protagonist, told as a few dated lines. */
@@ -102,6 +104,8 @@ export interface LifeExport {
   venues: VenueExport[];
   /** Everyone in the world: [id, [week, city][]]. Used by the map to show the whole population. */
   population: [number, [number, number][]][];
+  /** Everyone in the world who died during the story: [id, week]. */
+  deaths: [number, number][];
   snapshots: SnapshotExport[];
   stats: LifeStats;
 }
@@ -133,7 +137,7 @@ export function exportLife(life: LifeResult, top = 90): LifeExport {
       id, name: a.name, born: a.birthYear, trait: descriptor(a), hobbies: a.hobbies.map((h) => CLUBS[h].hobby),
       kin: t.kin, met: t.met, ctx: t.ctx, venue: t.venue >= 0 ? venues[t.venue].name : null,
       via: t.via >= 0 ? agents[t.via].name : null, p: t.p, peak: Math.round(t.peak * 100) / 100, depth: Math.round(t.dp * 100) / 100,
-      compat: Math.round(t.c * 100) / 100, cities: cityTimeline(id),
+      compat: Math.round(t.c * 100) / 100, cities: cityTimeline(id), died: a.died >= 0 ? a.died : null,
     });
   }
 
@@ -159,7 +163,7 @@ export function exportLife(life: LifeResult, top = 90): LifeExport {
   if (life.start.partner >= 0) partners.push({ id: life.start.partner, from: null, to: null });
   for (const e of events) {
     if (e.t === 'partner') partners.push({ id: e.other, from: e.week, to: null });
-    else if (e.t === 'breakup' && partners.length) partners[partners.length - 1].to = e.week;
+    else if ((e.t === 'breakup' || (e.t === 'death' && e.partner)) && partners.length) partners[partners.length - 1].to = e.week;
   }
   const told = findArcs(life);
   const arcs: LifeExport['arcs'] = {
@@ -183,6 +187,7 @@ export function exportLife(life: LifeResult, top = 90): LifeExport {
     arcs,
     venues: venueList,
     population: agents.map((a) => [a.id, cityTimeline(a.id)] as [number, [number, number][]]),
+    deaths: agents.filter((a) => a.died >= 0).map((a) => [a.id, a.died] as [number, number]),
     snapshots,
     stats: computeStats(life),
   };

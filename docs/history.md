@@ -4,6 +4,19 @@ What was added, when, and why, newest first. `AGENTS.md` describes the project a
 
 ## 2026-11-12
 
+### Endings: falling out, fading when out of sight, and death
+
+- **What:** three rules, each with an off switch.
+  - *Falling out.* Two friends who matter to each other can fall out when they spend time together, more readily if they are a poor fit or the friendship is young. They stop seeing each other; whenever their paths would cross they either make up or keep away. Making up restores most of what they had.
+  - *Out of sight.* After two years without being in the same room, a friendship that is not family loses the staying power that depth and long acquaintance gave it, and calls and texts hold much less of it. Seeing each other again resets it.
+  - *Death.* People die on a realistic mortality curve. They leave the world; the protagonist keeps the memory. The protagonist cannot die.
+- **Also:** the stories, highlights, lanes, person card and map all show these. A lane ends where a life does. The story lines now say what a count works out to ("427 times, about once a month"), after the owner pointed out that a bare number means little.
+- **Why:** the retelling by people showed that almost every close friendship lasted the full 40 years and parents lived to 105. There were no endings to tell.
+- **Experiment:** the same 8 lives with all three on, each one off, and all off; the table is in `AGENTS.md`. With all three off the simulation is unchanged, and a test checks that.
+- **Result:** about 3.6 fallings-out per life with a third made up; "drifted apart" moments up from 7 to 17 per life and "grew close again" from 0.6 to 2.5; friends kept two years after a move down from 76% to 58%; about 13 deaths among a protagonist's family and friends.
+- **Costs, not fixed:** circles shrank at every level and are now well under the human targets, and 59% of the world dies over a story because nobody new arrives. Both are in `docs/open-questions.md`.
+- **A bug worth remembering:** weeks are negative during the warm-up, so "week of death, or -1" misread anyone who died then as alive. The rules now start with the story.
+
 ### A lane per person on the timeline; mom, dad, brother, sister
 
 - **What:** the scrubber now has a lane for each person in the cast. A lane is tall and coral when you are in each other's inner circle, gold when close, thin and white for a friend, a blue hairline for an acquaintance, and a faint line when out of touch. White marks are the turns in that person's story; clicking one goes there and opens their card. A Cast button hides the lanes and brings back the old row of highlight dots. Family are now called mom, dad, older brother, younger sister and so on, read from the first name so that no existing life changes. Two cast members with the same first name get a last initial. The person card is no longer see-through.

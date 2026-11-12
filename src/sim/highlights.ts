@@ -2,12 +2,12 @@
 // Pure function of the LifeResult; views and the console reel both read this.
 
 import { CLUBS, type Ctx } from './activities';
-import { clickReasons, descriptor } from './people';
+import { clickReasons, descriptor, kinWord } from './people';
 import type { LifeResult, Tie } from './sim';
 
 export type HighlightType =
   | 'move' | 'job' | 'met' | 'smallWorld' | 'nearMiss' | 'reunion' | 'friendsMet' | 'introduced'
-  | 'fade' | 'rekindle' | 'friendMoved' | 'friendArrived' | 'hobby' | 'partner' | 'breakup';
+  | 'fade' | 'rekindle' | 'friendMoved' | 'friendArrived' | 'hobby' | 'partner' | 'breakup' | 'fight' | 'mend' | 'death';
 
 export interface Highlight {
   week: number;
@@ -88,6 +88,12 @@ export function findHighlights(life: LifeResult): Highlight[] {
 
   const faded = new Set<number>();
   const wasClose = new Set<number>();
+  // While two people are not speaking, the falling-out explains the slide; no separate "drifted apart".
+  const inRift = new Set<number>();
+  const span = (weeks: number) => {
+    const y = Math.round(weeks / 52);
+    return y < 1 ? `${Math.max(1, Math.round(weeks / 4.3))} months` : y === 1 ? 'a year' : `${y} years`;
+  };
 
   for (const e of events) {
     switch (e.t) {
@@ -228,9 +234,47 @@ export function findHighlights(life: LifeResult): Highlight[] {
         });
         break;
       }
+      case 'fight': {
+        const tie = ties.get(e.other);
+        if (!tie) break;
+        inRift.add(e.other);
+        wasClose.delete(e.other);
+        const known = Math.round((e.week - Math.max(0, tie.met)) / 52);
+        out.push({
+          week: e.week, type: 'fight', score: 4 + e.s * 7, scaffold: false, people: [e.other], venue: e.venue,
+          text: `You and ${name(e.other)} fell out${e.venue >= 0 ? ` after a night at ${vname(e.venue)}` : ''}. ` +
+            (tie.met < 0 ? 'You had known each other since before the story began.' : `You had known each other ${known < 1 ? 'less than a year' : known === 1 ? 'a year' : `${known} years`}.`),
+        });
+        break;
+      }
+      case 'mend': {
+        const tie = ties.get(e.other);
+        if (!tie) break;
+        inRift.delete(e.other);
+        faded.delete(e.other);
+        out.push({
+          week: e.week, type: 'mend', score: 4 + tie.peak * 5 + Math.min(3, e.gap / 156), scaffold: false, people: [e.other],
+          text: `You and ${name(e.other)} made up, ${span(e.gap)} after you fell out.`,
+        });
+        break;
+      }
+      case 'death': {
+        const tie = ties.get(e.who);
+        if (!tie || !(e.kin || e.partner || e.s >= L[1])) break;
+        const first = name(e.who).split(' ')[0];
+        const who = e.partner ? `Your partner ${first}`
+          : e.kin ? `Your ${kinWord(me, agents[e.who])}, ${first},`
+          : `Your ${levelOf(e.s) === 4 ? 'inner-circle friend' : LEVEL_NAMES[levelOf(e.s)]} ${name(e.who)}`;
+        out.push({
+          week: e.week, type: 'death', scaffold: e.kin || e.partner, people: [e.who],
+          score: e.kin || e.partner ? 11 : 4 + e.s * 8,
+          text: `${who} died, aged ${e.age}.`,
+        });
+        break;
+      }
       case 'level': {
         const tie = ties.get(e.other);
-        if (!tie || tie.kin || partners.has(e.other)) break;
+        if (!tie || tie.kin || partners.has(e.other) || inRift.has(e.other)) break;
         if (e.to >= 3) {
           if (faded.has(e.other)) {
             faded.delete(e.other);

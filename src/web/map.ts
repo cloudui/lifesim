@@ -74,6 +74,9 @@ export function createMap(root: HTMLElement, ctx: Ctx): Scene {
   }
   let clock = 0;
   let drawn: { id: number; x: number; y: number }[] = [];
+  // Week each person died, for the life currently loaded.
+  let deathsOf: unknown = null;
+  let deaths = new Map<number, number>();
   let labelEls: HTMLElement[] = [];
 
   // The sea and the islands never change, so paint them once.
@@ -121,8 +124,14 @@ export function createMap(root: HTMLElement, ctx: Ctx): Scene {
 
     // Everyone else, faintly.
     g.fillStyle = 'rgba(255,255,255,0.14)';
+    if (deathsOf !== d) {
+      deathsOf = d;
+      deaths = new Map(d.deaths);
+    }
     for (const [id, tl] of d.population) {
       if (id === d.ego.id || (strengths.get(id) ?? 0) >= L[0]) continue;
+      const died = deaths.get(id);
+      if (died !== undefined && died <= week) continue;
       const [x, y] = position(id, tl, week);
       g.fillRect(Math.round(x), Math.round(y), 1, 1);
     }

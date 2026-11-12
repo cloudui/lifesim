@@ -33,6 +33,15 @@ export interface LifeStats {
   partneredAt: number | null;
   /** How many times the protagonist and a partner split up. */
   breakups: number;
+  /** Fallings-out the protagonist had, and how many were made up. */
+  fights: number;
+  mends: number;
+  /** Deaths among the protagonist's family, partner and friends. */
+  losses: number;
+  /** Across the whole world during the story. */
+  worldFights: number;
+  worldMends: number;
+  worldDeaths: number;
   /** Across the whole world during the story: couples formed, and couples that split. */
   worldCouples: number;
   worldBreakups: number;
@@ -52,7 +61,8 @@ export interface LifeStats {
 
 export function computeStats(life: LifeResult): LifeStats {
   const L = life.params.levels;
-  const kin = new Set(life.world.agents[life.ego].family);
+  // Read from the ties, not the family list: the list drops people when they die.
+  const kin = new Set([...life.ties].filter(([, t]) => t.kin).map(([o]) => o));
   let metDuringLife = 0;
   let becameFriends = 0;
   let becameClose = 0;
@@ -89,6 +99,9 @@ export function computeStats(life: LifeResult): LifeStats {
   let familyVisits = 0;
   let partneredAt: number | null = null;
   let breakups = 0;
+  let fights = 0;
+  let mends = 0;
+  let losses = 0;
   const kept: number[] = [];
   const friendSince = new Map<number, number>();
   const durations: number[] = [];
@@ -96,6 +109,9 @@ export function computeStats(life: LifeResult): LifeStats {
     if (e.t === 'job') jobs++;
     else if (e.t === 'visit') familyVisits++;
     else if (e.t === 'breakup') breakups++;
+    else if (e.t === 'fight') fights++;
+    else if (e.t === 'mend') mends++;
+    else if (e.t === 'death' && (e.kin || e.partner || e.s >= L[1])) losses++;
     else if (e.t === 'partner' && partneredAt === null) partneredAt = life.startYear + Math.floor(e.week / 52) - life.world.agents[life.ego].birthYear;
     else if (e.t === 'move' && e.who === life.ego) {
       moves++;
@@ -122,6 +138,7 @@ export function computeStats(life: LifeResult): LifeStats {
   return {
     metDuringLife, becameFriends, becameClose, becameInner, moves, jobs, familyVisits, partneredAt, avgCircle,
     breakups, worldCouples: life.sim.couplesFormed, worldBreakups: life.sim.breakups,
+    fights, mends, losses, worldFights: life.sim.fights, worldMends: life.sim.mends, worldDeaths: life.sim.deaths,
     startCircle: circles[0], endCircle: circles[circles.length - 1],
     moveRetention: kept.length ? kept.reduce((a, b) => a + b, 0) / kept.length : null,
     medianFriendshipYears: durations.length ? durations[Math.floor(durations.length / 2)] : null,

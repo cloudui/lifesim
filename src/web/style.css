@@ -112,6 +112,9 @@ body[data-tab='journal'] .dialog, body[data-tab='people'] .dialog { display: non
 #lanes[aria-pressed='true'] { color: var(--accent); border-color: rgb(255 209 102 / 0.5); }
 .lane-base { stroke: var(--grid); stroke-width: 1; }
 .lane-hit { fill: transparent; }
+.lane-end { fill: none; stroke: var(--text-3); stroke-width: 1.5; }
+.dot.death.past { fill: #c9b8ff; }
+.dot.fight.past { fill: var(--tier-0); }
 .lane-name { fill: var(--text-2); font: 15px var(--font); cursor: pointer; }
 .lane-name:hover, .lane.open .lane-name { fill: var(--accent); }
 .lane-name.inside { paint-order: stroke; stroke: #0b0d16; stroke-width: 3px; font-size: 13px; }

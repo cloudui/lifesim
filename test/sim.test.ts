@@ -46,6 +46,7 @@ describe('life simulation', () => {
   it('keeps membership lists consistent with agents', () => {
     const { world } = runLife({ seed: 5, ...small });
     for (const a of world.agents) {
+      if (a.died >= 0) continue;
       expect(world.venues[a.work].members).toContain(a.id);
       expect(world.venues[a.work].city).toBe(a.city);
       for (const c of a.clubs) {
@@ -87,5 +88,50 @@ describe('life simulation', () => {
     const upTo = (l: typeof base) => JSON.stringify(l.events.filter((e) => e.week < met.week));
     expect(upTo(alt)).toEqual(upTo(base));
     expect(alt.events.some((e) => e.t === 'met' && e.other === met.other && e.week === met.week)).toBe(false);
+  });
+
+  it('falling out stops two people seeing each other until they make up', () => {
+    const life = runLife({ seed: 3, ...small, years: 6, params: { fightRate: 0.2, mendRate: 0.3, deathRate: 0 } });
+    const fights = life.events.filter((e) => e.t === 'fight');
+    const mends = life.events.filter((e) => e.t === 'mend');
+    expect(fights.length).toBeGreaterThan(0);
+    expect(mends.length).toBeGreaterThan(0);
+    for (const f of fights) {
+      if (f.t !== 'fight') continue;
+      const mend = mends.find((m) => m.t === 'mend' && m.other === f.other && m.week > f.week);
+      const until = mend ? mend.week : Infinity;
+      for (let i = 0; i < life.contacts.length; i += 4) {
+        const w = life.contacts[i];
+        if (life.contacts[i + 1] === f.other && w > f.week && w < until) throw new Error(`saw ${f.other} in week ${w} during a rift`);
+      }
+    }
+  });
+
+  it('the dead take no further part, and the protagonist outlives the story', () => {
+    const life = runLife({ seed: 3, ...small, years: 6, params: { deathRate: 40 } });
+    const { agents, venues } = life.world;
+    const deaths = life.events.filter((e) => e.t === 'death');
+    expect(deaths.length).toBeGreaterThan(5);
+    expect(agents[life.ego].died).toBe(-1);
+    for (const a of agents) {
+      if (a.died < 0) {
+        if (a.partner >= 0) expect(agents[a.partner].died).toBe(-1);
+        for (const f of a.family) expect(agents[f].died).toBe(-1);
+        continue;
+      }
+      for (const v of venues) expect(v.members.includes(a.id)).toBe(false);
+      for (let i = 0; i < life.contacts.length; i += 4) {
+        if (life.contacts[i + 1] === a.id && life.contacts[i] > a.died) throw new Error(`met ${a.id} after they died`);
+      }
+      for (const s of life.snapshots) if (s.week > a.died) expect(s.nodes.some((n) => n[0] === a.id)).toBe(false);
+    }
+  });
+
+  it('is unchanged by the ending rules when they are switched off', () => {
+    const off = { fightRate: 0, apartFade: 1, deathRate: 0 };
+    const life = runLife({ seed: 11, ...small, params: off });
+    expect(life.events.some((e) => e.t === 'fight' || e.t === 'mend' || e.t === 'death')).toBe(false);
+    const again = runLife({ seed: 11, ...small, params: off });
+    expect(JSON.stringify(again.events)).toEqual(JSON.stringify(life.events));
   });
 });

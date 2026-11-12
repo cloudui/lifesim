@@ -111,10 +111,17 @@ function personTip(id: number): string {
   const s = strengthsAt(week).get(id) ?? 0;
   const isPartner = id === partnerAt(week)?.id;
   const isEx = view.data.ego.partners.some((x) => x.id === id && x.to !== null && week >= x.to);
-  const role = isPartner ? 'your partner' : isEx ? 'a former partner' : p.kin && !wasPartner(id) ? 'family' : LEVEL_NAMES[levelOf(s)];
+  const gone = p.died !== null && week >= p.died;
+  const arc = view.arcs.get(id);
+  const role = isPartner ? 'your partner'
+    : isEx ? 'a former partner'
+    : wasPartner(id) ? 'your late partner'
+    : p.kin ? (arc?.role === 'family' ? arc.label : 'family')
+    : gone ? 'a friend' : LEVEL_NAMES[levelOf(s)];
+  const where = gone ? `died ${yearOf(p.died!)}` : `lives in ${view.data.cities[cityAt(p.cities, week)]}`;
   return (
-    `<b>${esc(p.name)}, ${yearOf(week) - p.born}</b>` +
-    `<span class="muted">${esc(role)} · lives in ${esc(view.data.cities[cityAt(p.cities, week)])}</span>` +
+    `<b>${esc(p.name)}, ${yearOf(gone ? p.died! : week) - p.born}</b>` +
+    `<span class="muted">${esc(role)} · ${esc(where)}</span>` +
     `${esc(p.trait[0].toUpperCase() + p.trait.slice(1))}. Into ${esc(p.hobbies.join(', '))}.<br>${esc(howMet(id))}.` +
     (p.kin ? '' : `<br>How well you fit: ${Math.round(p.compat * 100)} out of 100.`)
   );
@@ -234,7 +241,10 @@ function buildTimeline(): void {
     const role = wasPartner(id) ? ' ♥' : arc.role === 'family' ? ` · ${arc.label.replace(/^your (older |younger |twin )?/, '')}` : '';
     const g = el('g', { class: 'lane' });
     const from = Math.max(0, p.met);
-    g.append(el('line', { x1: tlScale(from), x2: tlScale(total), y1: y + LH / 2, y2: y + LH / 2, class: 'lane-base' }));
+    // The lane ends where the person's life does.
+    const until = p.died ?? total;
+    g.append(el('line', { x1: tlScale(from), x2: tlScale(until), y1: y + LH / 2, y2: y + LH / 2, class: 'lane-base' }));
+    if (p.died !== null) g.append(el('circle', { cx: tlScale(until) + 3, cy: y + LH / 2, r: 2.5, class: 'lane-end' }));
     const tierAt = (i: number): number => {
       const n = snaps[i].nodes.find((r) => r[0] === id);
       const s = n ? n[1] / 100 : 0;
@@ -266,7 +276,7 @@ function buildTimeline(): void {
       const r = svg.getBoundingClientRect();
       const w = invert(((e.clientX - r.left) / r.width) * W);
       const t = w < from ? 4 : tierAt(snapIndex(w));
-      const state = w < from ? 'not in your life yet' : t === 4 ? 'out of touch' : ['inner circle', 'close friend', 'friend', 'acquaintance'][t];
+      const state = w < from ? 'not in your life yet' : p.died !== null && w >= p.died ? `died ${yearOf(p.died)}` : t === 4 ? 'out of touch' : ['inner circle', 'close friend', 'friend', 'acquaintance'][t];
       showTip(`<b>${esc(p.name)}</b><span class="muted">${esc(arc.label)}</span>${yearOf(w)}: ${state}`, e.clientX, e.clientY);
     });
     hit.addEventListener('pointerleave', hideTip);

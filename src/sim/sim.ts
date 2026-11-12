@@ -38,6 +38,14 @@ export interface Tie {
   via: number;
   /** Compatibility of the pair when they met, 0 to 1. */
   c: number;
+  /** Week the two fell out, or -1 if they are on speaking terms. */
+  rift: number;
+  /** Depth just before they fell out; making up restores part of it. */
+  dr: number;
+  /** Week they were last in the same room. */
+  seen: number;
+  /** Week the other person died, or -1. Only the protagonist's ties outlive a person. */
+  gone: number;
 }
 
 export interface Mutual {
@@ -61,7 +69,11 @@ export type SimEvent =
   | { t: 'hobby'; week: number; from: number; to: number; via: number }
   | { t: 'club'; week: number; venue: number; via: number }
   | { t: 'partner'; week: number; other: number }
-  | { t: 'breakup'; week: number; other: number; weeks: number };
+  | { t: 'breakup'; week: number; other: number; weeks: number }
+  | { t: 'fight'; week: number; other: number; venue: number; s: number }
+  | { t: 'mend'; week: number; other: number; gap: number }
+  /** Every death in the world. `s` is how close the protagonist was to them, 0 for a stranger. */
+  | { t: 'death'; week: number; who: number; age: number; s: number; kin: boolean; partner: boolean };
 
 export interface Snapshot {
   week: number;
@@ -120,6 +132,7 @@ const R = {
   JOIN_PICK: 11, DRIFT: 12, DRIFT_PICK: 13, HOST: 14, SIZE: 15, INVITE: 16, ACCEPT: 17, INTRO: 18, SOLO: 19,
   HANG: 20, MIX: 21, MIX_ACC: 22, FAMILY: 23, CALL: 24, CALL_PICK: 25, SPARK: 26, ORDER: 27, REFER_PICK: 28,
   JOIN_FOLLOW: 29, DRIFT_FOLLOW: 30, AWAY_HANG: 31, PARTNER: 32, PLUS_ONE: 33, MSG: 34, MSG_PICK: 35, BREAKUP: 36,
+  FIGHT: 37, MEND: 38, DEATH: 39,
 } as const;
 
 const CTX_INDEX: Record<Ctx, number> = Object.fromEntries(CTX_LIST.map((c, i) => [c, i])) as Record<Ctx, number>;
@@ -148,6 +161,10 @@ export class Sim {
   /** Couples formed and couples that broke up, across the whole world, since logging started. */
   couplesFormed = 0;
   breakups = 0;
+  /** Fallings-out, makings-up and deaths across the whole world since logging started. */
+  fights = 0;
+  mends = 0;
+  deaths = 0;
 
   /** Week each agent's current relationship status began: when they got together, or when they became single. */
   private since: Int32Array;
@@ -191,6 +208,7 @@ export class Sim {
         // Family and childhood friends start as depth with no recent contact.
         a: t.a, b: t.b, d: t.s, k: 0, last: startWeek, met: Math.min(t.met, startWeek), venue: -1, ctx: t.ctx,
         p: 1, n: 0, peak: t.s, dp: t.s, kin: t.kin, via: -1, c: compat(world.agents[t.a], world.agents[t.b]),
+        rift: -1, dr: 0, seen: startWeek, gone: -1,
       };
       this.adj[t.a].set(t.b, tie);
       this.adj[t.b].set(t.a, tie);
@@ -219,7 +237,18 @@ export class Sim {
   /** Current depth of a tie, after decay since its last interaction. */
   depth(t: Tie): number {
     const gap = this.week - t.last;
-    return gap <= 0 || t.d === 0 ? t.d : t.d * Math.exp((-LN2 * gap) / this.depthHalfLife(t));
+    if (gap <= 0 || t.d === 0) return t.d;
+    const P = this.P;
+    const hl = this.depthHalfLife(t);
+    let fade = gap;
+    if (!t.kin && P.apartFade > 1) {
+      // Weeks since they were last in the same room, beyond the grace period, count several times over.
+      // This takes away the staying power of a deep, long-held tie; it never fades faster than a new one would.
+      const fastFrom = t.seen + P.apartGrace;
+      const speed = Math.min(P.apartFade, hl / P.hlMin);
+      if (this.week > fastFrom && speed > 1) fade += (this.week - (fastFrom > t.last ? fastFrom : t.last)) * (speed - 1);
+    }
+    return t.d * Math.exp((-LN2 * fade) / hl);
   }
 
   /** Current contact of a tie, after decay since its last interaction. */
@@ -360,11 +389,17 @@ export class Sim {
       const c = compat(A, B);
       const spark = P.sparkMax * this.r(R.SPARK, a, b) ** P.sparkPow * Math.min(1.5, c / 0.3);
       // A first impression counts as depth: a few first meetings matter straight away.
-      tie = { a, b, d: spark, k: 0, last: w, met: w, venue, ctx, p, n: 0, peak: 0, dp: spark, kin: false, via, c };
+      tie = { a, b, d: spark, k: 0, last: w, met: w, venue, ctx, p, n: 0, peak: 0, dp: spark, kin: false, via, c, rift: -1, dr: 0, seen: w, gone: -1 };
       this.adj[a].set(b, tie);
       this.adj[b].set(a, tie);
     } else {
-      if (this.logging && egoInvolved && !tie.kin && ctx !== 'call' && ctx !== 'message' && w - tie.last >= P.reunionGap) {
+      let mended = false;
+      if (tie.rift >= 0) {
+        // Not on speaking terms. When their paths would cross they either make up or keep their distance.
+        if (!this.tryMend(tie)) return;
+        mended = true;
+      }
+      if (!mended && this.logging && egoInvolved && !tie.kin && ctx !== 'call' && ctx !== 'message' && w - tie.last >= P.reunionGap) {
         this.events.push({
           t: 'reunion', week: w, other: a === this.ego ? b : a, venue, ctx, gap: w - tie.last, prevPeak: tie.peak,
           city: this.loc[this.ego],
@@ -376,6 +411,8 @@ export class Sim {
     // family time build depth; a call can restore depth that has faded but cannot add new depth.
     let gain: number;
     let cap: number;
+    // Out of sight for long enough, calls and messages hold less of what was there.
+    const hold = !tie.kin && P.apartFade > 1 && w - tie.seen > P.apartGrace ? 1 / P.apartFade : 1;
     switch (ctx) {
       case 'work': gain = P.workGain; cap = P.workCap; break;
       case 'club': { const c = CLUBS[this.world.venues[venue].hobby]; gain = c.gain; cap = c.cap; break; }
@@ -397,13 +434,14 @@ export class Sim {
       case 'message':
         gain = P.msgGain;
         cap = P.msgCap;
-        if (tie.d < tie.dp) tie.d += P.msgHold * (tie.dp - tie.d);
+        if (tie.d < tie.dp) tie.d += P.msgHold * hold * (tie.dp - tie.d);
         break;
       default:
         gain = P.callGain;
         cap = P.callCap;
-        if (tie.d < tie.dp) tie.d += P.callHold * (tie.dp - tie.d);
+        if (tie.d < tie.dp) tie.d += P.callHold * hold * (tie.dp - tie.d);
     }
+    if (ctx !== 'call' && ctx !== 'message') tie.seen = w;
     if (tie.k < cap) tie.k += gain * (cap - tie.k);
     tie.last = w;
     tie.n++;
@@ -420,6 +458,45 @@ export class Sim {
     if (this.logging && egoInvolved && ctx !== 'message') {
       this.contacts.push(w, a === this.ego ? b : a, venue, CTX_INDEX[ctx]);
     }
+    // The story starts with everyone on speaking terms, so this only runs once it has begun.
+    if (this.logging && ctx === 'outing' && !isNew && !tie.kin && P.fightRate > 0 && tie.d >= P.fightMinDepth) this.maybeFallOut(tie, venue, s);
+  }
+
+  /** Two friends fall out. Likelier for a poor fit and a young friendship; rare between old friends. */
+  private maybeFallOut(tie: Tie, venue: number, s: number): void {
+    const P = this.P;
+    const years = (this.week - tie.met) / 52;
+    const rate = (P.fightRate * (1.4 - tie.c)) / (1 + years / P.fightSettle);
+    if (this.r(R.FIGHT, tie.a, tie.b) >= rate) return;
+    tie.rift = this.week;
+    tie.dr = tie.d;
+    tie.d *= 1 - P.fightDrop;
+    tie.k *= 1 - P.fightDrop;
+    // What is left is all there is to hold on to until they make up.
+    tie.dp = tie.d;
+    this.fights++;
+    if (tie.a === this.ego || tie.b === this.ego) {
+      this.events.push({ t: 'fight', week: this.week, other: tie.a === this.ego ? tie.b : tie.a, venue, s });
+    }
+  }
+
+  /** Two people who fell out cross paths. Returns true if they make up. */
+  private tryMend(tie: Tie): boolean {
+    const P = this.P;
+    const gap = this.week - tie.rift;
+    if (gap < P.mendAfter || this.r(R.MEND, tie.a, tie.b) >= P.mendRate * (0.5 + tie.c)) return false;
+    this.settle(tie);
+    tie.rift = -1;
+    const back = P.mendKeep * tie.dr;
+    if (tie.d < back) tie.d = back;
+    if (tie.dp < tie.d) tie.dp = tie.d;
+    if (this.logging) {
+      this.mends++;
+      if (tie.a === this.ego || tie.b === this.ego) {
+        this.events.push({ t: 'mend', week: this.week, other: tie.a === this.ego ? tie.b : tie.a, gap });
+      }
+    }
+    return true;
   }
 
   private onMet(tie: Tie): void {
@@ -510,7 +587,7 @@ export class Sim {
     if (this.logging) {
       if (a.id === ego) {
         for (const [o, t] of this.adj[ego]) {
-          if (!t.kin && this.world.agents[o].city === from && this.cur(t) >= this.P.levels[1]) left++;
+          if (!t.kin && t.gone < 0 && this.world.agents[o].city === from && this.cur(t) >= this.P.levels[1]) left++;
         }
       } else {
         const t = this.adj[ego].get(a.id);
@@ -549,9 +626,61 @@ export class Sim {
     return a.city === 0 ? 1 : 0;
   }
 
+  /** Someone dies. They leave every list they were on; only the protagonist keeps the tie, as a memory. */
+  private die(a: Agent): void {
+    const agents = this.world.agents;
+    const ego = this.ego;
+    const id = a.id;
+    const mine = this.adj[ego].get(id);
+    const wasPartner = a.partner === ego;
+    if (this.logging) {
+      this.deaths++;
+      this.events.push({
+        t: 'death', week: this.week, who: id, age: this.yr - a.birthYear, s: mine ? this.cur(mine) : 0,
+        kin: !!mine?.kin, partner: wasPartner,
+      });
+    }
+    a.died = this.week;
+    if (a.partner >= 0) {
+      const b = agents[a.partner];
+      b.partner = -1;
+      this.since[b.id] = this.week;
+      a.partner = -1;
+    }
+    for (const f of a.family) {
+      const list = agents[f].family;
+      const i = list.indexOf(id);
+      if (i >= 0) list.splice(i, 1);
+    }
+    a.family = [];
+    this.removeMember(a.work, id);
+    for (const c of a.clubs) this.removeMember(c, id);
+    a.clubs = [];
+    this.adj[id].forEach((t, o) => {
+      const fo = this.fo[o];
+      const i = fo.indexOf(id);
+      if (i >= 0) {
+        fo.splice(i, 1);
+        this.fs[o].splice(i, 1);
+        this.fm[o].splice(i, 1);
+        this.fk[o].splice(i, 1);
+      }
+      if (o === ego) t.gone = this.week;
+      else this.adj[o].delete(id);
+    });
+    this.adj[id].clear();
+    this.fo[id].length = this.fs[id].length = this.fm[id].length = this.fk[id].length = 0;
+    this.loc[id] = -1;
+  }
+
   private lifeEvents(a: Agent): void {
     const P = this.P;
     const age = this.yr - a.birthYear;
+    // Nobody dies during the warm-up years before the story; the world starts whole.
+    if (this.logging && P.deathRate > 0 && a.id !== this.ego && this.r(R.DEATH, a.id) < (P.deathRate * P.deathBase * Math.exp(P.deathGrowth * age)) / 52) {
+      this.die(a);
+      return;
+    }
     const moveRate = age < 30 ? P.moveYoung : age < 45 ? P.moveMid : P.moveOld;
     const settled = this.week - this.lastMove[a.id] >= P.moveCooldown;
     if (settled && this.world.cities.length > 1 && this.r(R.MOVE, a.id) < moveRate / 52) {
@@ -575,7 +704,7 @@ export class Sim {
   }
 
   private maybeVisitFamily(a: Agent): void {
-    if (a.family.length === 0 || this.r(R.VISIT, a.id) >= this.P.visitRate) return;
+    if (a.died >= 0 || a.family.length === 0 || this.r(R.VISIT, a.id) >= this.P.visitRate) return;
     const agents = this.world.agents;
     const away: number[] = [];
     for (const f of a.family) if (agents[f].city !== a.city) away.push(f);
@@ -646,6 +775,7 @@ export class Sim {
   }
 
   private routine(a: Agent): void {
+    if (a.died >= 0) return;
     const P = this.P;
     const venues = this.world.venues;
     if (this.yr - a.birthYear < P.retireAge && this.r(R.WORK, a.id) < P.workAttend) this.addAtt(a.work, a.id);
@@ -734,6 +864,7 @@ export class Sim {
 
   /** Make plans: invite a few friends who are in town, favouring close and brand-new ones. */
   private hostOuting(h: Agent): void {
+    if (h.died >= 0) return;
     const P = this.P;
     const id = h.id;
     const here = this.loc[id];
@@ -824,6 +955,7 @@ export class Sim {
   }
 
   private soloOutings(a: Agent): void {
+    if (a.died >= 0) return;
     const P = this.P;
     const id = a.id;
     const here = this.loc[id];
@@ -892,6 +1024,7 @@ export class Sim {
   }
 
   private familyTime(a: Agent): void {
+    if (a.died >= 0) return;
     const id = a.id;
     for (const f of a.family) {
       if (f < id || this.loc[f] !== this.loc[id]) continue;
@@ -903,7 +1036,7 @@ export class Sim {
   private call(a: Agent): void {
     const P = this.P;
     const id = a.id;
-    if (this.r(R.CALL, id) >= P.callBase + P.callExt * a.ext) return;
+    if (a.died >= 0 || this.r(R.CALL, id) >= P.callBase + P.callExt * a.ext) return;
     const agents = this.world.agents;
     const cand = this.cand;
     const wts = this.wts;
@@ -940,7 +1073,7 @@ export class Sim {
   private message(a: Agent): void {
     const P = this.P;
     const id = a.id;
-    if (P.msgRate <= 0 || this.r(R.MSG, id) >= P.msgRate * (0.4 + 0.6 * a.ext)) return;
+    if (a.died >= 0 || P.msgRate <= 0 || this.r(R.MSG, id) >= P.msgRate * (0.4 + 0.6 * a.ext)) return;
     const cand = this.cand;
     const wts = this.wts;
     cand.length = 0;
@@ -982,6 +1115,7 @@ export class Sim {
     let n = 0;
     // forEach avoids allocating an entry array per tie, which matters here.
     this.adj[a].forEach((t, b) => {
+      if (t.gone >= 0) return;
       const s = this.cur(t);
       if (s < min) return;
       fo[n] = b;
@@ -1018,6 +1152,7 @@ export class Sim {
   private checkEgoLevels(emit: boolean): void {
     const L = this.P.levels;
     for (const [o, t] of this.adj[this.ego]) {
+      if (t.gone >= 0) continue;
       const s = this.cur(t);
       const prev = this.egoLevel.get(o) ?? 0;
       let lv = this.levelOf(s);
@@ -1034,6 +1169,7 @@ export class Sim {
     const nodes: [number, number, number][] = [];
     const set = new Set<number>();
     for (const [o, t] of this.adj[this.ego]) {
+      if (t.gone >= 0) continue;
       const s = this.cur(t);
       if (s >= L[0]) {
         nodes.push([o, s, this.depth(t)]);
@@ -1073,8 +1209,8 @@ export class Sim {
     this.egoVenues.length = 0;
     this.yr = this.year();
 
-    for (const a of agents) this.lifeEvents(a);
-    for (const a of agents) this.loc[a.id] = a.city;
+    for (const a of agents) if (a.died < 0) this.lifeEvents(a);
+    for (const a of agents) this.loc[a.id] = a.died >= 0 ? -1 : a.city;
     for (const a of agents) this.maybeVisitFamily(a);
     for (const a of agents) if (this.loc[a.id] === a.city) this.routine(a);
     // Rotate who gets to make plans first so low ids are not favoured.
@@ -1128,7 +1264,8 @@ export function runLife(opt: LifeOptions): LifeResult {
   for (let w = 0; w < years * 52; w++) sim.step();
   sim.finish();
   const ties = new Map<number, Tie & { now: number; depthNow: number }>();
-  for (const [o, t] of sim.adj[world.ego]) ties.set(o, { ...t, now: sim.cur(t), depthNow: sim.depth(t) });
+  // Someone who has died is no longer in any circle; `peak` still says what they were.
+  for (const [o, t] of sim.adj[world.ego]) ties.set(o, t.gone >= 0 ? { ...t, now: 0, depthNow: 0 } : { ...t, now: sim.cur(t), depthNow: sim.depth(t) });
   return {
     seed: opt.seed, startYear, years, params, world, ego: world.ego, start,
     events: sim.events, contacts: sim.contacts, snapshots: sim.snapshots, ties, sim,

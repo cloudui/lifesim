@@ -52,6 +52,8 @@ export interface Agent {
   /** Usual hangouts in the current city, with visit counts. */
   haunts: { v: number; n: number }[];
   grewUpHere: boolean;
+  /** Week they died, or -1. */
+  died: number;
 }
 
 export interface SeedTie {
@@ -258,6 +260,7 @@ export function generateWorld(opt: WorldOptions): World {
       clubs: [],
       haunts: [],
       grewUpHere,
+      died: -1,
     };
     agents.push(a);
     return a;

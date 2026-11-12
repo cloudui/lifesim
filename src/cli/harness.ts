@@ -16,7 +16,7 @@ function num(name: string, dflt: number): number {
 }
 
 const KEYS: (keyof CircleCounts)[] = ['inner', 'close', 'friend', 'acquaintance'];
-const TYPES = ['met', 'smallWorld', 'nearMiss', 'reunion', 'friendsMet', 'introduced', 'fade', 'rekindle', 'friendMoved', 'friendArrived', 'hobby', 'breakup'];
+const TYPES = ['met', 'smallWorld', 'nearMiss', 'reunion', 'friendsMet', 'introduced', 'fade', 'rekindle', 'friendMoved', 'friendArrived', 'hobby', 'breakup', 'fight', 'mend', 'death'];
 
 interface Row {
   seconds: number;
@@ -35,12 +35,13 @@ function oneLife(seed: number, years: number, params: Record<string, number | nu
   const pop: Record<string, number[]> = { inner: [], close: [], friend: [], acquaintance: [] };
   const { sim } = life;
   for (let a = 0; a < sim.adj.length; a++) {
+    if (life.world.agents[a].died >= 0) continue;
     const strengths: number[] = [];
     for (const t of sim.adj[a].values()) if (!t.kin) strengths.push(sim.cur(t));
     const c = countCircle(strengths, life.params.levels);
     for (const k of KEYS) pop[k].push(c[k]);
   }
-  const young = life.world.agents.filter((a) => a.grewUpHere);
+  const young = life.world.agents.filter((a) => a.grewUpHere && a.died < 0);
   const youngPartnered = young.filter((a) => a.partner >= 0).length / young.length;
   const highlights: Record<string, number> = {};
   for (const h of findHighlights(life)) highlights[h.type] = (highlights[h.type] ?? 0) + 1;
@@ -58,6 +59,11 @@ function oneLife(seed: number, years: number, params: Record<string, number | nu
       'ever partnered (share of lives)': st.partneredAt === null ? 0 : 1,
       'younger generation partnered (share)': youngPartnered,
       'breakups (protagonist)': st.breakups,
+      'fallings-out (protagonist)': st.fights,
+      'made up (protagonist)': st.mends,
+      'deaths of family and friends': st.losses,
+      'world: made up per falling-out (share)': st.worldFights ? st.worldMends / st.worldFights : null,
+      'world: died during the story (share)': st.worldDeaths / life.world.agents.length,
       'world: breakups per couple formed (share)': st.worldCouples ? st.worldBreakups / st.worldCouples : null,
       'friends kept 2y after a move': st.moveRetention,
       'median friendship length (y)': st.medianFriendshipYears,

@@ -10,7 +10,7 @@ import { clickReasons, descriptor, kinWord } from './people';
 import type { LifeResult, SimEvent } from './sim';
 
 export type ArcRole = 'family' | 'partner' | 'childhood' | 'work' | 'club' | 'chance' | 'introduced';
-export type ArcShape = 'constant' | 'season' | 'cooled' | 'slow' | 'cameBack' | 'late' | 'steady';
+export type ArcShape = 'constant' | 'season' | 'cooled' | 'slow' | 'cameBack' | 'late' | 'steady' | 'fellOut' | 'lost';
 
 export interface ArcBeat {
   /** Week the beat belongs to; beats are in order. */
@@ -161,8 +161,9 @@ export function findArcs(life: LifeResult, opt: ArcOptions = {}): ArcsResult {
   if (life.start.partner >= 0) partnerSpans.push({ id: life.start.partner, from: -1, to: -1 });
   for (const e of events) {
     if (e.t === 'partner') partnerSpans.push({ id: e.other, from: e.week, to: -1 });
-    if (e.t === 'breakup') {
-      const span = [...partnerSpans].reverse().find((p) => p.id === e.other && p.to < 0);
+    if (e.t === 'breakup' || (e.t === 'death' && e.partner)) {
+      const other = e.t === 'breakup' ? e.other : e.who;
+      const span = [...partnerSpans].reverse().find((p) => p.id === other && p.to < 0);
       if (span) span.to = e.week;
     }
   }
@@ -218,7 +219,7 @@ export function findArcs(life: LifeResult, opt: ArcOptions = {}): ArcsResult {
   const egoMoves: Extract<SimEvent, { t: 'move' }>[] = [];
   for (const e of events) {
     if (e.t === 'met') metEvent.set(e.other, e);
-    else if (e.t === 'reunion' || e.t === 'level' || e.t === 'partner' || e.t === 'breakup') push(e.other, e);
+    else if (e.t === 'reunion' || e.t === 'level' || e.t === 'partner' || e.t === 'breakup' || e.t === 'fight' || e.t === 'mend') push(e.other, e);
     else if (e.t === 'move') {
       if (e.who === ego) egoMoves.push(e);
       else if (ties.has(e.who)) push(e.who, e);
@@ -255,7 +256,10 @@ export function findArcs(life: LifeResult, opt: ArcOptions = {}): ArcsResult {
     const endS = arr ? arr[arr.length - 1] : 0;
     const knownFrom = Math.max(0, ties.get(id)!.met);
     let shape: ArcShape = 'steady';
-    if (cameBack) shape = 'cameBack';
+    const tie = ties.get(id)!;
+    if (tie.gone >= 0 && !tie.kin) shape = 'lost';
+    else if (tie.rift >= 0) shape = 'fellOut';
+    else if (cameBack) shape = 'cameBack';
     else if (closeQ > 0 && endS < L[1]) shape = 'season';
     else if (closeQ > 0 && endS < L[2] && endWeek - closeTo >= 156) shape = 'cooled';
     else if (closeFrom >= endWeek * 0.6 && endS >= L[2]) shape = 'late';
@@ -327,7 +331,8 @@ export function findArcs(life: LifeResult, opt: ArcOptions = {}): ArcsResult {
       const until = apartUntil(id, from);
       const n = s ? s.weeks.filter((w) => w > from && w <= until).length : 0;
       if (until >= endWeek) return n ? ` You saw each other ${times(n)} after that.` : ' You never saw each other again.';
-      const yrs = span(until - from);
+      const y = Math.round((until - from) / 52);
+      const yrs = y < 1 ? 'months' : y === 1 ? 'year' : `${y} years`;
       return n ? ` In the ${yrs} you lived apart you saw each other ${times(n)}.` : ` In the ${yrs} you lived apart you did not see each other once.`;
     };
     const beats: ArcBeat[] = [];
@@ -347,7 +352,10 @@ export function findArcs(life: LifeResult, opt: ArcOptions = {}): ArcsResult {
       beats.push({ week: 0, text: `${who} is ${label}, ${ageOf(id, 0)} when the story starts and living ${where}.` });
     } else if (!met) {
       const yrs = Math.max(1, Math.round(-t.met / 52));
-      if (t.ctx === 'childhood') {
+      if (life.start.partner === id) {
+        label = 'your partner';
+        beats.push({ week: 0, text: `You and ${who} (${ageOf(id, 0)}, ${descriptor(agents[id])}) are already together when the story starts.` });
+      } else if (t.ctx === 'childhood') {
         label = 'a friend from growing up';
         beats.push({ week: 0, text: `You and ${who} grew up together in ${cities[agents[id].hometown].name}. You have known each other as long as you can remember.${apartAtStart}` });
       } else {
@@ -390,8 +398,22 @@ export function findArcs(life: LifeResult, opt: ArcOptions = {}): ArcsResult {
     const turns: ArcBeat[] = [];
     let wasClose = false;
     let faded = false;
-    for (const e of byPerson.get(id) ?? []) {
-      if (e.t === 'move') {
+    let inRift = false;
+    const mine = byPerson.get(id) ?? [];
+    for (const e of mine) {
+      if (e.t === 'fight') {
+        // The falling-out covers the slide in closeness that follows it.
+        inRift = true;
+        const mend = mine.find((x) => x.t === 'mend' && x.week > e.week);
+        const after = mend && mend.t === 'mend' ? ` You did not speak for ${span(mend.gap)}.` : '';
+        turns.push({ week: e.week, text: `In ${year(e.week)} the two of you fell out.${after}` });
+      } else if (e.t === 'mend') {
+        inRift = false;
+        faded = false;
+        turns.push({ week: e.week, text: `In ${year(e.week)} you made up.` });
+      } else if (e.t === 'level' && inRift) {
+        continue;
+      } else if (e.t === 'move') {
         if (together(e.week)) continue;
         const egoCity = cityAt(ego, e.week);
         const known = (arr && nearest(arr, e.week)) || 0;
@@ -442,9 +464,18 @@ export function findArcs(life: LifeResult, opt: ArcOptions = {}): ArcsResult {
     if (s && s.n > 0 && c.role !== 'partner' && !brief) {
       const top = [...s.venues.entries()].sort((a, b) => b[1] - a[1])[0];
       const mostly = top && top[1] >= 5 && top[1] >= s.n * 0.25 ? `, more often at ${vname(top[0])} than anywhere else` : '';
-      const calls = s.calls >= 10 ? `${mostly ? ',' : ''} and spoke on the phone ${s.calls} times` : '';
-      const known = Math.round((endWeek - Math.max(0, t.met)) / 52);
-      middle.push(`Over ${known >= life.years ? `the ${life.years}` : known} years you saw each other ${times(s.n)}${mostly}${calls}.`);
+      const known = Math.round(((t.gone >= 0 ? t.gone : endWeek) - Math.max(0, t.met)) / 52);
+      // A bare count means little; say what it works out to.
+      const perYear = s.n / Math.max(1, known);
+      const rhythm = s.n < 8 ? ''
+        : perYear >= 40 ? ', nearly every week'
+        : perYear >= 20 ? ', about every other week'
+        : perYear >= 10 ? ', about once a month'
+        : perYear >= 1.5 ? `, about ${Math.round(perYear)} times a year`
+        : perYear >= 0.75 ? ', about once a year'
+        : ', less than once a year';
+      const calls = s.calls >= 10 ? `${mostly || rhythm ? ',' : ''} and spoke on the phone ${s.calls} times` : '';
+      middle.push(`Over ${known >= life.years ? `the ${life.years}` : known} years you saw each other ${times(s.n)}${rhythm}${mostly}${calls}.`);
       if (c.role === 'family' && s.decade.length >= 2) {
         const a = s.decade[0] ?? 0;
         const z = s.decade[s.decade.length - 1] ?? 0;
@@ -471,7 +502,17 @@ export function findArcs(life: LifeResult, opt: ArcOptions = {}): ArcsResult {
     const since = s && s.last >= 0 ? endWeek - s.last : endWeek;
     const elsewhere = agents[id].city !== me.city ? `, though ${who} lives in ${cities[agents[id].city].name}` : '';
     let ending: ArcBeat;
-    if (brief && s && s.last >= 0) {
+    if (t.gone >= 0) {
+      const lastYear = s ? s.weeks.filter((w) => w > t.gone - 52).length : 0;
+      const close = c.role === 'family' || c.role === 'partner' || t.peak >= L[2];
+      ending = {
+        week: t.gone,
+        text: `In ${year(t.gone)} ${who} died, aged ${ageOf(id, t.gone)}.` +
+          (close ? (lastYear ? ` You saw each other ${times(lastYear)} in that last year.` : ' You had not seen each other in over a year.') : ''),
+      };
+    } else if (t.rift >= 0) {
+      ending = { week: endWeek, text: 'You have not spoken since.' };
+    } else if (brief && s && s.last >= 0) {
       ending = { week: s.last, text: s.n === 1 ? (met ? 'You only ever spoke that once.' : `You saw each other once, in ${year(s.last)}.`) : `You saw each other twice, the last time in ${year(s.last)}.` };
     } else if (brief) {
       ending = { week: beats[0].week, text: 'Your paths did not cross during the story.' };
@@ -481,7 +522,7 @@ export function findArcs(life: LifeResult, opt: ArcOptions = {}): ArcsResult {
     } else if (since >= 260 && nowS < L[2] && s && s.last >= 0) {
       ending = { week: s.last, text: `The last time you saw each other was at ${vname(s.lastVenue)} in ${year(s.last)}. Neither of you knew it was the last time.` };
     } else if (nowS >= L[2]) {
-      const recent = s ? s.weeks.filter((w) => w > endWeek - 104).length / 2 : 0;
+      const recent = s ? s.weeks.filter((w) => w > endWeek - 52).length : 0;
       const often = recent >= 26 ? 'most weeks' : recent >= 6 ? 'most months' : recent >= 1 ? 'a few times a year' : 'rarely';
       ending = { week: endWeek, text: `At ${ageOf(ego, endWeek)} you still count ${who} as ${nowS >= L[3] ? 'inner circle' : c.role === 'family' ? 'close' : 'a close friend'}${elsewhere}. You see each other ${often}.` };
     } else if (since >= 260) {
@@ -530,7 +571,7 @@ export function findArcs(life: LifeResult, opt: ArcOptions = {}): ArcsResult {
     if (rootMet) {
       const where = rootMet.ctx === 'work' ? `a job at ${vname(rootMet.venue)}` : rootMet.ctx === 'club' ? vname(rootMet.venue) : rootMet.ctx === 'outing' ? `a night at ${vname(rootMet.venue)}` : `a chance meeting at ${vname(rootMet.venue)}`;
       origin = `${where} in ${year(rootMet.week)}${rootMet.p < 0.2 ? `, ${formatOdds(rootMet.p)} that week` : ''}`;
-    } else if (rootTie?.kin) origin = 'your family';
+    } else if (rootTie?.kin && !partnerIds.has(root)) origin = 'your family';
     else if (rootTie?.ctx === 'childhood') origin = `growing up in ${cities[agents[root].hometown].name}`;
     else origin = 'before the story began';
     const down = downstream.get(root)?.length ?? 0;
@@ -560,6 +601,8 @@ export const SHAPE_NAMES: Record<ArcShape, string> = {
   cooled: 'close once, friends now',
   slow: 'a slow burn',
   cameBack: 'lost and found',
+  fellOut: 'fell out',
+  lost: 'died',
   late: 'arrived late',
   steady: 'part of the picture',
 };
