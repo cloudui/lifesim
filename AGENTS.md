@@ -9,7 +9,7 @@ This file is the shared brief for any coding agent or person picking the project
 Last updated 2026-11-12.
 
 - **Done:** the simulation core, highlight detection, a console highlight reel, a tuning harness, determinism tests, a JSON export, and a full-screen browser game with four tabs: Walk (pixel art), Map (pixel art), Circle and Journal.
-- **Branch:** `main` has the pixel views, the depth and contact tie model, messaging, breakups and the person card. The full-screen game layout is on `redesign-fullscreen`, under review.
+- **Branch:** everything is on `main`: the pixel views, the depth and contact tie model, messaging, breakups, the person card and the full-screen game layout.
 - **Not started:** running the sim in the browser, the intake form, a phone layout, sound.
 - **Next step:** give friendships sudden movement. Today closeness only changes by small weekly nudges and slow fading, so most friendships look flat on the person card (see "Next: conflict and busy periods" in the roadmap). Product direction is still being decided around what makes the site worth exploring; ideas are in `docs/product-ideas.md`. Speed is parked; the page reads lives simulated ahead of time.
 
