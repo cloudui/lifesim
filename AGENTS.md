@@ -11,7 +11,7 @@ Last updated 2026-11-12.
 - **Done:** the simulation core, highlight detection, a retelling by people and a what-if rerun (both console experiments), a console highlight reel, a tuning harness, determinism tests, a JSON export, and a full-screen browser game with five tabs: Walk (pixel art), Map (pixel art), Circle, People and Journal.
 - **Branch:** everything is on `main`: the pixel views, the depth and contact tie model, messaging, breakups, the person card and the full-screen game layout.
 - **Not started:** running the sim in the browser, the intake form, a phone layout, sound.
-- **Next step:** make the story about people, not events. `docs/experience.md` is the working draft of the core experience (meant to be tried and changed, not followed to the letter). A life is now retold as a cast of 7 to 14 people plus a catalog of everyone, in the People tab, on the person card and in the console (`npm run people`). `npm run whatif` reruns a life with one meeting left out; it is console only. What it showed: the retelling reads better, but the simulation rarely gives a friendship an ending, so the realism work (falling out, drifting, ageing and loss, travel, roots, influence) is what the story needs next. Next on the page: rework the timeline scrubber into a lane per cast member, so scrubbing shows who was in your life when. Wider ideas are in `docs/product-ideas.md`. Speed is parked; the page reads lives simulated ahead of time.
+- **Next step:** make the story about people, not events. `docs/experience.md` is the working draft of the core experience (meant to be tried and changed, not followed to the letter). A life is now retold as a cast of 7 to 14 people plus a catalog of everyone, in the People tab, on the person card and in the console (`npm run people`). `npm run whatif` reruns a life with one meeting left out; it is console only. What it showed: the retelling reads better, but the simulation rarely gives a friendship an ending, so the realism work (falling out, drifting, ageing and loss, travel, roots, influence) is what the story needs next. The timeline scrubber has a lane per cast member, so scrubbing shows who was in your life when. Open on the page: it is text heavy, and a first-time visitor has no easy way to tell who is who (ideas: lead with roles, let people rename the key people, one line of story at a time in the dialogue box). Wider ideas are in `docs/product-ideas.md`. Speed is parked; the page reads lives simulated ahead of time.
 
 ## Run it
 
@@ -148,6 +148,7 @@ Getting together with a partner, breaking up, unlikely origin of a close friend,
 - **New tunable:** add it to `params.ts`; the harness can then override it with `--set`.
 - **New random draw:** add a new purpose to the `R` table in `sim.ts`. Append only, never renumber, or existing lives change.
 - **New life event:** add a rule to `lifeEvents` in `sim.ts`, a variant to `SimEvent`, and wording in `highlights.ts`.
+- **Family words:** `kinWord` in `people.ts` gives "mom", "dad", "older brother", "younger sister". It reads gender from the first name (a few names go either way and are settled by id), so no random draw is used and no life changes. A new first name in `world.ts` should be added to the list there if it reads as male.
 - **New view:** read `LifeExport` only. If a view needs more data, add it in `export.ts`.
 
 ### The page
@@ -156,7 +157,8 @@ The page is one full-window game screen, not a page of cards. The current view f
 
 - **Top left:** the protagonist's name, the year, their age, their city (in its colour), their partner, and how many people sit in each circle.
 - **Top centre:** the view tabs (keys 1 to 5). **Top right:** "Lives" reopens the title screen.
-- **Bottom:** a dialogue box with the current moment's text, and under it the timeline scrubber: a play button, the city band as the track, highlights as dots sized by score, life events as diamonds, and a speed button (1×, 2×, 4×, 8×). Drag to scrub, space plays, arrows step a quarter.
+- **Bottom:** a dialogue box with the current moment's text, and under it the timeline scrubber: a play button, the city band as the track, life events as diamonds, a lane for each person in the cast, a Cast button that hides the lanes, and a speed button (1×, 2×, 4×, 8×). Drag to scrub, space plays, arrows step a quarter.
+- **Lanes:** a lane shows when that person was in your life and how close: tall and coral for inner circle, gold for close, thin white for a friend, a blue hairline for an acquaintance, and a faint line when out of touch. White marks are the turns in their story; clicking one goes to that moment and opens their card. Clicking a name opens their card. With the lanes hidden the scrubber shows every highlight as a dot sized by score, as it used to. Lanes are on by default in windows at least 700 pixels tall, and the choice is remembered in the browser.
 - **Title screen** on load: the person, a Begin button and the other lives. Deep links (`?week=`, `?play`, `?person=`, `?advance=`) skip it.
 - **End card** when playback reaches the end: people met, close friends, the one who mattered most, the luckiest meeting, then watch again, read the journal, or another life.
 

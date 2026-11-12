@@ -89,6 +89,13 @@ An idea to try, not a decision. Full person-by-person simulation where the camer
 
 Worth keeping either way: everyone near the protagonist follows the same rules as the protagonist, so friends meeting without you still happens naturally.
 
+## Making it readable at a glance (raised 2026-11-12)
+
+Two problems seen once the people were on the page, both open:
+
+- **It is text heavy.** The People tab is a reading page. Directions to try: cast cards you look at before you read (portrait, a small closeness line, a few icons for the turns, text one tap away); the story told one line at a time in the dialogue box as the life plays; the timeline lanes as the main way around on a phone.
+- **Who is who.** A stranger's name carries nothing. Directions to try: lead with the role ("your mom", "your oldest friend", "the coworker who became your best friend"); the same portrait and colour for a person everywhere; a short "meet the cast" moment at the start; letting people rename the few who matter (mom, a sibling, a best friend) to names from their own life, kept in the browser. Random names are probably fine for people passing through and too disconnected for the anchors.
+
 ## Open questions
 
 - How the cast is shown on the page. A first version is the People tab: cast cards with their stories, then a catalog of everyone. Still open: bringing the cast into the Walk, and turning the timeline scrubber into a lane per cast member so scrubbing shows who was in your life when.

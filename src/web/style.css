@@ -102,12 +102,21 @@ kbd { font: inherit; font-size: 15px; opacity: 0.55; }
 body[data-tab='journal'] .dialog, body[data-tab='people'] .dialog { display: none; }
 
 .bar {
-  display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center;
+  display: grid; grid-template-columns: auto 1fr auto auto; gap: 12px; align-items: start;
   background: var(--panel); border: 1px solid var(--panel-edge); border-radius: 8px; padding: 6px 10px;
 }
 #play { width: 44px; height: 38px; padding: 0; font-size: 20px; background: var(--accent); color: #1b1608; border-color: transparent; }
 #play:hover { filter: brightness(1.1); }
-#speed { width: 52px; padding: 4px 0; }
+#speed { width: 52px; padding: 4px 0; margin-top: 4px; }
+#lanes { padding: 4px 8px; margin-top: 4px; }
+#lanes[aria-pressed='true'] { color: var(--accent); border-color: rgb(255 209 102 / 0.5); }
+.lane-base { stroke: var(--grid); stroke-width: 1; }
+.lane-hit { fill: transparent; }
+.lane-name { fill: var(--text-2); font: 15px var(--font); cursor: pointer; }
+.lane-name:hover, .lane.open .lane-name { fill: var(--accent); }
+.lane-name.inside { paint-order: stroke; stroke: #0b0d16; stroke-width: 3px; font-size: 13px; }
+.lane-beat { fill: var(--text); stroke: #0b0d16; stroke-width: 1; cursor: pointer; }
+.lane-beat:hover { fill: var(--accent); }
 #timeline { min-width: 0; }
 #timeline svg { display: block; width: 100%; cursor: ew-resize; touch-action: none; user-select: none; overflow: visible; }
 #timeline text, .chart text { fill: var(--text-3); font: 14px var(--font); }
@@ -263,6 +272,8 @@ button.big:hover { filter: brightness(1.1); background: var(--accent); }
 #person-card {
   position: fixed; right: 16px; top: 96px; z-index: 8; width: min(480px, calc(100vw - 32px));
   max-height: calc(100vh - 290px); overflow-y: auto; font-size: 18px;
+  /* Solid, because it can sit on top of a page of text. */
+  background: #10131f;
 }
 .pc-head { padding-right: 32px; line-height: 1.15; }
 .pc-head b { display: block; font-size: 28px; font-weight: 400; color: var(--accent); }

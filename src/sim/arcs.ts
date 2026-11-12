@@ -6,7 +6,7 @@
 
 import { CLUBS, CTX_LIST } from './activities';
 import { formatOdds } from './highlights';
-import { clickReasons, descriptor } from './people';
+import { clickReasons, descriptor, kinWord } from './people';
 import type { LifeResult, SimEvent } from './sim';
 
 export type ArcRole = 'family' | 'partner' | 'childhood' | 'work' | 'club' | 'chance' | 'introduced';
@@ -342,8 +342,7 @@ export function findArcs(life: LifeResult, opt: ArcOptions = {}): ArcsResult {
 
     // Beginning.
     if (c.role === 'family') {
-      const gap = me.birthYear - agents[id].birthYear;
-      label = gap >= 16 ? 'one of your parents' : gap > 0 ? 'your older sibling' : 'your younger sibling';
+      label = `your ${kinWord(me, agents[id])}`;
       const where = cityAt(id, 0) === cityAt(ego, 0) ? `in ${cities[cityAt(id, 0)].name}, like you` : `in ${cities[cityAt(id, 0)].name}`;
       beats.push({ week: 0, text: `${who} is ${label}, ${ageOf(id, 0)} when the story starts and living ${where}.` });
     } else if (!met) {

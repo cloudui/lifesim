@@ -4,6 +4,12 @@ What was added, when, and why, newest first. `AGENTS.md` describes the project a
 
 ## 2026-11-12
 
+### A lane per person on the timeline; mom, dad, brother, sister
+
+- **What:** the scrubber now has a lane for each person in the cast. A lane is tall and coral when you are in each other's inner circle, gold when close, thin and white for a friend, a blue hairline for an acquaintance, and a faint line when out of touch. White marks are the turns in that person's story; clicking one goes there and opens their card. A Cast button hides the lanes and brings back the old row of highlight dots. Family are now called mom, dad, older brother, younger sister and so on, read from the first name so that no existing life changes. Two cast members with the same first name get a last initial. The person card is no longer see-through.
+- **Why:** the old scrubber was a time bar with a dot per meeting, which fitted the old list-of-meetings story. The project owner wanted scrubbing to mean more, wanted a way in from the scrubber (especially on a phone), and suggested the family words.
+- **Raised and not solved:** the page is text heavy, and it is hard for a first-time visitor to tell who is who. Ideas are noted in `docs/experience.md`.
+
 ### People tab, a catalog of everyone, and the story on the person card
 
 - **What:** a fifth tab, People. It shows the cast (now 7 to 14 people, depending on how many mattered, instead of a fixed ten) as cards with each person's story in a few lines, then who led to whom, then a catalog of everyone the protagonist ever knew, most relevant first, with search and filters. Lines that have not happened yet are dim, so the page fills in as time moves. The person card shows the same story under its chart. The export gained `arcs`, and the five lives were exported again. The Journal lost its cast list, which the People tab replaces. The dialogue box is now hidden on the People and Journal tabs, not just blanked, so they use the full height.

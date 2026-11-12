@@ -133,20 +133,38 @@ function insets(): { top: number; bottom: number } {
 
 let tlScale = (w: number) => w;
 let tlPlayhead: SVGElement;
-let tlFill: SVGElement;
+let tlDims: SVGElement[] = [];
 let tlDots: { node: SVGElement; week: number }[] = [];
+let tlLanes = new Map<number, SVGElement>();
+/** Whether the timeline shows a lane for each person in the cast. Remembered between visits. */
+let lanesOn = window.innerHeight >= 700;
+try {
+  const saved = localStorage.getItem('lanes');
+  if (saved !== null) lanesOn = saved === '1';
+} catch {
+  // Storage can be blocked; the default is fine.
+}
 
 function buildTimeline(): void {
   const host = $('timeline');
   const W = Math.max(200, host.clientWidth);
-  const H = 50;
   const pad = 8;
   const bandY = 3;
   const laneTop = 14;
-  const laneBottom = 36;
   const total = view.totalWeeks;
-  tlScale = (w) => pad + (w / total) * (W - 2 * pad);
-  const invert = (x: number) => Math.min(total, Math.max(0, ((x - pad) / (W - 2 * pad)) * total));
+  const cast = lanesOn ? view.data.arcs.cast.filter((id) => view.people.has(id) && view.arcs.has(id)) : [];
+  // With lanes, the names sit in a gutter on the left; on a narrow screen they sit on the lane itself.
+  const narrow = W <= 560;
+  const padL = pad + (cast.length && !narrow ? 118 : 0);
+  // With lanes, the moments row keeps only life events; each person's moments are on their lane.
+  const laneBottom = cast.length ? 26 : 36;
+  const LH = 9;
+  const LG = narrow ? 14 : 5;
+  const castTop = laneBottom + (narrow ? 16 : 6);
+  const bottom = cast.length ? castTop + cast.length * (LH + LG) : laneBottom;
+  const H = bottom + 14;
+  tlScale = (w) => padL + (w / total) * (W - padL - pad);
+  const invert = (x: number) => Math.min(total, Math.max(0, ((x - padL) / (W - padL - pad)) * total));
   const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, height: H, role: 'slider', 'aria-label': 'Timeline: drag to move through the life' });
 
   // Where the protagonist lived, as the track itself.
@@ -156,25 +174,24 @@ function buildTimeline(): void {
     const x1 = tlScale(i + 1 < tl.length ? tl[i + 1][0] : total);
     svg.append(el('rect', { x: x0 + 0.5, y: bandY, width: Math.max(1, x1 - x0 - 1), height: 5, fill: `var(--city-${c})` }));
   });
-  tlFill = el('rect', { x: pad, y: bandY, height: 5, class: 'tl-dim' });
-  svg.append(tlFill);
 
   // A tick every five years.
   for (let y = 0; y <= view.data.years; y += 5) {
     const x = tlScale(y * 52);
-    svg.append(el('line', { x1: x, x2: x, y1: laneTop - 2, y2: laneBottom + 2, class: 'gridline' }));
+    svg.append(el('line', { x1: x, x2: x, y1: laneTop - 2, y2: bottom + 2, class: 'gridline' }));
     if (W > 520 || y % 10 === 0) {
       const anchor = y === 0 ? 'start' : y === view.data.years ? 'end' : 'middle';
       svg.append(el('text', { x, y: H - 2, 'text-anchor': anchor }, `${view.data.startYear + y}`));
     }
   }
 
-  // Moments, packed into lanes so they do not overlap. Life events are diamonds.
+  // Moments, packed into rows so they do not overlap. Life events are diamonds.
   const placed: { x: number; y: number; r: number }[] = [];
   const mid = (laneTop + laneBottom) / 2;
   tlDots = [];
   for (const h of view.data.highlights) {
-    const r = Math.min(6, 2 + h.score * 0.32);
+    if (cast.length && !h.scaffold) continue;
+    const r = Math.min(cast.length ? 4.5 : 6, 2 + h.score * 0.32);
     const x = tlScale(h.week);
     // Try spots outward from the middle; if the column is full, overlap at the middle.
     let y = mid;
@@ -199,8 +216,100 @@ function buildTimeline(): void {
     tlDots.push({ node, week: h.week });
   }
 
+  // One lane per person in the cast: when they were in your life, and how close. The band is
+  // tall and warm when you are close and thin and cool when you are not. Marks are the turns
+  // in their story.
+  tlLanes = new Map();
+  const L = view.data.levels;
+  const snaps = view.data.snapshots;
+  const THICK = [LH, 7, 4, 2];
+  // Two people in one cast can share a first name; those get a last initial.
+  const firstNames = cast.map((id) => view.people.get(id)!.name.split(' ')[0]);
+  cast.forEach((id, row) => {
+    const p = view.people.get(id)!;
+    const arc = view.arcs.get(id)!;
+    const y = castTop + row * (LH + LG);
+    const parts = p.name.split(' ');
+    const first = firstNames.filter((n) => n === parts[0]).length > 1 && parts[1] ? `${parts[0]} ${parts[1][0]}.` : parts[0];
+    const role = wasPartner(id) ? ' ♥' : arc.role === 'family' ? ` · ${arc.label.replace(/^your (older |younger |twin )?/, '')}` : '';
+    const g = el('g', { class: 'lane' });
+    const from = Math.max(0, p.met);
+    g.append(el('line', { x1: tlScale(from), x2: tlScale(total), y1: y + LH / 2, y2: y + LH / 2, class: 'lane-base' }));
+    const tierAt = (i: number): number => {
+      const n = snaps[i].nodes.find((r) => r[0] === id);
+      const s = n ? n[1] / 100 : 0;
+      return s >= L[3] ? 0 : s >= L[2] ? 1 : s >= L[1] ? 2 : s >= L[0] ? 3 : 4;
+    };
+    let runStart = 0;
+    let runTier = -1;
+    const flush = (end: number) => {
+      if (runTier < 0 || runTier > 3) return;
+      const h = THICK[runTier];
+      g.append(el('rect', {
+        x: tlScale(runStart), y: y + (LH - h) / 2, width: Math.max(1, tlScale(end) - tlScale(runStart)), height: h,
+        fill: `var(--tier-${runTier})`,
+      }));
+    };
+    for (let i = 0; i < snaps.length; i++) {
+      const t = tierAt(i);
+      if (t === runTier) continue;
+      flush(snaps[i].week);
+      runStart = snaps[i].week;
+      runTier = t;
+    }
+    flush(total);
+
+    // Hovering the lane says who this is and how close you are at that point.
+    const hit = el('rect', { x: padL, y: y - LG / 2, width: W - padL - pad, height: LH + LG, class: 'lane-hit' });
+    hit.addEventListener('pointermove', (ev) => {
+      const e = ev as PointerEvent;
+      const r = svg.getBoundingClientRect();
+      const w = invert(((e.clientX - r.left) / r.width) * W);
+      const t = w < from ? 4 : tierAt(snapIndex(w));
+      const state = w < from ? 'not in your life yet' : t === 4 ? 'out of touch' : ['inner circle', 'close friend', 'friend', 'acquaintance'][t];
+      showTip(`<b>${esc(p.name)}</b><span class="muted">${esc(arc.label)}</span>${yearOf(w)}: ${state}`, e.clientX, e.clientY);
+    });
+    hit.addEventListener('pointerleave', hideTip);
+    g.append(hit);
+
+    const seenWeeks = new Set<number>();
+    for (const b of arc.beats) {
+      if (b.week <= 0 || b.week >= total || seenWeeks.has(b.week)) continue;
+      seenWeeks.add(b.week);
+      const mark = el('rect', { x: tlScale(b.week) - 1.5, y: y - 1.5, width: 3, height: LH + 3, rx: 1, class: 'lane-beat' });
+      mark.addEventListener('pointermove', (ev) => {
+        const e = ev as PointerEvent;
+        e.stopPropagation();
+        showTip(`<b>${esc(first)} · ${yearOf(b.week)}</b>${esc(b.text)}`, e.clientX, e.clientY);
+      });
+      mark.addEventListener('pointerleave', hideTip);
+      mark.addEventListener('pointerdown', (ev) => {
+        ev.stopPropagation();
+        setWeek(b.week);
+        openPerson(id);
+      });
+      g.append(mark);
+    }
+
+    const name = narrow
+      ? el('text', { x: pad + 2, y: y - 1, class: 'lane-name inside' }, first + role)
+      : el('text', { x: padL - 8, y: y + LH - 0.5, 'text-anchor': 'end', class: 'lane-name' }, first + role);
+    name.addEventListener('pointerdown', (ev) => {
+      ev.stopPropagation();
+      openPerson(id);
+    });
+    g.append(name);
+    svg.append(g);
+    tlLanes.set(id, g);
+  });
+
+  // Everything to the right of the playhead is dimmed.
+  tlDims = [el('rect', { y: bandY, height: 5, class: 'tl-dim' })];
+  if (cast.length) tlDims.push(el('rect', { y: castTop - 2, height: bottom - castTop + 2, class: 'tl-dim lanes' }));
+  svg.append(...tlDims);
+
   tlPlayhead = el('g', { class: 'playhead' });
-  tlPlayhead.append(el('line', { x1: 0, x2: 0, y1: 0, y2: laneBottom + 2 }));
+  tlPlayhead.append(el('line', { x1: 0, x2: 0, y1: 0, y2: bottom + 2 }));
   tlPlayhead.append(el('rect', { x: -3, y: -1, width: 6, height: 11 }));
   svg.append(tlPlayhead);
 
@@ -220,17 +329,28 @@ function buildTimeline(): void {
   });
   svg.addEventListener('pointerup', () => (dragging = false));
   host.replaceChildren(svg);
+  $('lanes').setAttribute('aria-pressed', String(lanesOn));
+}
+
+/** Open someone's card and mark their lane. */
+function openPerson(id: number): void {
+  card.open(id);
+  updateTimeline();
 }
 
 function updateTimeline(): void {
   const x = tlScale(week);
   tlPlayhead.setAttribute('transform', `translate(${x},0)`);
-  tlFill.setAttribute('x', String(x));
-  tlFill.setAttribute('width', String(Math.max(0, tlScale(view.totalWeeks) - x)));
+  for (const d of tlDims) {
+    d.setAttribute('x', String(x));
+    d.setAttribute('width', String(Math.max(0, tlScale(view.totalWeeks) - x)));
+  }
   for (const d of tlDots) {
     d.node.classList.toggle('past', d.week <= week);
     d.node.classList.toggle('now', d.week <= week && week - d.week < 26);
   }
+  const open = card.current();
+  for (const [id, g] of tlLanes) g.classList.toggle('open', id === open);
 }
 
 // ---------------------------------------------------------- HUD and dialogue
@@ -340,7 +460,7 @@ const ctx: Ctx = {
   playing: () => playing,
   yearOf, ageAt, cityAt, levelOf, strengthsAt, snapIndex, partnerAt, wasPartner, personTip, showTip, insets,
   hideTip: () => hideTip(),
-  openPerson: (id) => card.open(id),
+  openPerson,
 };
 const card = createPersonCard($('person-card'), ctx, (w) => setWeek(w));
 const scenes: Record<Tab, Scene> = {
@@ -496,6 +616,15 @@ async function main(): Promise<void> {
     load(lives[(i + 1) % lives.length].seed, true);
   });
   for (const t of TABS) $(`tab-${t}`).addEventListener('click', () => setTab(t));
+  $('lanes').addEventListener('click', () => {
+    lanesOn = !lanesOn;
+    try {
+      localStorage.setItem('lanes', lanesOn ? '1' : '0');
+    } catch {
+      // Not remembered, but it still works for this visit.
+    }
+    layoutAll();
+  });
   const wantedTab = query.get('tab') as Tab | null;
   setTab(wantedTab && TABS.includes(wantedTab) ? wantedTab : 'walk');
 
@@ -528,7 +657,7 @@ async function main(): Promise<void> {
   if (query.has('week')) setWeek(Number(query.get('week')) || 0);
   if (query.has('person')) {
     const closest = [...view.data.people].filter((p) => !p.kin).sort((x, y) => y.peak - x.peak)[0];
-    card.open(query.get('person') === 'closest' && closest ? closest.id : Number(query.get('person')));
+    openPerson(query.get('person') === 'closest' && closest ? closest.id : Number(query.get('person')));
   }
   if (query.has('play')) setPlaying(true);
   // Testing aid: ?play&advance=2.5 runs the animation forward that many seconds before showing it.
