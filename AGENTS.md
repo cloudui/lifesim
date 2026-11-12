@@ -11,7 +11,7 @@ Last updated 2026-11-12.
 - **Done:** the simulation core, highlight detection, a console highlight reel, a tuning harness, determinism tests, a JSON export, and a full-screen browser game with four tabs: Walk (pixel art), Map (pixel art), Circle and Journal.
 - **Branch:** everything is on `main`: the pixel views, the depth and contact tie model, messaging, breakups, the person card and the full-screen game layout.
 - **Not started:** running the sim in the browser, the intake form, a phone layout, sound.
-- **Next step:** give friendships sudden movement. Today closeness only changes by small weekly nudges and slow fading, so most friendships look flat on the person card (see "Next: conflict and busy periods" in the roadmap). Product direction is still being decided around what makes the site worth exploring; ideas are in `docs/product-ideas.md`. Speed is parked; the page reads lives simulated ahead of time.
+- **Next step:** settle what the core experience should feel like before more practical work. A working draft is in `docs/experience.md` (a life in chapters, travel and holidays home, roots, archetypes, influence from partner and friends, traits that drift); it is meant to be tried and changed, not followed to the letter. Conflict and busy periods (see the roadmap) give friendships sudden movement and are still wanted, but now come after the experience is settled. Wider ideas are in `docs/product-ideas.md`. Speed is parked; the page reads lives simulated ahead of time.
 
 ## Run it
 
@@ -91,6 +91,7 @@ index.html, src/web/   the page (vanilla TypeScript, SVG and canvas):
   pixel.ts             procedural sprites and glyphs; there are no image assets
   person.ts            the person card: you and one other person as two lines over time
   types.ts             the Scene interface the animated tabs implement
+docs/experience.md     the core experience we are aiming for; a working draft, open to change
 docs/product-ideas.md  what would make the site magnetic; saved for later
 docs/history.md        what was added, when and why, newest first; add an entry for each change in behaviour
 test/sim.test.ts       determinism and consistency tests
@@ -228,7 +229,7 @@ Measured on 2026-11-12 across the five exported lives (about 1,050 friendships o
 
 1. Review console lives and adjust tone, highlight wording and thresholds.
 2. Review the Walk and Map views in a real browser: pacing, charm, what is missing.
-3. Decide the product shape from `docs/product-ideas.md` (the leading idea: short setup, a one-minute pixel life, an end card to share).
+3. Decide the product shape from `docs/experience.md` and `docs/product-ideas.md` (the leading idea: short setup, a one-minute pixel life, an end card to share).
 4. Decide how the interactive experience pays for simulation time (precomputed lives, a web worker that streams, a faster core, or a mix), then do the performance work.
 5. Timeline refinements: compress quiet periods.
 6. Short literature pass to tune decay rates, contact frequencies and circle sizes.
