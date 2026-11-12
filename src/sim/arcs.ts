@@ -38,6 +38,10 @@ export interface Arc {
   odds: number | null;
   /** Week you met, or -1 if you knew them before the story. */
   met: number;
+  /** A two- or three-word role for tight spaces, e.g. "mom", "work friend", "via Linh". */
+  tag: string;
+  /** Every week you saw each other in person during the story, in order. */
+  seenWeeks: number[];
   /** Week you last saw each other in person during the story, or -1. */
   last: number;
   /** Whether they are one of the people the story is about. */
@@ -534,6 +538,18 @@ export function findArcs(life: LifeResult, opt: ArcOptions = {}): ArcsResult {
       ending = { week: endWeek, text: `At ${ageOf(ego, endWeek)} ${who} is ${nowS >= L[1] ? 'still a friend' : 'someone you still see now and then'}${elsewhere}.` };
     }
 
+    const tagOf = (): string => {
+      if (partnerIds.has(id)) return events.some((e) => e.t === 'breakup' && e.other === id) && me.partner !== id ? 'ex' : 'partner';
+      if (c.role === 'family') return kinWord(me, agents[id]).replace(/^(older|younger|twin) /, '');
+      switch (t.ctx) {
+        case 'childhood': return 'childhood friend';
+        case 'work': return 'work friend';
+        case 'club': return t.venue >= 0 && venues[t.venue].hobby >= 0 ? CLUBS[venues[t.venue].hobby].venueSuffix.toLowerCase() : 'club friend';
+        case 'hangout': return 'chance meeting';
+        case 'outing': return t.via >= 0 && t.met >= 0 ? `via ${first(t.via)}` : 'friend of a friend';
+        default: return 'old friend';
+      }
+    };
     const midWeek = c.closeFrom >= 0 ? c.closeFrom : beats[0].week;
     beats.push(...middle.map((text) => ({ week: midWeek, text })));
     // Keep turns that come before the ending; a move after the last meeting is noise.
@@ -543,7 +559,7 @@ export function findArcs(life: LifeResult, opt: ArcOptions = {}): ArcsResult {
       id, name: agents[id].name, role: c.role, shape: c.shape, label, score: c.score,
       from: Math.max(0, t.met), closeFrom: c.closeFrom, closeTo: c.closeTo, seen: s?.n ?? 0,
       odds: met && met.p < 0.5 ? met.p : null, met: t.met >= 0 && met ? t.met : -1, ledTo: led, beats,
-      last: s?.last ?? -1, cast: castIds.has(id),
+      last: s?.last ?? -1, cast: castIds.has(id), tag: tagOf(), seenWeeks: s?.weeks ?? [],
       relevance: c.score * (c.role === 'family' || c.role === 'partner' ? 1.5 : 1) + t.peak + Math.min(1, (s?.n ?? 0) / 1000),
     };
 

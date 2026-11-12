@@ -2,6 +2,12 @@
 
 Big questions that came up while building, newest first. Each one says what was done in the meantime, so nothing is blocked. Delete an entry once it is decided, and record the decision in `AGENTS.md` or `docs/experience.md`.
 
+## From the page work (2026-11-12)
+
+1. **Renaming people.** Letting a visitor rename mom, a sibling or a best friend would do a lot for "who is who", but names are written into every story line when a life is exported. Doing it properly means storing lines with name slots. Worth it now, or wait for the setup screen?
+
+2. **Opening credits give the story away.** The title screen now shows the cast before the life plays, including people not met until year 20. It helps you know who to watch for; it also spoils who matters. Keep, or show only the people there at the start?
+
 ## From starting at 18 (2026-11-12)
 
 1. **How long should a story be?** It still runs 40 years, which is now ages 18 to 58. That drops the years in which parents and older friends die and retirement begins. Running to 65 or 70 means 47 to 52 years, about a quarter more simulation time per life. *In the meantime:* 40 years.

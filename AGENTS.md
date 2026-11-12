@@ -11,7 +11,7 @@ Last updated 2026-11-12.
 - **Done:** the simulation core with endings (falling out, fading when out of sight, death), highlight detection, a retelling by people and a what-if rerun (both console experiments), a console highlight reel, a tuning harness, determinism tests, a JSON export, and a full-screen browser game with five tabs: Walk (pixel art), Map (pixel art), Circle, People and Journal.
 - **Branch:** everything is on `main`: the pixel views, the depth and contact tie model, messaging, breakups, the person card and the full-screen game layout.
 - **Not started:** running the sim in the browser, the intake form, a phone layout, sound.
-- **Next step:** the story is told through people, friendships end as well as begin, and the story starts at 18. Being worked on: less text and making it clear who is who on the page. After that, from the lists in `docs/history.md` and the roadmap: travel and going home, influence from partner and friends, and what-if on the page. `docs/experience.md` is the working draft of the experience, meant to be tried and changed. `docs/open-questions.md` lists the big questions waiting for the project owner. `npm run whatif` reruns a life with one meeting left out; it is console only. Speed is parked; the page reads lives simulated ahead of time. Phone layout is parked until the owner asks for it.
+- **Next step:** the story is told through people, friendships end as well as begin, and the story starts at 18. A first pass at less text and at who is who is on the page. Next, from the lists in `docs/history.md` and the roadmap: travel and going home, influence from partner and friends, and what-if on the page. `docs/experience.md` is the working draft of the experience, meant to be tried and changed. `docs/open-questions.md` lists the big questions waiting for the project owner. `npm run whatif` reruns a life with one meeting left out; it is console only. Speed is parked; the page reads lives simulated ahead of time. Phone layout is parked until the owner asks for it.
 
 ## Run it
 
@@ -93,6 +93,7 @@ index.html, src/web/   the page (vanilla TypeScript, SVG and canvas):
   map.ts               Map tab: where everyone is
   circle.ts            Circle tab: everyone you know by closeness
   people.ts            People tab: the cast and their stories, how they reached you, and a catalog of everyone
+  closeness.ts         one person's closeness across the life as runs of the same circle, for strips and lanes
   journal.ts           Journal tab: summary, circle chart and moments
   pixel.ts             procedural sprites and glyphs; there are no image assets
   person.ts            the person card: you and one other person as two lines over time
@@ -144,6 +145,8 @@ Getting together with a partner, breaking up, falling out, making up, the death 
 
 ### People and what-if (experiments)
 
+- The moments exported for the page are the ones about the cast, plus life events and a few of the best others, about 50 in all (it used to be the top 90 of everything).
+- Every person has a short role (`tag`: "mom", "work friend", "pub quiz", "via Tomas") used on the lanes, the dialogue box and the title screen.
 - `findArcs(life)` in `arcs.ts` is a pure function of the `LifeResult`, like highlights. It tells a few lines for everyone the protagonist knew and exports them as `LifeExport.arcs`. It picks a cast of 7 to 14 (partners, the family you spent most time with, then friends ranked by closeness added up over the years, with a penalty for repeating a kind of friendship so the cast is varied) and writes each person's beats from the event log, contact rows and snapshots.
 - "Reached you through" means the person introduced you, or brought you into the club or job where you met.
 - `LifeOptions.skipMeeting` makes the protagonist and one person not meet in one given week. Nothing else changes, so the life is identical up to that week. The two may still meet later.
@@ -164,9 +167,9 @@ The page is one full-window game screen, not a page of cards. The current view f
 
 - **Top left:** the protagonist's name, the year, their age, their city (in its colour), their partner, and how many people sit in each circle.
 - **Top centre:** the view tabs (keys 1 to 5). **Top right:** "Lives" reopens the title screen.
-- **Bottom:** a dialogue box with the current moment's text, and under it the timeline scrubber: a play button, the city band as the track, life events as diamonds, a lane for each person in the cast, a Cast button that hides the lanes, and a speed button (1×, 2×, 4×, 8×). Drag to scrub, space plays, arrows step a quarter.
+- **Bottom:** a dialogue box with the current moment's text (and, when it is about someone in the cast, their portrait, first name and role), and under it the timeline scrubber: a play button, the city band as the track, life events as diamonds, a lane for each person in the cast, a Cast button that hides the lanes, and a speed button (1×, 2×, 4×, 8×). Drag to scrub, space plays, arrows step a quarter.
 - **Lanes:** a lane shows when that person was in your life and how close: tall and coral for inner circle, gold for close, thin white for a friend, a blue hairline for an acquaintance, and a faint line when out of touch. White marks are the turns in their story; clicking one goes to that moment and opens their card. Clicking a name opens their card. With the lanes hidden the scrubber shows every highlight as a dot sized by score, as it used to. Lanes are on by default in windows at least 700 pixels tall, and the choice is remembered in the browser.
-- **Title screen** on load: the person, a Begin button and the other lives. Deep links (`?week=`, `?play`, `?person=`, `?advance=`) skip it.
+- **Title screen** on load: the person, the cast as opening credits (portrait, first name and role), a Begin button and the other lives. Deep links (`?week=`, `?play`, `?person=`, `?advance=`) skip it.
 - **End card** when playback reaches the end: people met, close friends, the one who mattered most, the luckiest meeting, then watch again, read the journal, or another life.
 
 The views:
@@ -174,7 +177,7 @@ The views:
 - **Walk** (pixel art, the default): the protagonist walks in place while the city scrolls past. The canvas is sized to the window at a whole-number pixel scale, and the street sits just above the dialogue box. The skyline is the city they live in (a spire for New York, a red bridge for San Francisco, a twin-antenna tower for Chicago), and the sky moves from dawn to dusk across the whole life. Their inner circle walks behind them and their partner beside them. At each highlight time holds still: the person walks up outside the venue (bar, café, park, office or club hall) and they wave. Getting together brings hearts and confetti and both outfits melt into a suit or gown for a year. A move sweeps the new skyline in with a plane overhead. Hair greys with age.
 - **Map** (pixel art): the three cities as islands, fitted between the HUD bars. Everyone in the world is a faint dot; people the protagonist knows are coloured by closeness; dotted lines run to the inner circle wherever they live; dots fly between islands when someone moves. Hover for details.
 - **Circle** (`circle.ts`): the protagonist in the centre, everyone they know placed by closeness and clockwise in the order they met.
-- **People** (`people.ts`): the life retold as people. First the cast, the 7 to 14 people the story is about (partners, close family and a varied set of friends), each as a card with their pixel portrait and their story in a few lines. A line is dim until the playhead reaches it; clicking a line goes to that moment. Then how they reached you (who led to whom). Then a catalog of everyone the protagonist ever knew, most relevant first, with a name search and filters.
+- **People** (`people.ts`): the life retold as people. First the cast, the 7 to 14 people the story is about (partners, close family and a varied set of friends), each as a card meant to be looked at before it is read: who they are to you, their portrait and name, a strip of how close you were across the life, the one line that is current at the playhead, and a running count ("Seen 147 times so far · 96 still to come"). The whole story is folded away under the card. Then how they reached you (who led to whom). Then a catalog of everyone the protagonist ever knew, most relevant first, with a name search and filters.
 - **Journal** (`journal.ts`): the reading page. A summary with lifetime numbers, the circle-size chart (scrubbable) and the full list of moments.
 
 Clicking a person in the Map, Circle or People tab opens a card (`person.ts`) with the two of you drawn as two lines over time, and under the chart their story in a few lines: close together when you are close, drifting apart when you are not. A dotted pair shows where you would be on depth alone, without regular contact. The scale is shared by everyone and gives each circle the same height, so a change of circle is a visible step. Dots along the top are the moments you shared; drag the chart to scrub. `?person=<id>` or `?person=closest` opens it from the address bar.

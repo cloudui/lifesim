@@ -2,7 +2,7 @@
 
 import { CLUBS, type Ctx } from './activities';
 import { findArcs, SHAPE_NAMES, type ArcBeat, type ArcRole } from './arcs';
-import { findHighlights, selectReel, type Highlight } from './highlights';
+import { findHighlights, type Highlight } from './highlights';
 import { descriptor } from './people';
 import type { LifeResult } from './sim';
 import { computeStats, type LifeStats } from './stats';
@@ -39,8 +39,12 @@ export interface PersonExport {
 export interface ArcExport {
   id: number;
   role: ArcRole;
-  /** e.g. "met by chance" or "one of your parents". */
+  /** e.g. "met by chance" or "your mom". */
   label: string;
+  /** A two- or three-word role for tight spaces, e.g. "mom", "work friend", "via Linh". */
+  tag: string;
+  /** Cast only: every week the two saw each other in person, so the page can count up and down. */
+  seenAt?: number[];
   /** The kind of friendship it was, e.g. "a slow burn". Empty for family and partners. */
   shape: string;
   /** One of the people the story is about. */
@@ -110,7 +114,7 @@ export interface LifeExport {
   stats: LifeStats;
 }
 
-export function exportLife(life: LifeResult, top = 90): LifeExport {
+export function exportLife(life: LifeResult, top = 50): LifeExport {
   const { world, events, ties, params } = life;
   const { agents, venues } = world;
   const me = agents[life.ego];
@@ -151,7 +155,15 @@ export function exportLife(life: LifeResult, top = 90): LifeExport {
     };
   });
 
-  const highlights = selectReel(findHighlights(life), top);
+  // The moments shown are the ones about the cast, plus life events and a few of the best others.
+  const told = findArcs(life);
+  const castIds = new Set(told.cast.map((a) => a.id));
+  const allMoments = findHighlights(life);
+  const byScore = (a: Highlight, b: Highlight) => b.score - a.score;
+  const aboutCast = allMoments.filter((h) => !h.scaffold && h.people.some((p) => castIds.has(p))).sort(byScore).slice(0, top - 10);
+  const kept = new Set(aboutCast);
+  const others = allMoments.filter((h) => !h.scaffold && !kept.has(h)).sort(byScore).slice(0, top - aboutCast.length);
+  const highlights = [...allMoments.filter((h) => h.scaffold), ...aboutCast, ...others].sort((a, b) => a.week - b.week || b.score - a.score);
   const venueIds = new Set(highlights.map((h) => h.venue ?? -1).filter((v) => v >= 0));
   const venueList: VenueExport[] = [...venueIds].map((id) => {
     const v = venues[id];
@@ -165,12 +177,11 @@ export function exportLife(life: LifeResult, top = 90): LifeExport {
     if (e.t === 'partner') partners.push({ id: e.other, from: e.week, to: null });
     else if ((e.t === 'breakup' || (e.t === 'death' && e.partner)) && partners.length) partners[partners.length - 1].to = e.week;
   }
-  const told = findArcs(life);
   const arcs: LifeExport['arcs'] = {
     cast: told.cast.map((a) => a.id),
     threads: told.threads.map((t) => t.text),
     people: told.everyone.map((a) => ({
-      id: a.id, role: a.role, label: a.label, cast: a.cast, closeFrom: a.closeFrom, closeTo: a.closeTo, seen: a.seen, last: a.last,
+      id: a.id, role: a.role, label: a.label, tag: a.tag, ...(a.cast ? { seenAt: a.seenWeeks } : {}), cast: a.cast, closeFrom: a.closeFrom, closeTo: a.closeTo, seen: a.seen, last: a.last,
       shape: a.role === 'family' || a.role === 'partner' ? '' : SHAPE_NAMES[a.shape], beats: a.beats,
     })),
   };

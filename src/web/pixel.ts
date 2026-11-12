@@ -195,3 +195,17 @@ export function drawGlyph(ctx: CanvasRenderingContext2D, name: string, x: number
     for (let i = 0; i < row.length; i++) if (row[i] === '1') ctx.fillRect(Math.round(x) + i, Math.round(y) + j, 1, 1);
   });
 }
+
+/** A standing portrait of a person, as a small canvas scaled up by CSS. The same face everywhere. */
+export function portrait(id: number, scale: number): HTMLCanvasElement {
+  const c = document.createElement('canvas');
+  c.width = 20;
+  c.height = 26;
+  c.style.width = `${20 * scale}px`;
+  c.style.height = `${26 * scale}px`;
+  c.style.imageRendering = 'pixelated';
+  const g = c.getContext('2d')!;
+  g.imageSmoothingEnabled = false;
+  drawPerson(g, 10, 25, lookFor(id), { pose: 'stand', frame: 0, outfit: 'casual' });
+  return c;
+}

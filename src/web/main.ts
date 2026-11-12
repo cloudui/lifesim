@@ -9,6 +9,7 @@ import '@fontsource/vt323';
 import { createCircle } from './circle';
 import { createJournal } from './journal';
 import { createPeople } from './people';
+import { portrait } from './pixel';
 import { createMap } from './map';
 import { createPersonCard } from './person';
 import './style.css';
@@ -162,7 +163,7 @@ function buildTimeline(): void {
   const cast = lanesOn ? view.data.arcs.cast.filter((id) => view.people.has(id) && view.arcs.has(id)) : [];
   // With lanes, the names sit in a gutter on the left; on a narrow screen they sit on the lane itself.
   const narrow = W <= 560;
-  const padL = pad + (cast.length && !narrow ? 118 : 0);
+  const padL = pad + (cast.length && !narrow ? 196 : 0);
   // With lanes, the moments row keeps only life events; each person's moments are on their lane.
   const laneBottom = cast.length ? 26 : 36;
   const LH = 9;
@@ -238,7 +239,8 @@ function buildTimeline(): void {
     const y = castTop + row * (LH + LG);
     const parts = p.name.split(' ');
     const first = firstNames.filter((n) => n === parts[0]).length > 1 && parts[1] ? `${parts[0]} ${parts[1][0]}.` : parts[0];
-    const role = wasPartner(id) ? ' ♥' : arc.role === 'family' ? ` · ${arc.label.replace(/^your (older |younger |twin )?/, '')}` : '';
+    // Every lane says who the person is to you, not only their name.
+    const role = arc.tag === 'partner' ? ' ♥' : ` · ${arc.tag}`;
     const g = el('g', { class: 'lane' });
     const from = Math.max(0, p.met);
     // The lane ends where the person's life does.
@@ -400,7 +402,16 @@ function updateDialog(): void {
   box.classList.remove('pop');
   void box.offsetWidth;
   if (h) box.classList.add('pop');
-  box.querySelector('.dialog-when')!.textContent = h ? `${yearOf(h.week)} · age ${ageAt(h.week)}` : '';
+  // Say who the moment is about, with their face, when it is someone in the cast.
+  const who = h?.people.map((id) => view.arcs.get(id)).find((a) => a?.cast);
+  const whoName = who ? view.people.get(who.id)?.name.split(' ')[0] : undefined;
+  box.querySelector('.dialog-when')!.innerHTML = h
+    ? `${yearOf(h.week)} · age ${ageAt(h.week)}` + (who && whoName ? `<small>${esc(whoName)} · ${esc(who.tag)}</small>` : '')
+    : '';
+  const face = box.querySelector<HTMLElement>('.dialog-face')!;
+  face.replaceChildren();
+  face.hidden = !who;
+  if (who) face.append(portrait(who.id, 3));
   box.querySelector('.dialog-text')!.textContent = h ? h.text : playing ? '' : 'Press play to start walking through this life.';
 }
 
@@ -422,6 +433,20 @@ function fillTitle(): void {
   $('title-sub').textContent =
     `Born ${e.born} in ${d.cities[e.hometown]}: ${social}, ${e.trait}, into ${e.hobbies.join(' and ')}. ` +
     `Follow ${e.name.split(' ')[0]} through ${d.years} years of meeting people, losing touch and finding them again.`;
+  // The opening credits: the people this story turns out to be about, by what they are to you.
+  $('title-cast').replaceChildren(
+    ...d.arcs.cast.map((id) => {
+      const arc = view.arcs.get(id);
+      const p = view.people.get(id);
+      const item = document.createElement('div');
+      item.className = 'title-person';
+      if (!arc || !p) return item;
+      const label = document.createElement('span');
+      label.innerHTML = `<b>${esc(p.name.split(' ')[0])}</b><small>${esc(arc.tag)}</small>`;
+      item.append(portrait(id, 2), label);
+      return item;
+    }),
+  );
   $('lives').replaceChildren(
     ...lives.map((l) => {
       const b = document.createElement('button');

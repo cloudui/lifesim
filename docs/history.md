@@ -4,6 +4,13 @@ What was added, when, and why, newest first. `AGENTS.md` describes the project a
 
 ## 2026-11-12
 
+### Less text, and who is who
+
+- **What:** cast cards now lead with the role ("your mom", "a friend from growing up"), then portrait and name, a strip of closeness across the life, one current line, and a count that moves with the playhead ("Seen 147 times so far · 96 still to come"). The full story is folded away. Every lane on the timeline says the role, not only family. The dialogue box shows the portrait, first name and role of the cast member a moment is about. The title screen lists the cast as opening credits. The moments shown were cut from about 90 to about 50 and are chosen to be about the cast. The person card has the same count.
+- **Why:** the owner found the page text heavy and hard to follow for someone who does not know who anyone is, and wanted numbers to mean more.
+- **Tried and dropped:** tiny faces in the lane gutter; unreadable at that size.
+- **Not done:** renaming the key people to names from your own life (names are baked into the story text, so it needs care); a visual for who led to whom; the Walk still stages moments the old way.
+
 ### Busy periods, and the story starts at 18
 
 - **What:** for a year after a move, a new job or a new partner, a person has less time for plans (70% of usual). The protagonist is now 18 or 19 when the story starts and lives where they grew up; the youngest people in the world are that age too. Under-18s, who only exist in the warm-up years, do not work or move on their own. `--start-age 25` gives the old start.

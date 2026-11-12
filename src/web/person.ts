@@ -38,6 +38,7 @@ export function createPersonCard(root: HTMLElement, ctx: Ctx, seek: (week: numbe
   root.innerHTML = `
     <button class="pc-close" type="button" aria-label="Close">×</button>
     <div class="pc-head"></div>
+    <div class="pc-count muted"></div>
     <div class="pc-chart"></div>
     <ol class="pc-story"></ol>
     <div class="legend pc-legend">
@@ -179,6 +180,16 @@ export function createPersonCard(root: HTMLElement, ctx: Ctx, seek: (week: numbe
     head.innerHTML = ctx.personTip(id);
     root.querySelector('.pc-name')!.textContent = ctx.view().people.get(id)?.name.split(' ')[0] ?? '';
     for (const [w, li] of beats) li.classList.toggle('future', w > ctx.week());
+    // For the cast: how many times you have seen each other, and how many are still to come.
+    const weeks = ctx.view().arcs.get(id)?.seenAt;
+    let line = '';
+    if (weeks && weeks.length) {
+      let sofar = 0;
+      while (sofar < weeks.length && weeks[sofar] <= ctx.week()) sofar++;
+      const left = weeks.length - sofar;
+      line = left ? `Seen ${sofar} time${sofar === 1 ? '' : 's'} so far · ${left} still to come` : `You saw each other ${sofar} times in all.`;
+    }
+    root.querySelector('.pc-count')!.textContent = line;
     if (playhead) {
       const px = x(ctx.week());
       playhead.setAttribute('x1', String(px));
