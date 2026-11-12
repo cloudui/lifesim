@@ -36,7 +36,7 @@ A 20-second setup, a 60 to 90 second pixel-art life, and an end card with three 
 - **Closeness graph.** Click a person and see a small line chart of how close the two of you were over time: two lines that wiggle together and apart, with time on the x axis. The quarterly snapshots already hold closeness and depth for everyone you know.
 - **Messaging.** Cheap contact (texts, calls) that keeps a friendship alive without time together. Built on 2026-11-11 (see `AGENTS.md`).
 - **Convenience friends and real ones.** Some people are close only because you see them every week; others stay close through years of silence. Well-built friendships should decay more slowly. Built on 2026-11-11: a tie is now two numbers, depth and contact (see `AGENTS.md`).
-- **Conflict.** People fall out. How likely a fight is should depend on both personalities and on the relationship (how close, how long, how much time together). A fight can open a large rift that may or may not be mended.
+- **Conflict.** People fall out. How likely a fight is should depend on both personalities and on the relationship (how close, how long, how much time together). A fight can open a large rift that may or may not be mended. Now the next step; the plan is in the roadmap in `AGENTS.md`.
 - **Hobbies shaped by friends.** Partly built: when a hobby changes, it is often copied from a friend. Not built: a friend's influence making a change more likely in the first place, or pulling you along to their club.
 - **Personality that changes.** Having children and getting older should shift traits, for example going out less or becoming less spontaneous. Today only openness to new people and how often people go out change with age.
 

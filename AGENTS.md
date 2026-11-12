@@ -6,12 +6,12 @@ This file is the shared brief for any coding agent or person picking the project
 
 ## Status
 
-Last updated 2026-11-11.
+Last updated 2026-11-12.
 
 - **Done:** the simulation core, highlight detection, a console highlight reel, a tuning harness, determinism tests, a JSON export, and a browser page with three tabs: Walk (pixel art), Map (pixel art) and Circle (the original graph and charts).
-- **Branch:** the pixel views are merged to `main`. The depth and contact tie model is on `tie-depth`; messaging and breakups are on `messaging-breakups`, which builds on it; the person card is on `closeness-chart`.
+- **Branch:** everything is on `main`: the pixel views, the depth and contact tie model, messaging, breakups and the person card.
 - **Not started:** running the sim in the browser, the intake form, a phone layout, sound.
-- **Next step:** review the closeness chart on a few friends to judge the tie model by eye. Product direction is being decided around what makes the site worth exploring; ideas are in `docs/product-ideas.md`. Speed is parked until then; the page reads lives simulated ahead of time.
+- **Next step:** give friendships sudden movement. Today closeness only changes by small weekly nudges and slow fading, so most friendships look flat on the person card (see "Next: conflict and busy periods" in the roadmap). Product direction is still being decided around what makes the site worth exploring; ideas are in `docs/product-ideas.md`. Speed is parked; the page reads lives simulated ahead of time.
 
 ## Run it
 
@@ -202,6 +202,16 @@ Known to be off and deliberately not tuned yet: the outer circles are too small 
 - **Model was built from general knowledge** of the literature (shared-venue meeting, triadic closure, homophily, tie decay, preferential return to familiar places). No literature pass has been done to pin parameter values, and the Quarew1107/Life-simulation repo has not been read.
 
 ## Roadmap
+
+### Next: conflict and busy periods
+
+Measured on 2026-11-12 across the five exported lives (about 1,050 friendships of two years or more, closeness on a 0 to 100 scale): nearly half move less than 15 points in total, only 14% move 30 or more, and the typical change from one quarter to the next is 1.5 points. People do change circle (about 31 become close friends per life and 36% of those later fall to acquaintance or below), but the fall is a slide over years and only 7 of 55 came back. Nothing in the model is sudden.
+
+1. **Conflict.** Two people can fall out. The chance should depend on both personalities and on the relationship: how close they are, how long they have known each other, how much time they spend together. A fight opens a rift, a sharp drop in depth and a stop to plans together, that may be mended later or may not. Needs: a rule in the weekly loop, a `SimEvent` and highlight wording for the fight and for making up, a light tone, and an off switch so its effect can be measured the way messaging and breakups were.
+2. **Busy periods.** A new job, a new partner or a move cuts someone's time for friends for a year or two, so contact drops across the board and then recovers.
+3. After both: look at the person card again. If friendships still read as flat, rescale the chart so each circle takes equal height on one shared scale.
+
+### After that
 
 1. Review console lives and adjust tone, highlight wording and thresholds.
 2. Review the Walk and Map views in a real browser: pacing, charm, what is missing.
