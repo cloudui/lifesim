@@ -4,6 +4,12 @@ What was added, when, and why, newest first. `AGENTS.md` describes the project a
 
 ## 2026-11-12
 
+### Full-screen game layout [branch `redesign-fullscreen`]
+
+- **What:** the page is now one full-window screen instead of a column of cards. The current view fills the window and a HUD floats on top. Top left shows who, when, where and the circle counts. The tabs are in the middle of the top bar. Along the bottom are a dialogue box for the current moment and a docked timeline scrubber. A title screen opens each life and an end card closes it. Circle became a full-screen view of its own. The charts, the moments list and a new cast list (pixel portraits of everyone who became a close friend) moved to a fourth tab, Journal. Everything is dark and set in VT323. The four circle colours are now the same in every view.
+- **Why:** the old page read like a dashboard of separate pieces; the project owner wanted one cohesive, game-like experience with the timeline as the default full-screen view.
+- **Kept as is:** the stack (vanilla TypeScript and Vite), the Walk and Map drawing, the person card. Treated as an experiment; the stack may change once the product shape is decided.
+
 ### Closeness chart rescaled by circle [branch `chart-rescale`]
 
 - **What:** the person card now uses one shared scale where each circle (acquaintance, friend, close friend, inner circle) takes the same height, with faint guides naming each circle. The names "you" and the friend moved into the legend.

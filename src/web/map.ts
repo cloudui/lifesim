@@ -39,12 +39,11 @@ function position(id: number, timeline: [number, number][], w: number): [number,
 
 export function createMap(root: HTMLElement, ctx: Ctx): Scene {
   root.innerHTML = `
-    <div class="stage map-stage">
-      <canvas width="${W}" height="${H}"></canvas>
+    <div class="map-box">
+      <canvas class="pixel-canvas" width="${W}" height="${H}"></canvas>
       <div class="map-labels"></div>
-      <div class="hud hud-left"></div>
     </div>
-    <div class="pixel-legend">
+    <div class="pixel-legend map-legend">
       <span><i style="background:#ffffff"></i>you</span>
       <span><i style="background:${TIER_COLORS[3]}"></i>inner circle</span>
       <span><i style="background:${TIER_COLORS[2]}"></i>close friends</span>
@@ -57,7 +56,22 @@ export function createMap(root: HTMLElement, ctx: Ctx): Scene {
   const g = canvas.getContext('2d')!;
   g.imageSmoothingEnabled = false;
   const labels = root.querySelector<HTMLElement>('.map-labels')!;
-  const hud = root.querySelector<HTMLElement>('.hud-left')!;
+  const box = root.querySelector<HTMLElement>('.map-box')!;
+  const legend = root.querySelector<HTMLElement>('.map-legend')!;
+
+  /** Fit the map between the HUD bars, at a whole-number scale when there is room for one. */
+  function resize(): void {
+    const { top, bottom } = ctx.insets();
+    const legendH = legend.offsetHeight + 10;
+    const availW = (root.clientWidth || window.innerWidth) - 32;
+    const availH = (root.clientHeight || window.innerHeight) - top - bottom - legendH - 12;
+    const fit = Math.max(0.5, Math.min(availW / W, availH / H));
+    const scale = fit >= 5 ? Math.floor(fit) : Math.floor(fit * 4) / 4;
+    box.style.width = `${W * scale}px`;
+    box.style.height = `${H * scale}px`;
+    box.style.top = `${top + Math.max(0, (availH - H * scale) / 2)}px`;
+    legend.style.bottom = `${bottom}px`;
+  }
   let clock = 0;
   let drawn: { id: number; x: number; y: number }[] = [];
   let labelEls: HTMLElement[] = [];
@@ -169,7 +183,6 @@ export function createMap(root: HTMLElement, ctx: Ctx): Scene {
     g.fillStyle = '#ffffff';
     g.fillRect(mx - 1, my - 1, 3, 3);
 
-    hud.textContent = `${ctx.yearOf(week)} · AGE ${ctx.ageAt(week)}`;
     labelEls.forEach((elm, ci) => {
       const here = ctx.cityAt(d.ego.cities, week) === ci;
       elm.querySelector('.n')!.textContent = `${counts[ci]} you know${here ? ' · you live here' : ''}`;
@@ -217,8 +230,10 @@ export function createMap(root: HTMLElement, ctx: Ctx): Scene {
         (c, i) => `<div class="map-label" style="left:${(c.x / W) * 100}%;top:${((c.y + c.r * SQUASH + 10) / H) * 100}%"><b>${names[i] ?? ''}</b><span class="n"></span></div>`,
       ).join('');
       labelEls = [...labels.querySelectorAll<HTMLElement>('.map-label')];
+      resize();
     },
     seek() {},
+    resize,
     frame,
     timeScale: () => 1,
   };

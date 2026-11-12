@@ -1,9 +1,13 @@
-// The inspection page: timeline, social graph and circle chart for one exported life.
+// The game shell. One full-window stage shows the current view; the HUD floats on top:
+// who and when at the top left, the view tabs in the middle, the dialogue box and the
+// timeline scrubber along the bottom. A title screen opens a life and an end card closes it.
 // Reads only the LifeExport JSON; never touches the simulation.
 
-import type { LifeExport, PersonExport } from '../sim/export';
+import type { LifeExport } from '../sim/export';
 import { formatOdds, LEVEL_NAMES } from '../sim/highlights';
 import '@fontsource/vt323';
+import { createCircle } from './circle';
+import { createJournal } from './journal';
 import { createMap } from './map';
 import { createPersonCard } from './person';
 import './style.css';
@@ -18,18 +22,21 @@ function el(name: string, attrs: Record<string, string | number> = {}, text?: st
   if (text !== undefined) e.textContent = text;
   return e;
 }
-const css = (name: string) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+const esc = (s: string) => s.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]!);
+
+type Tab = 'walk' | 'map' | 'circle' | 'journal';
+const TABS: Tab[] = ['walk', 'map', 'circle', 'journal'];
+/** Weeks of life per second of playback. The pixel views run slower so moments can land. */
+const RATE: Record<Tab, number> = { walk: 30, map: 45, circle: 70, journal: 70 };
+const SPEEDS = [1, 2, 4, 8];
 
 let view: View;
+let lives: { seed: number; name: string; born: number; hometown: string }[] = [];
 let week = 0;
 let playing = false;
-let hoverId = -1;
 let lastFrame = 0;
 let speed = 1;
-type Tab = 'walk' | 'map' | 'circle';
 let tab: Tab = 'walk';
-/** Weeks of life per second of playback. The pixel views run slower so moments can land. */
-const RATE: Record<Tab, number> = { walk: 30, map: 45, circle: 70 };
 
 // ------------------------------------------------------------------ helpers
 
@@ -87,367 +94,15 @@ function showTip(html: string, x: number, y: number): void {
   tip.style.top = `${Math.min(window.innerHeight - r.height - 8, Math.max(8, y + 14))}px`;
 }
 const hideTip = () => (tip.hidden = true);
-const esc = (s: string) => s.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]!);
 
-// ----------------------------------------------------------------- timeline
-
-let tlScale = (w: number) => w;
-let tlInvert = (x: number) => x;
-let tlPlayhead: SVGElement;
-let tlDots: { node: SVGElement; week: number }[] = [];
-
-function buildTimeline(): void {
-  const host = $('timeline');
-  const W = Math.max(320, host.clientWidth);
-  const H = 150;
-  const padL = 10;
-  const padR = 10;
-  const bandY = 6;
-  const laneTop = 30;
-  const laneBottom = 118;
-  tlScale = (w) => padL + (w / view.totalWeeks) * (W - padL - padR);
-  tlInvert = (x) => Math.min(view.totalWeeks, Math.max(0, ((x - padL) / (W - padL - padR)) * view.totalWeeks));
-  const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, height: H, role: 'img', 'aria-label': 'Timeline of notable moments' });
-
-  // Where the protagonist lived.
-  const tl = view.data.ego.cities;
-  tl.forEach(([w, c], i) => {
-    const x0 = tlScale(w);
-    const x1 = tlScale(i + 1 < tl.length ? tl[i + 1][0] : view.totalWeeks);
-    svg.append(el('rect', { x: x0 + 1, y: bandY, width: Math.max(1, x1 - x0 - 2), height: 8, rx: 4, fill: `var(--city-${c})` }));
-    if (x1 - x0 > 70) svg.append(el('text', { x: x0 + 2, y: bandY + 21, class: 'label' }, view.data.cities[c]));
-  });
-
-  // Axis: a tick every five years.
-  for (let y = 0; y <= view.data.years; y += 5) {
-    const x = tlScale(y * 52);
-    svg.append(el('line', { x1: x, x2: x, y1: laneTop, y2: laneBottom + 4, class: 'gridline' }));
-    const anchor = y === 0 ? 'start' : y === view.data.years ? 'end' : 'middle';
-    svg.append(el('text', { x, y: H - 6, 'text-anchor': anchor }, `${view.data.startYear + y} · age ${ageAt(y * 52)}`));
-  }
-
-  // Dots, packed into lanes so they do not overlap.
-  const hs = view.data.highlights;
-  const placed: { x: number; y: number; r: number }[] = [];
-  const mid = (laneTop + laneBottom) / 2;
-  tlDots = [];
-  hs.forEach((h, i) => {
-    const r = Math.min(11, 3 + h.score * 0.55);
-    const x = tlScale(h.week);
-    let y = mid;
-    for (let k = 0; k < 40; k++) {
-      y = mid + (k % 2 ? -1 : 1) * Math.ceil(k / 2) * 7;
-      if (y - r < laneTop || y + r > laneBottom) continue;
-      if (!placed.some((p) => (p.x - x) ** 2 + (p.y - y) ** 2 < (p.r + r + 1) ** 2)) break;
-    }
-    placed.push({ x, y, r });
-    const node = h.scaffold
-      ? el('rect', { x: x - r * 0.75, y: y - r * 0.75, width: r * 1.5, height: r * 1.5, rx: 1.5, transform: `rotate(45 ${x} ${y})`, class: 'dot scaffold' })
-      : el('circle', { cx: x, cy: y, r, class: 'dot' });
-    node.addEventListener('pointermove', (ev) => {
-      const e = ev as PointerEvent;
-      showTip(`<b>${yearOf(h.week)} · age ${ageAt(h.week)}</b>${esc(h.text)}`, e.clientX, e.clientY);
-    });
-    node.addEventListener('pointerleave', hideTip);
-    node.dataset.i = String(i);
-    svg.append(node);
-    tlDots.push({ node, week: h.week });
-  });
-
-  tlPlayhead = el('line', { y1: bandY - 2, y2: laneBottom + 6, class: 'playhead' });
-  svg.append(tlPlayhead);
-
-  let dragging = false;
-  const seek = (ev: PointerEvent) => {
-    const r = svg.getBoundingClientRect();
-    setWeek(tlInvert(((ev.clientX - r.left) / r.width) * W));
-  };
-  svg.addEventListener('pointerdown', (ev) => {
-    dragging = true;
-    (svg as unknown as Element).setPointerCapture((ev as PointerEvent).pointerId);
-    seek(ev as PointerEvent);
-  });
-  svg.addEventListener('pointermove', (ev) => dragging && seek(ev as PointerEvent));
-  svg.addEventListener('pointerup', () => (dragging = false));
-  host.replaceChildren(svg);
-}
-
-function updateTimeline(): void {
-  const x = tlScale(week);
-  tlPlayhead.setAttribute('x1', String(x));
-  tlPlayhead.setAttribute('x2', String(x));
-  for (const d of tlDots) {
-    d.node.classList.toggle('past', d.week <= week);
-    d.node.classList.toggle('now', d.week <= week && week - d.week < 26);
-  }
-}
-
-// --------------------------------------------------------------- area chart
-
-const TIER_LABELS = ['Inner circle', 'Close friends', 'Friends', 'Acquaintances'];
-let areaPlayhead: SVGElement;
-let areaScale = (w: number) => w;
-
-function buildArea(): void {
-  const host = $('area');
-  const W = Math.max(280, host.clientWidth);
-  const H = 170;
-  const padL = 30;
-  const padR = 8;
-  const padT = 8;
-  const padB = 22;
-  const snaps = view.data.snapshots;
-  const totals = view.tiers.map((t) => t[0] + t[1] + t[2] + t[3]);
-  const max = Math.max(10, ...totals);
-  const step = max > 160 ? 50 : max > 80 ? 25 : max > 30 ? 10 : 5;
-  const top = Math.ceil(max / step) * step;
-  const x = (w: number) => padL + (w / view.totalWeeks) * (W - padL - padR);
-  const y = (v: number) => padT + (1 - v / top) * (H - padT - padB);
-  areaScale = x;
-  const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, height: H, role: 'img', 'aria-label': 'Circle sizes over time' });
-
-  for (let v = 0; v <= top; v += step) {
-    svg.append(el('line', { x1: padL, x2: W - padR, y1: y(v), y2: y(v), class: 'gridline' }));
-    svg.append(el('text', { x: padL - 6, y: y(v) + 3.5, 'text-anchor': 'end' }, String(v)));
-  }
-  for (let yr = 0; yr <= view.data.years; yr += 10) {
-    const anchor = yr === 0 ? 'start' : yr === view.data.years ? 'end' : 'middle';
-    svg.append(el('text', { x: x(yr * 52), y: H - 6, 'text-anchor': anchor }, `age ${ageAt(yr * 52)}`));
-  }
-  // Stacked bands, innermost at the bottom. Drawn outermost first so each sits on top of the last.
-  for (let tier = 3; tier >= 0; tier--) {
-    const height = (i: number) => view.tiers[i].slice(0, tier + 1).reduce((a, b) => a + b, 0);
-    const pts = snaps.map((s, i) => `${x(s.week).toFixed(1)},${y(height(i)).toFixed(1)}`);
-    svg.append(el('path', {
-      d: `M${x(0)},${y(0)} L${pts.join(' L')} L${x(view.totalWeeks)},${y(0)} Z`,
-      fill: `var(--tier-${tier})`, stroke: 'var(--surface)', 'stroke-width': 1.5, 'stroke-linejoin': 'round',
-    }));
-  }
-  areaPlayhead = el('line', { y1: padT, y2: H - padB, class: 'playhead' });
-  svg.append(areaPlayhead);
-
-  let dragging = false;
-  const at = (ev: PointerEvent) => {
-    const r = svg.getBoundingClientRect();
-    const px = ((ev.clientX - r.left) / r.width) * W;
-    return Math.min(view.totalWeeks, Math.max(0, ((px - padL) / (W - padL - padR)) * view.totalWeeks));
-  };
-  svg.addEventListener('pointerdown', (ev) => {
-    dragging = true;
-    (svg as unknown as Element).setPointerCapture((ev as PointerEvent).pointerId);
-    setWeek(at(ev as PointerEvent));
-  });
-  svg.addEventListener('pointerup', () => (dragging = false));
-  svg.addEventListener('pointermove', (ev) => {
-    const e = ev as PointerEvent;
-    const w = at(e);
-    if (dragging) setWeek(w);
-    const t = view.tiers[snapIndex(w)];
-    showTip(
-      `<b>${yearOf(w)} · age ${ageAt(w)}</b>` + TIER_LABELS.map((l, i) => `${l}: ${t[i]}`).join('<br>'),
-      e.clientX, e.clientY,
-    );
-  });
-  svg.addEventListener('pointerleave', hideTip);
-  host.replaceChildren(svg);
-
-  $('tier-legend').innerHTML = TIER_LABELS.map((l, i) => `<span><i class="swatch" style="background:var(--tier-${i})"></i>${l}</span>`).join('');
-}
-
-// -------------------------------------------------------------------- graph
-
-const canvas = $<HTMLCanvasElement>('graph');
-let nodesDrawn: { id: number; x: number; y: number; r: number }[] = [];
-
-/** Strength to distance from the centre, as a fraction of the outer radius. */
-function radiusFor(s: number): number {
-  const L = view.data.levels;
-  const stops: [number, number][] = [[L[0], 1], [L[1], 0.76], [L[2], 0.52], [L[3], 0.3], [1, 0.12]];
-  if (s <= stops[0][0]) return 1;
-  for (let i = 1; i < stops.length; i++) {
-    if (s <= stops[i][0]) {
-      const f = (s - stops[i - 1][0]) / (stops[i][0] - stops[i - 1][0]);
-      return stops[i - 1][1] + f * (stops[i][1] - stops[i - 1][1]);
-    }
-  }
-  return 0.12;
-}
-
-function drawGraph(): void {
-  const dpr = window.devicePixelRatio || 1;
-  const size = canvas.clientWidth;
-  if (canvas.width !== Math.round(size * dpr)) {
-    canvas.width = Math.round(size * dpr);
-    canvas.height = Math.round(canvas.clientHeight * dpr);
-  }
-  const ctx = canvas.getContext('2d')!;
-  const H = canvas.clientHeight;
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  ctx.clearRect(0, 0, size, H);
-  const cx = size / 2;
-  const cy = H / 2;
-  const R = Math.min(size, H) / 2 - 44;
-  const ink = css('--text');
-  const ink2 = css('--text-2');
-  const ink3 = css('--text-3');
-  const grid = css('--grid');
-  const surface = css('--surface');
-  const cityColors = [css('--city-0'), css('--city-1'), css('--city-2')];
-  const L = view.data.levels;
-
-  // Rings at each threshold, labelled directly (labels are drawn last so dots do not hide them).
-  const ringLabels: { text: string; y: number }[] = [];
-  ctx.font = '11px system-ui, sans-serif';
-  ctx.textAlign = 'center';
-  [[L[0], 'acquaintances'], [L[1], 'friends'], [L[2], 'close friends'], [L[3], 'inner circle']].forEach(([s, label]) => {
-    const r = radiusFor(s as number) * R;
-    ctx.beginPath();
-    ctx.arc(cx, cy, r, 0, Math.PI * 2);
-    ctx.strokeStyle = grid;
-    ctx.lineWidth = 1;
-    ctx.stroke();
-    ringLabels.push({ text: label as string, y: cy + r - 5 });
-  });
-
-  // Decade marks around the rim: people are placed clockwise by when you met them.
-  for (let yr = 0; yr < view.data.years; yr += 10) {
-    const first = view.data.people.filter((p) => p.met >= yr * 52).sort((a, b) => a.met - b.met)[0];
-    if (!first) continue;
-    const a = view.angle.get(first.id)!;
-    ctx.fillStyle = ink3;
-    ctx.textAlign = 'center';
-    const lx = Math.min(size - 36, Math.max(36, cx + Math.cos(a) * (R + 22)));
-    ctx.fillText(`met ${view.data.startYear + yr}+`, lx, cy + Math.sin(a) * (R + 16) + (Math.abs(Math.cos(a)) > 0.8 ? -8 : 4));
-    ctx.beginPath();
-    ctx.moveTo(cx + Math.cos(a) * (R - 4), cy + Math.sin(a) * (R - 4));
-    ctx.lineTo(cx + Math.cos(a) * (R + 5), cy + Math.sin(a) * (R + 5));
-    ctx.strokeStyle = ink3;
-    ctx.lineWidth = 1;
-    ctx.stroke();
-  }
-
-  const strengths = strengthsAt(week);
-  const pos = new Map<number, { x: number; y: number; s: number }>();
-  for (const [id, s] of strengths) {
-    if (s < L[0] * 0.6) continue;
-    const a = view.angle.get(id);
-    if (a === undefined) continue;
-    const r = radiusFor(s) * R;
-    pos.set(id, { x: cx + Math.cos(a) * r, y: cy + Math.sin(a) * r, s });
-  }
-
-  // Friendships among the people you know.
-  const snap = view.data.snapshots[snapIndex(week)];
-  ctx.lineWidth = 1;
-  ctx.globalAlpha = 0.09;
-  ctx.strokeStyle = ink2;
-  ctx.beginPath();
-  for (const [a, b] of snap.edges) {
-    if (a === hoverId || b === hoverId) continue;
-    const p = pos.get(a);
-    const q = pos.get(b);
-    if (!p || !q) continue;
-    ctx.moveTo(p.x, p.y);
-    ctx.lineTo(q.x, q.y);
-  }
-  ctx.stroke();
-  ctx.globalAlpha = 1;
-  const linked = new Set<number>();
-  if (hoverId >= 0 && pos.has(hoverId)) {
-    ctx.strokeStyle = ink;
-    ctx.lineWidth = 1.25;
-    ctx.globalAlpha = 0.7;
-    ctx.beginPath();
-    const p = pos.get(hoverId)!;
-    for (const [a, b] of snap.edges) {
-      if (a !== hoverId && b !== hoverId) continue;
-      const q = pos.get(a === hoverId ? b : a);
-      if (!q) continue;
-      linked.add(a === hoverId ? b : a);
-      ctx.moveTo(p.x, p.y);
-      ctx.lineTo(q.x, q.y);
-    }
-    ctx.stroke();
-    ctx.globalAlpha = 1;
-  }
-
-  // People.
-  nodesDrawn = [];
-  const labels: { x: number; y: number; text: string; strong: boolean; rank: number }[] = [];
-  const partner = partnerAt(week)?.id ?? -1;
-  for (const [id, p] of pos) {
-    const person = view.people.get(id)!;
-    const lv = levelOf(p.s);
-    const r = 3 + lv * 0.9;
-    const isPartner = id === partner;
-    const kin = isPartner || (person.kin && !wasPartner(id));
-    ctx.globalAlpha = p.s < L[0] ? 0.35 : hoverId >= 0 && id !== hoverId && !linked.has(id) ? 0.4 : 1;
-    ctx.fillStyle = cityColors[cityAt(person.cities, week)] ?? ink3;
-    ctx.strokeStyle = surface;
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    if (kin) {
-      const d = r + 1.5;
-      ctx.moveTo(p.x, p.y - d);
-      ctx.lineTo(p.x + d, p.y);
-      ctx.lineTo(p.x, p.y + d);
-      ctx.lineTo(p.x - d, p.y);
-      ctx.closePath();
-    } else ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.fill();
-    if (isPartner) {
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, r + 5.5, 0, Math.PI * 2);
-      ctx.strokeStyle = ink;
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-    }
-    ctx.globalAlpha = 1;
-    nodesDrawn.push({ id, x: p.x, y: p.y, r });
-    if (lv >= 4 || isPartner || id === hoverId || linked.has(id)) {
-      labels.push({
-        x: p.x, y: p.y - r - 5, text: person.name.split(' ')[0] + (isPartner ? ' ♥' : ''),
-        strong: id === hoverId || isPartner, rank: (id === hoverId ? 3 : isPartner ? 2 : 0) + p.s,
-      });
-    }
-  }
-
-  // You, in the middle.
-  ctx.beginPath();
-  ctx.arc(cx, cy, 8, 0, Math.PI * 2);
-  ctx.fillStyle = ink;
-  ctx.strokeStyle = surface;
-  ctx.lineWidth = 2;
-  ctx.stroke();
-  ctx.fill();
-  labels.push({ x: cx, y: cy - 14, text: 'You', strong: true, rank: 10 });
-
-  ctx.textAlign = 'center';
-  ctx.lineJoin = 'round';
-  ctx.font = '11px system-ui, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.lineJoin = 'round';
-  for (const l of ringLabels) {
-    ctx.strokeStyle = surface;
-    ctx.lineWidth = 4;
-    ctx.strokeText(l.text, cx, l.y);
-    ctx.fillStyle = ink3;
-    ctx.fillText(l.text, cx, l.y);
-  }
-  // Most important labels first; skip any that would sit on top of one already drawn.
-  const boxes: { x0: number; x1: number; y: number }[] = [];
-  for (const l of labels.sort((a, b) => b.rank - a.rank)) {
-    ctx.font = `${l.strong ? '600 ' : ''}11.5px system-ui, sans-serif`;
-    const half = ctx.measureText(l.text).width / 2 + 3;
-    if (boxes.some((b) => Math.abs(b.y - l.y) < 13 && l.x - half < b.x1 && l.x + half > b.x0)) continue;
-    boxes.push({ x0: l.x - half, x1: l.x + half, y: l.y });
-    ctx.strokeStyle = surface;
-    ctx.lineWidth = 3;
-    ctx.strokeText(l.text, l.x, l.y);
-    ctx.fillStyle = l.strong ? ink : ink2;
-    ctx.fillText(l.text, l.x, l.y);
-  }
+/** How the protagonist came to know someone, as a short phrase. */
+function howMet(id: number): string {
+  const p = view.people.get(id)!;
+  return p.ctx === 'family' ? 'Family'
+    : p.ctx === 'childhood' ? 'You grew up together'
+    : `Met in ${yearOf(p.met)}` +
+      (p.ctx === 'work' ? ` at work (${p.venue})` : p.ctx === 'club' ? ` at ${p.venue}` : p.ctx === 'hangout' ? ` by chance at ${p.venue}` : p.via ? ` through ${p.via}` : ' through friends') +
+      (p.met >= 0 && p.p < 0.2 ? `, ${formatOdds(p.p)} that week` : '');
 }
 
 function personTip(id: number): string {
@@ -456,89 +111,224 @@ function personTip(id: number): string {
   const isPartner = id === partnerAt(week)?.id;
   const isEx = view.data.ego.partners.some((x) => x.id === id && x.to !== null && week >= x.to);
   const role = isPartner ? 'your partner' : isEx ? 'a former partner' : p.kin && !wasPartner(id) ? 'family' : LEVEL_NAMES[levelOf(s)];
-  const how =
-    p.ctx === 'family' ? 'Family'
-    : p.ctx === 'childhood' ? 'You grew up together'
-    : `Met in ${yearOf(p.met)}` +
-      (p.ctx === 'work' ? ` at work (${p.venue})` : p.ctx === 'club' ? ` at ${p.venue}` : p.ctx === 'hangout' ? ` by chance at ${p.venue}` : p.via ? ` through ${p.via}` : ' through friends') +
-      (p.met >= 0 && p.p < 0.2 ? `, ${formatOdds(p.p)} that week` : '');
   return (
     `<b>${esc(p.name)}, ${yearOf(week) - p.born}</b>` +
     `<span class="muted">${esc(role)} · lives in ${esc(view.data.cities[cityAt(p.cities, week)])}</span>` +
-    `${esc(p.trait[0].toUpperCase() + p.trait.slice(1))}. Into ${esc(p.hobbies.join(', '))}.<br>${esc(how)}.` +
+    `${esc(p.trait[0].toUpperCase() + p.trait.slice(1))}. Into ${esc(p.hobbies.join(', '))}.<br>${esc(howMet(id))}.` +
     (p.kin ? '' : `<br>How well you fit: ${Math.round(p.compat * 100)} out of 100.`)
   );
 }
 
-canvas.addEventListener('pointermove', (ev) => {
-  const r = canvas.getBoundingClientRect();
-  const x = ev.clientX - r.left;
-  const y = ev.clientY - r.top;
-  let best = -1;
-  let bestD = 14 * 14;
-  for (const n of nodesDrawn) {
-    const d = (n.x - x) ** 2 + (n.y - y) ** 2;
-    if (d < bestD) {
-      bestD = d;
-      best = n.id;
-    }
-  }
-  if (best !== hoverId) {
-    hoverId = best;
-    drawGraph();
-  }
-  if (best >= 0) showTip(personTip(best), ev.clientX, ev.clientY);
-  else hideTip();
-});
-canvas.addEventListener('click', () => {
-  if (hoverId >= 0) card.open(hoverId);
-});
-canvas.addEventListener('pointerleave', () => {
-  hoverId = -1;
-  hideTip();
-  drawGraph();
-});
-
-// ------------------------------------------------------------- now and feed
-
-let feedItems: HTMLLIElement[] = [];
-let lastCurrent = -2;
-
-function buildFeed(): void {
-  const feed = $('feed');
-  feedItems = view.data.highlights.map((h) => {
-    const li = document.createElement('li');
-    if (h.scaffold) li.classList.add('scaffold');
-    li.innerHTML = `<span class="when">${yearOf(h.week)} · ${ageAt(h.week)}</span><span class="what">${esc(h.text)}</span>`;
-    li.addEventListener('click', () => setWeek(h.week));
-    return li;
-  });
-  feed.replaceChildren(...feedItems);
-  lastCurrent = -2;
+const hudTop = $('hud-top');
+const hudBottom = $('hud-bottom');
+function insets(): { top: number; bottom: number } {
+  return {
+    top: hudTop.getBoundingClientRect().bottom + 8,
+    bottom: window.innerHeight - hudBottom.getBoundingClientRect().top + 8,
+  };
 }
 
-function updateNow(): void {
+// ----------------------------------------------------------------- timeline
+
+let tlScale = (w: number) => w;
+let tlPlayhead: SVGElement;
+let tlFill: SVGElement;
+let tlDots: { node: SVGElement; week: number }[] = [];
+
+function buildTimeline(): void {
+  const host = $('timeline');
+  const W = Math.max(200, host.clientWidth);
+  const H = 50;
+  const pad = 8;
+  const bandY = 3;
+  const laneTop = 14;
+  const laneBottom = 36;
+  const total = view.totalWeeks;
+  tlScale = (w) => pad + (w / total) * (W - 2 * pad);
+  const invert = (x: number) => Math.min(total, Math.max(0, ((x - pad) / (W - 2 * pad)) * total));
+  const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, height: H, role: 'slider', 'aria-label': 'Timeline: drag to move through the life' });
+
+  // Where the protagonist lived, as the track itself.
+  const tl = view.data.ego.cities;
+  tl.forEach(([w, c], i) => {
+    const x0 = tlScale(w);
+    const x1 = tlScale(i + 1 < tl.length ? tl[i + 1][0] : total);
+    svg.append(el('rect', { x: x0 + 0.5, y: bandY, width: Math.max(1, x1 - x0 - 1), height: 5, fill: `var(--city-${c})` }));
+  });
+  tlFill = el('rect', { x: pad, y: bandY, height: 5, class: 'tl-dim' });
+  svg.append(tlFill);
+
+  // A tick every five years.
+  for (let y = 0; y <= view.data.years; y += 5) {
+    const x = tlScale(y * 52);
+    svg.append(el('line', { x1: x, x2: x, y1: laneTop - 2, y2: laneBottom + 2, class: 'gridline' }));
+    if (W > 520 || y % 10 === 0) {
+      const anchor = y === 0 ? 'start' : y === view.data.years ? 'end' : 'middle';
+      svg.append(el('text', { x, y: H - 2, 'text-anchor': anchor }, `${view.data.startYear + y}`));
+    }
+  }
+
+  // Moments, packed into lanes so they do not overlap. Life events are diamonds.
+  const placed: { x: number; y: number; r: number }[] = [];
+  const mid = (laneTop + laneBottom) / 2;
+  tlDots = [];
+  for (const h of view.data.highlights) {
+    const r = Math.min(6, 2 + h.score * 0.32);
+    const x = tlScale(h.week);
+    // Try spots outward from the middle; if the column is full, overlap at the middle.
+    let y = mid;
+    for (let k = 0; k < 12; k++) {
+      const cand = mid + (k % 2 ? -1 : 1) * Math.ceil(k / 2) * 4;
+      if (cand - r < laneTop || cand + r > laneBottom) continue;
+      if (!placed.some((p) => (p.x - x) ** 2 + (p.y - cand) ** 2 < (p.r + r + 0.5) ** 2)) {
+        y = cand;
+        break;
+      }
+    }
+    placed.push({ x, y, r });
+    const node = h.scaffold
+      ? el('rect', { x: x - r * 0.75, y: y - r * 0.75, width: r * 1.5, height: r * 1.5, transform: `rotate(45 ${x} ${y})`, class: `dot scaffold ${h.type}` })
+      : el('circle', { cx: x, cy: y, r, class: `dot ${h.type}` });
+    node.addEventListener('pointermove', (ev) => {
+      const e = ev as PointerEvent;
+      showTip(`<b>${yearOf(h.week)} · age ${ageAt(h.week)}</b>${esc(h.text)}`, e.clientX, e.clientY);
+    });
+    node.addEventListener('pointerleave', hideTip);
+    svg.append(node);
+    tlDots.push({ node, week: h.week });
+  }
+
+  tlPlayhead = el('g', { class: 'playhead' });
+  tlPlayhead.append(el('line', { x1: 0, x2: 0, y1: 0, y2: laneBottom + 2 }));
+  tlPlayhead.append(el('rect', { x: -3, y: -1, width: 6, height: 11 }));
+  svg.append(tlPlayhead);
+
+  let dragging = false;
+  const seekTo = (ev: PointerEvent) => {
+    const r = svg.getBoundingClientRect();
+    setWeek(invert(((ev.clientX - r.left) / r.width) * W));
+  };
+  svg.addEventListener('pointerdown', (ev) => {
+    dragging = true;
+    svg.setPointerCapture((ev as PointerEvent).pointerId);
+    seekTo(ev as PointerEvent);
+  });
+  svg.addEventListener('pointermove', (ev) => {
+    const e = ev as PointerEvent;
+    if (dragging) seekTo(e);
+  });
+  svg.addEventListener('pointerup', () => (dragging = false));
+  host.replaceChildren(svg);
+}
+
+function updateTimeline(): void {
+  const x = tlScale(week);
+  tlPlayhead.setAttribute('transform', `translate(${x},0)`);
+  tlFill.setAttribute('x', String(x));
+  tlFill.setAttribute('width', String(Math.max(0, tlScale(view.totalWeeks) - x)));
+  for (const d of tlDots) {
+    d.node.classList.toggle('past', d.week <= week);
+    d.node.classList.toggle('now', d.week <= week && week - d.week < 26);
+  }
+}
+
+// ---------------------------------------------------------- HUD and dialogue
+
+let hudKey = '';
+let dialogIdx = -3;
+
+function updateHud(): void {
   const d = view.data;
   const t = view.tiers[snapIndex(week)];
-  const withNow = partnerAt(week);
-  const partner = withNow ? view.people.get(withNow.id)?.name ?? '—' : 'Single';
-  const tile = (k: string, v: string | number, cls = '') => `<div class="tile ${cls}"><div class="k">${k}</div><div class="v ${typeof v === 'string' && v.length > 9 ? 'small' : ''}">${esc(String(v))}</div></div>`;
-  $('now').innerHTML =
-    tile('Year', yearOf(week)) + tile('Age', ageAt(week)) + tile('Lives in', d.cities[cityAt(d.ego.cities, week)]) + tile('Partner', partner) +
-    TIER_LABELS.map((l, i) => tile(l, t[i])).join('');
+  const p = partnerAt(week);
+  const partner = p ? view.people.get(p.id)?.name.split(' ')[0] : null;
+  const key = `${yearOf(week)}|${cityAt(d.ego.cities, week)}|${partner}|${t.join(',')}`;
+  if (key === hudKey) return;
+  hudKey = key;
+  $('hud-when').innerHTML =
+    `<span class="y">${yearOf(week)}</span> · age ${ageAt(week)} · ` +
+    `<span class="city" style="color:var(--city-${cityAt(d.ego.cities, week)})">${esc(d.cities[cityAt(d.ego.cities, week)])}</span>` +
+    (partner ? ` · <span class="heart">♥</span> ${esc(partner)}` : '');
+  const chip = (i: number, label: string) => `<span><i style="background:var(--tier-${i})"></i>${t[i]} ${label}</span>`;
+  $('hud-circle').innerHTML = chip(0, 'inner') + chip(1, 'close') + chip(2, 'friends') + chip(3, 'acquaintances');
+}
 
-  const hs = d.highlights;
-  let current = -1;
-  for (let i = 0; i < hs.length; i++) if (hs[i].week <= week) current = i;
-  if (current === lastCurrent) return;
-  lastCurrent = current;
-  feedItems.forEach((li, i) => {
-    li.classList.toggle('future', i > current);
-    li.classList.toggle('current', i === current);
-  });
-  const li = feedItems[Math.max(0, current)];
-  const feed = $('feed');
-  if (li) feed.scrollTo({ top: li.offsetTop - feed.clientHeight / 2 + li.clientHeight / 2, behavior: 'auto' });
+function updateDialog(): void {
+  const scene = scenes[tab];
+  let idx = scene.caption ? scene.caption() : -1;
+  if (!scene.caption || idx < -1) {
+    idx = -1;
+    const hs = view.data.highlights;
+    for (let i = 0; i < hs.length && hs[i].week <= week; i++) idx = i;
+  }
+  if (idx === dialogIdx) return;
+  dialogIdx = idx;
+  const h = view.data.highlights[idx];
+  const box = $('dialog');
+  box.classList.toggle('empty', !h);
+  box.classList.remove('pop');
+  void box.offsetWidth;
+  if (h) box.classList.add('pop');
+  box.querySelector('.dialog-when')!.textContent = h ? `${yearOf(h.week)} · age ${ageAt(h.week)}` : '';
+  box.querySelector('.dialog-text')!.textContent = h ? h.text : playing ? '' : 'Press play to start walking through this life.';
+}
+
+// ------------------------------------------------------ title and end screens
+
+function showTitle(on: boolean): void {
+  $('title-screen').hidden = !on;
+  if (on) {
+    setPlaying(false);
+    $('end-screen').hidden = true;
+  }
+}
+
+function fillTitle(): void {
+  const d = view.data;
+  const e = d.ego;
+  $('title-name').textContent = e.name;
+  const social = e.ext < 0.35 ? 'an introvert' : e.ext < 0.65 ? 'neither introvert nor extravert' : 'an extravert';
+  $('title-sub').textContent =
+    `Born ${e.born} in ${d.cities[e.hometown]}: ${social}, ${e.trait}, into ${e.hobbies.join(' and ')}. ` +
+    `Follow ${e.name.split(' ')[0]} through ${d.years} years of meeting people, losing touch and finding them again.`;
+  $('lives').replaceChildren(
+    ...lives.map((l) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = l.seed === d.seed ? 'life current' : 'life';
+      b.innerHTML = `<b>${esc(l.name)}</b><small>born ${l.born} · ${esc(l.hometown)}</small>`;
+      b.addEventListener('click', () => {
+        if (l.seed !== view.data.seed) load(l.seed, true);
+      });
+      return b;
+    }),
+  );
+}
+
+function showEnd(): void {
+  const d = view.data;
+  const s = d.stats;
+  const first = d.ego.name.split(' ')[0];
+  $('end-eyebrow').textContent = `${d.startYear} – ${d.startYear + d.years} · ${d.years} years`;
+  $('end-title').textContent = `${first} at ${ageAt(view.totalWeeks)}`;
+  const cand = d.people.filter((p) => (!p.kin || wasPartner(p.id)) && p.met >= 0);
+  const most = [...cand].sort((a, b) => b.peak - a.peak)[0];
+  const luckiest = cand.filter((p) => p.peak >= d.levels[2]).sort((a, b) => a.p - b.p)[0];
+  const end = partnerAt(view.totalWeeks);
+  const lines: string[] = [
+    `<p><b>${s.metDuringLife}</b> new people met. <b>${s.becameClose}</b> became close friends${s.becameInner ? `, <b>${s.becameInner}</b> made the inner circle` : ''}.</p>`,
+  ];
+  if (most) lines.push(`<p>The one who mattered most: <b>${esc(most.name)}</b>. ${esc(howMet(most.id))}.</p>`);
+  if (luckiest && luckiest !== most && luckiest.p < 0.2) {
+    lines.push(`<p>Luckiest meeting: <b>${esc(luckiest.name.split(' ')[0])}</b>, ${esc(formatOdds(luckiest.p))}.</p>`);
+  }
+  lines.push(
+    `<p>${s.moves ? `Moved ${s.moves === 1 ? 'once' : `${s.moves} times`}` : 'Never moved'}, changed jobs ${s.jobs === 1 ? 'once' : `${s.jobs} times`}. ` +
+      (end ? `Ended the story with ${esc(view.people.get(end.id)?.name.split(' ')[0] ?? 'a partner')}.` : 'Single at the end.') +
+      '</p>',
+  );
+  $('end-lines').innerHTML = lines.join('');
+  $('end-screen').hidden = false;
 }
 
 // --------------------------------------------------------------------- loop
@@ -547,61 +337,74 @@ const ctx: Ctx = {
   view: () => view,
   week: () => week,
   playing: () => playing,
-  yearOf, ageAt, cityAt, levelOf, strengthsAt, snapIndex, partnerAt, wasPartner, personTip, showTip,
+  yearOf, ageAt, cityAt, levelOf, strengthsAt, snapIndex, partnerAt, wasPartner, personTip, showTip, insets,
   hideTip: () => hideTip(),
   openPerson: (id) => card.open(id),
 };
 const card = createPersonCard($('person-card'), ctx, (w) => setWeek(w));
-const scenes: Partial<Record<Tab, Scene>> = {
+const scenes: Record<Tab, Scene> = {
   walk: createWalk($('view-walk'), ctx),
   map: createMap($('view-map'), ctx),
+  circle: createCircle($('view-circle'), ctx),
+  journal: createJournal($('view-journal'), ctx, (w) => setWeek(w)),
 };
 
 /** The user jumped to a point in time. */
 function setWeek(w: number): void {
   week = Math.min(view.totalWeeks, Math.max(0, w));
   for (const s of Object.values(scenes)) s.seek();
+  $('end-screen').hidden = true;
   render();
 }
 
 function render(): void {
   updateTimeline();
+  updateHud();
+  updateDialog();
   card.update();
-  if (tab !== 'circle') return;
-  const x = areaScale(week);
-  areaPlayhead.setAttribute('x1', String(x));
-  areaPlayhead.setAttribute('x2', String(x));
-  drawGraph();
-  updateNow();
 }
 
 function setPlaying(on: boolean): void {
   if (on && week >= view.totalWeeks) setWeek(0);
   playing = on;
-  $('play').textContent = on ? 'Pause' : 'Play';
+  const b = $('play');
+  b.textContent = on ? '❚❚' : '▶';
+  b.setAttribute('aria-label', on ? 'Pause' : 'Play');
+  document.body.classList.toggle('playing', on);
+  if (on) {
+    $('title-screen').hidden = true;
+    $('end-screen').hidden = true;
+  }
 }
 
 function setTab(next: Tab): void {
   tab = next;
-  for (const t of ['walk', 'map', 'circle'] as Tab[]) {
+  for (const t of TABS) {
     $(`view-${t}`).hidden = t !== tab;
     $(`tab-${t}`).setAttribute('aria-selected', String(t === tab));
   }
-  if (view) buildAll();
+  document.body.dataset.tab = tab;
+  hideTip();
+  if (!view) return;
+  scenes[tab].resize?.();
+  scenes[tab].seek();
+  dialogIdx = -3;
+  render();
+  history.replaceState(null, '', `?seed=${view.data.seed}&tab=${tab}`);
 }
 
 function tick(dt: number): void {
   if (!view) return;
   const scene = scenes[tab];
-  if (playing) {
-    const hold = scene ? scene.timeScale() === 0 : false;
-    if (!hold) {
-      week = Math.min(view.totalWeeks, week + dt * speed * RATE[tab]);
-      render();
-      if (week >= view.totalWeeks) setPlaying(false);
+  if (playing && scene.timeScale() !== 0) {
+    week = Math.min(view.totalWeeks, week + dt * speed * RATE[tab]);
+    if (week >= view.totalWeeks) {
+      setPlaying(false);
+      showEnd();
     }
   }
-  scene?.frame(dt * speed);
+  scene.frame(dt * speed);
+  render();
 }
 
 function loop(now: number): void {
@@ -611,15 +414,23 @@ function loop(now: number): void {
   requestAnimationFrame(loop);
 }
 
-function buildAll(): void {
+/** Keep the person card between the HUD bars. */
+function placeCard(): void {
+  const { top, bottom } = insets();
+  const c = $('person-card');
+  c.style.top = `${top}px`;
+  c.style.maxHeight = `${window.innerHeight - top - bottom}px`;
+}
+
+function layoutAll(): void {
+  placeCard();
   buildTimeline();
-  if (tab === 'circle') buildArea();
+  for (const s of Object.values(scenes)) s.resize?.();
   render();
 }
 
-async function load(seed: number): Promise<void> {
-  playing = false;
-  $('play').textContent = 'Play';
+async function load(seed: number, title = false): Promise<void> {
+  setPlaying(false);
   const data = (await (await fetch(`lives/${seed}.json`)).json()) as LifeExport;
   const people = new Map(data.people.map((p) => [p.id, p]));
   const order = [...data.people].sort((a, b) => a.met - b.met || a.id - b.id);
@@ -639,57 +450,79 @@ async function load(seed: number): Promise<void> {
   });
   view = { data, people, angle, totalWeeks: data.years * 52, tiers };
   card.reset();
-  week = Math.min(data.years * 52, Math.max(0, Number(new URLSearchParams(location.search).get('week')) || 0));
-
-  const e = data.ego;
-  $('title').textContent = `The life of ${e.name}`;
-  const social = e.ext < 0.35 ? 'An introvert' : e.ext < 0.65 ? 'Neither introvert nor extravert' : 'An extravert';
-  $('subtitle').textContent =
-    `Born ${e.born} in ${data.cities[e.hometown]}. ${social}, ${e.trait}, into ${e.hobbies.join(' and ')}. ` +
-    `Over ${data.years} years: met ${data.stats.metDuringLife} people, ${data.stats.becameClose} became close friends, moved ${data.stats.moves} times.`;
-  $('city-legend').innerHTML =
-    data.cities.map((c, i) => `<span><i class="swatch" style="background:var(--city-${i})"></i>${esc(c)}</span>`).join('') +
-    '<span><i class="mark diamond"></i>move, new job, new partner or breakup</span>';
-  buildFeed();
+  week = 0;
+  hudKey = '';
+  dialogIdx = -3;
+  $('hud-name').textContent = data.ego.name;
+  document.title = `${data.ego.name} · Life Connections`;
+  fillTitle();
+  // Fill the HUD first: the scenes measure it to stay clear of it.
+  updateHud();
   for (const sc of Object.values(scenes)) sc.reset();
-  buildAll();
-  history.replaceState(null, '', `?seed=${seed}&tab=${tab}${week ? `&week=${Math.round(week)}` : ''}`);
+  placeCard();
+  buildTimeline();
+  scenes[tab].resize?.();
+  render();
+  if (title) showTitle(true);
+  history.replaceState(null, '', `?seed=${seed}&tab=${tab}`);
 }
 
 async function main(): Promise<void> {
-  // Read the address before load() tidies it.
   const query = new URLSearchParams(location.search);
-  const index = (await (await fetch('lives/index.json')).json()) as { seed: number; name: string }[];
-  const select = $<HTMLSelectElement>('seed');
-  select.innerHTML = index.map((l) => `<option value="${l.seed}">${esc(l.name)} (seed ${l.seed})</option>`).join('');
-  const wanted = Number(new URLSearchParams(location.search).get('seed'));
-  const seed = index.some((l) => l.seed === wanted) ? wanted : index[0].seed;
-  select.value = String(seed);
-  select.addEventListener('change', () => load(Number(select.value)));
+  lives = (await (await fetch('lives/index.json')).json()) as typeof lives;
+  const wanted = Number(query.get('seed'));
+  const seed = lives.some((l) => l.seed === wanted) ? wanted : lives[0].seed;
+
   $('play').addEventListener('click', () => setPlaying(!playing));
-  $<HTMLSelectElement>('speed').addEventListener('change', (ev) => (speed = Number((ev.target as HTMLSelectElement).value)));
-  for (const t of ['walk', 'map', 'circle'] as Tab[]) $(`tab-${t}`).addEventListener('click', () => setTab(t));
-  const wantedTab = new URLSearchParams(location.search).get('tab') as Tab | null;
-  setTab(wantedTab && ['walk', 'map', 'circle'].includes(wantedTab) ? wantedTab : 'walk');
+  $('speed').addEventListener('click', () => {
+    speed = SPEEDS[(SPEEDS.indexOf(speed) + 1) % SPEEDS.length];
+    $('speed').textContent = `${speed}×`;
+  });
+  $('start').addEventListener('click', () => setPlaying(true));
+  $('lives-btn').addEventListener('click', () => showTitle($('title-screen').hidden));
+  $('end-again').addEventListener('click', () => {
+    setWeek(0);
+    setPlaying(true);
+  });
+  $('end-journal').addEventListener('click', () => {
+    $('end-screen').hidden = true;
+    setTab('journal');
+  });
+  $('end-next').addEventListener('click', () => {
+    const i = lives.findIndex((l) => l.seed === view.data.seed);
+    load(lives[(i + 1) % lives.length].seed, true);
+  });
+  for (const t of TABS) $(`tab-${t}`).addEventListener('click', () => setTab(t));
+  const wantedTab = query.get('tab') as Tab | null;
+  setTab(wantedTab && TABS.includes(wantedTab) ? wantedTab : 'walk');
+
   window.addEventListener('keydown', (ev) => {
-    if (ev.target instanceof HTMLSelectElement) return;
+    if (ev.metaKey || ev.ctrlKey || ev.altKey) return;
     if (ev.code === 'Space') {
       ev.preventDefault();
       setPlaying(!playing);
     } else if (ev.code === 'ArrowRight') setWeek(week + 13);
     else if (ev.code === 'ArrowLeft') setWeek(week - 13);
+    else if (ev.code === 'Escape') {
+      if (card.current() >= 0) card.close();
+      else {
+        $('title-screen').hidden = true;
+        $('end-screen').hidden = true;
+      }
+    } else if (/^Digit[1-4]$/.test(ev.code)) setTab(TABS[Number(ev.code.slice(5)) - 1]);
   });
   let resizeTimer = 0;
   window.addEventListener('resize', () => {
     clearTimeout(resizeTimer);
-    resizeTimer = window.setTimeout(buildAll, 120);
+    resizeTimer = window.setTimeout(layoutAll, 120);
   });
-  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-    for (const sc of Object.values(scenes)) sc.reset();
-    render();
-  });
-  await load(seed);
-  // ?person=<id> opens that person's card; ?person=closest picks whoever the protagonist was ever closest to outside the family.
+
+  // Deep links skip the title screen: ?week=1100, ?play, ?person=<id|closest>, ?advance=2.5.
+  const deep = ['week', 'play', 'person', 'advance'].some((k) => query.has(k));
+  await load(seed, !deep);
+  // The pixel font changes the HUD's size once it arrives.
+  document.fonts.ready.then(layoutAll);
+  if (query.has('week')) setWeek(Number(query.get('week')) || 0);
   if (query.has('person')) {
     const closest = [...view.data.people].filter((p) => !p.kin).sort((x, y) => y.peak - x.peak)[0];
     card.open(query.get('person') === 'closest' && closest ? closest.id : Number(query.get('person')));
@@ -702,6 +535,6 @@ async function main(): Promise<void> {
 }
 
 main().catch((err) => {
-  $('title').textContent = 'No lives to show yet';
-  $('subtitle').textContent = `Run "npm run export -- --seeds 1,3,5" first. (${err})`;
+  $('hud-name').textContent = 'No lives to show yet';
+  $('hud-when').textContent = `Run "npm run export -- --seeds 1,3,5" first. (${err})`;
 });

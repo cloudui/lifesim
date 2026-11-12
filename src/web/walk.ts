@@ -6,10 +6,12 @@ import type { Highlight } from '../sim/highlights';
 import { drawGlyph, drawPerson, hash, lookFor, mix, unit, type Outfit } from './pixel';
 import type { Ctx, Scene } from './types';
 
-const W = 320;
-const H = 144;
-const GROUND = 120;
-const EGO_X = 104;
+// The canvas is sized to fill the window at a whole-number pixel scale, so these change on resize.
+let W = 320;
+let H = 180;
+/** The street line the people stand on, kept just above the dialogue box. */
+let GROUND = 140;
+let EGO_X = 120;
 const WALK_SPEED = 40;
 
 type Kind = 'meet' | 'partner' | 'move' | 'note';
@@ -59,20 +61,26 @@ function buildings(city: number): { x: number; w: number; h: number }[] {
 const SKYLINES = [0, 1, 2].map(buildings);
 
 export function createWalk(root: HTMLElement, ctx: Ctx): Scene {
-  root.innerHTML = `
-    <div class="stage">
-      <canvas width="${W}" height="${H}"></canvas>
-      <div class="hud hud-left"></div>
-      <div class="hud hud-right"></div>
-    </div>
-    <div class="caption"><span class="caption-when"></span><span class="caption-text"></span></div>`;
+  root.innerHTML = `<canvas class="pixel-canvas"></canvas>`;
   const canvas = root.querySelector('canvas')!;
   const g = canvas.getContext('2d')!;
-  g.imageSmoothingEnabled = false;
-  const hudLeft = root.querySelector<HTMLElement>('.hud-left')!;
-  const hudRight = root.querySelector<HTMLElement>('.hud-right')!;
-  const capWhen = root.querySelector<HTMLElement>('.caption-when')!;
-  const capText = root.querySelector<HTMLElement>('.caption-text')!;
+
+  function resize(): void {
+    const cw = root.clientWidth || window.innerWidth;
+    const ch = root.clientHeight || window.innerHeight;
+    const { bottom } = ctx.insets();
+    // Big chunky pixels: roughly 190 game pixels tall, never fewer than 230 wide.
+    const scale = Math.max(2, Math.round(Math.min(ch / 190, cw / 230)));
+    W = Math.ceil(cw / scale);
+    H = Math.ceil(ch / scale);
+    GROUND = Math.min(H - 6, Math.max(100, Math.floor((ch - bottom) / scale) - 6));
+    EGO_X = Math.round(W * 0.4);
+    canvas.width = W;
+    canvas.height = H;
+    canvas.style.width = `${W * scale}px`;
+    canvas.style.height = `${H * scale}px`;
+    g.imageSmoothingEnabled = false;
+  }
 
   let scroll = 0;
   let clock = 0;
@@ -112,11 +120,7 @@ export function createWalk(root: HTMLElement, ctx: Ctx): Scene {
   }
 
   function showCaption(i: number): void {
-    if (i === captionIdx) return;
     captionIdx = i;
-    const h = ctx.view().data.highlights[i];
-    capWhen.textContent = h ? `${ctx.yearOf(h.week)} · age ${ctx.ageAt(h.week)}` : '';
-    capText.textContent = h ? h.text : 'Press play to start walking.';
   }
 
   function burst(x: number, y: number, n: number, glyph: string | undefined, colors: string[]): void {
@@ -289,11 +293,11 @@ export function createWalk(root: HTMLElement, ctx: Ctx): Scene {
     const night = progress > 0.8 ? (progress - 0.8) / 0.2 : progress < 0.06 ? 1 - progress / 0.06 : 0;
     if (night > 0) {
       g.fillStyle = `rgba(255,255,255,${0.75 * night})`;
-      for (let i = 0; i < 46; i++) g.fillRect(hash(i, 11) % W, hash(i, 12) % 60, 1, 1);
+      for (let i = 0; i < W / 6; i++) g.fillRect(hash(i, 11) % W, hash(i, 12) % Math.round(GROUND * 0.5), 1, 1);
     }
     // The sun crosses the sky once over the whole life.
     const sunX = 30 + progress * (W - 60);
-    const sunY = 70 - Math.sin(progress * Math.PI) * 54;
+    const sunY = GROUND * 0.55 - Math.sin(progress * Math.PI) * GROUND * 0.4;
     g.fillStyle = progress > 0.85 ? '#f4f1de' : '#fff3b0';
     g.beginPath();
     g.arc(Math.round(sunX), Math.round(sunY), 6, 0, Math.PI * 2);
@@ -445,10 +449,7 @@ export function createWalk(root: HTMLElement, ctx: Ctx): Scene {
       }
     }
 
-    // Text lives in HTML so it stays crisp.
-    const t = v.tiers[ctx.snapIndex(week)];
-    hudLeft.textContent = `${yearNow} · AGE ${ctx.ageAt(week)} · ${d.cities[city].toUpperCase()}`;
-    hudRight.textContent = `INNER ${t[0]} · CLOSE ${t[1]} · FRIENDS ${t[2]}` + (partnered ? ` · ♥ ${v.people.get(partnerId)?.name.split(' ')[0] ?? ''}` : '');
+    // Text lives in the shell's HUD and dialogue box so it stays crisp.
     if (!active) {
       let last = -1;
       for (let i = 0; i < d.highlights.length && d.highlights[i].week <= week; i++) last = i;
@@ -479,10 +480,13 @@ export function createWalk(root: HTMLElement, ctx: Ctx): Scene {
     reset() {
       presence.clear();
       scroll = unit(ctx.view().data.seed, 9) * 400;
+      resize();
       seek();
     },
     seek,
     frame,
+    resize,
+    caption: () => captionIdx,
     timeScale: () => (active || queue.length ? 0 : 1),
   };
 }

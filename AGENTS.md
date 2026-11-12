@@ -8,8 +8,8 @@ This file is the shared brief for any coding agent or person picking the project
 
 Last updated 2026-11-12.
 
-- **Done:** the simulation core, highlight detection, a console highlight reel, a tuning harness, determinism tests, a JSON export, and a browser page with three tabs: Walk (pixel art), Map (pixel art) and Circle (the original graph and charts).
-- **Branch:** everything is on `main`: the pixel views, the depth and contact tie model, messaging, breakups and the person card.
+- **Done:** the simulation core, highlight detection, a console highlight reel, a tuning harness, determinism tests, a JSON export, and a full-screen browser game with four tabs: Walk (pixel art), Map (pixel art), Circle and Journal.
+- **Branch:** `main` has the pixel views, the depth and contact tie model, messaging, breakups and the person card. The full-screen game layout is on `redesign-fullscreen`, under review.
 - **Not started:** running the sim in the browser, the intake form, a phone layout, sound.
 - **Next step:** give friendships sudden movement. Today closeness only changes by small weekly nudges and slow fading, so most friendships look flat on the person card (see "Next: conflict and busy periods" in the roadmap). Product direction is still being decided around what makes the site worth exploring; ideas are in `docs/product-ideas.md`. Speed is parked; the page reads lives simulated ahead of time.
 
@@ -83,9 +83,11 @@ src/cli/harness.ts     many lives in parallel, aggregate numbers
 src/sim/export.ts      LifeResult -> LifeExport, the plain JSON the page reads
 src/cli/export.ts      writes public/lives/<seed>.json and index.json
 index.html, src/web/   the page (vanilla TypeScript, SVG and canvas):
-  main.ts              shell, shared timeline and playhead, tabs, the Circle tab
+  main.ts              game shell: playhead, HUD, dialogue box, timeline scrubber, tabs, title and end screens
   walk.ts              Walk tab: the pixel-art walk through life
   map.ts               Map tab: where everyone is
+  circle.ts            Circle tab: everyone you know by closeness
+  journal.ts           Journal tab: summary, circle chart, cast and moments
   pixel.ts             procedural sprites and glyphs; there are no image assets
   person.ts            the person card: you and one other person as two lines over time
   types.ts             the Scene interface the animated tabs implement
@@ -136,20 +138,30 @@ Getting together with a partner, breaking up, unlikely origin of a close friend,
 
 ### The page
 
-The timeline at the top is shared: a coloured band for where the protagonist lived, highlights as dots sized by score, life events as diamonds. Drag to scrub, space plays, and there is a speed control. Below it are three tabs.
+The page is one full-window game screen, not a page of cards. The current view fills the window and a HUD floats on top of it:
 
-- **Walk** (pixel art): the protagonist walks in place while the city scrolls past. The skyline is the city they live in (a spire for New York, a red bridge for San Francisco, a twin-antenna tower for Chicago), and the sky moves from dawn to dusk across the whole life. Their inner circle walks behind them and their partner beside them. At each highlight time holds still: the person walks up outside the venue (bar, café, park, office or club hall) and they wave. Getting together brings hearts and confetti and both outfits melt into a suit or gown for a year. A move sweeps the new skyline in with a plane overhead. Hair greys with age. A caption under the scene gives the highlight text.
-- **Map** (pixel art): the three cities as islands. Everyone in the world is a faint dot; people the protagonist knows are coloured by closeness; dotted lines run to the inner circle wherever they live; dots fly between islands when someone moves. Hover for details.
-- **Circle**: the protagonist in the centre, everyone they know placed by closeness and clockwise in the order they met, with the circle-size chart, a "now" panel and the moments list.
+- **Top left:** the protagonist's name, the year, their age, their city (in its colour), their partner, and how many people sit in each circle.
+- **Top centre:** the view tabs (keys 1 to 4). **Top right:** "Lives" reopens the title screen.
+- **Bottom:** a dialogue box with the current moment's text, and under it the timeline scrubber: a play button, the city band as the track, highlights as dots sized by score, life events as diamonds, and a speed button (1×, 2×, 4×, 8×). Drag to scrub, space plays, arrows step a quarter.
+- **Title screen** on load: the person, a Begin button and the other lives. Deep links (`?week=`, `?play`, `?person=`, `?advance=`) skip it.
+- **End card** when playback reaches the end: people met, close friends, the one who mattered most, the luckiest meeting, then watch again, read the journal, or another life.
 
-Clicking a person in the Map or Circle tab opens a card (`person.ts`) with the two of you drawn as two lines over time: close together when you are close, drifting apart when you are not. A dotted pair shows where you would be on depth alone, without regular contact. The scale is shared by everyone and gives each circle the same height, so a change of circle is a visible step. Dots along the top are the moments you shared; drag the chart to scrub. `?person=<id>` or `?person=closest` opens it from the address bar.
+The views:
+
+- **Walk** (pixel art, the default): the protagonist walks in place while the city scrolls past. The canvas is sized to the window at a whole-number pixel scale, and the street sits just above the dialogue box. The skyline is the city they live in (a spire for New York, a red bridge for San Francisco, a twin-antenna tower for Chicago), and the sky moves from dawn to dusk across the whole life. Their inner circle walks behind them and their partner beside them. At each highlight time holds still: the person walks up outside the venue (bar, café, park, office or club hall) and they wave. Getting together brings hearts and confetti and both outfits melt into a suit or gown for a year. A move sweeps the new skyline in with a plane overhead. Hair greys with age.
+- **Map** (pixel art): the three cities as islands, fitted between the HUD bars. Everyone in the world is a faint dot; people the protagonist knows are coloured by closeness; dotted lines run to the inner circle wherever they live; dots fly between islands when someone moves. Hover for details.
+- **Circle** (`circle.ts`): the protagonist in the centre, everyone they know placed by closeness and clockwise in the order they met.
+- **Journal** (`journal.ts`): the reading page. A summary with lifetime numbers, the circle-size chart (scrubbable), the cast (everyone who became a close friend, with their pixel portrait, in order of appearance) and the full list of moments.
+
+Clicking a person in the Map, Circle or Journal tab opens a card (`person.ts`) with the two of you drawn as two lines over time: close together when you are close, drifting apart when you are not. A dotted pair shows where you would be on depth alone, without regular contact. The scale is shared by everyone and gives each circle the same height, so a change of circle is a visible step. Dots along the top are the moments you shared; drag the chart to scrub. `?person=<id>` or `?person=closest` opens it from the address bar.
 
 Notes for anyone changing it:
 
 - All pixel art is drawn in code from a person's id (`pixel.ts`), so there are no assets to license. Scenes draw to a small canvas that CSS scales up with `image-rendering: pixelated`; text is HTML in the VT323 font so it stays crisp.
-- An animated tab implements `Scene` (`types.ts`). It reads the shared playhead through `Ctx` and returns `timeScale() === 0` to hold time still while a moment plays.
-- The pixel views are a game screen and stay dark in both themes. The Circle tab follows the system theme and uses the dataviz palette: three city hues, neutral greys for the ordered circle tiers.
-- The project owner does not want the main experience to look like a dashboard. Circle is kept as an inspection view.
+- Every tab implements `Scene` (`types.ts`) and fills the whole stage. It reads the shared playhead through `Ctx`, returns `timeScale() === 0` to hold time still while a moment plays, and may choose which highlight the dialogue box shows (`caption()`). `ctx.insets()` gives the CSS pixels the HUD covers at the top and bottom so a scene can keep its subject clear of them; `resize()` is called when the window changes.
+- The whole page is dark in both system themes and set in VT323. The circle tiers use the same four colours everywhere (`--tier-0` to `--tier-3`: coral, gold, off-white, blue), and the three cities keep their hues.
+- The project owner does not want the experience to look like a dashboard. It should feel like a game: one screen, a HUD, tabs to dig into the detail.
+- Still vanilla TypeScript and Vite. This layout is an experiment; expect to revisit the stack when the product shape is decided.
 
 ## Calibration
 

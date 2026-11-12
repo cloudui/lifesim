@@ -2,73 +2,77 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Life Connections Sim</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#0b0d16" />
+    <title>Life Connections</title>
   </head>
   <body>
-    <div id="app">
-      <header class="top">
-        <div class="who">
-          <h1 id="title">Loading…</h1>
-          <p id="subtitle"></p>
-        </div>
-        <div class="controls">
-          <label>Life <select id="seed"></select></label>
-          <label>Speed <select id="speed"><option value="1">1×</option><option value="2">2×</option><option value="4">4×</option></select></label>
-          <button id="play" type="button">Play</button>
-        </div>
-      </header>
+    <!-- One full-window stage. Each tab is a scene that fills it; the HUD floats on top. -->
+    <main id="stage">
+      <section id="view-walk" class="view"></section>
+      <section id="view-map" class="view" hidden></section>
+      <section id="view-circle" class="view" hidden></section>
+      <section id="view-journal" class="view" hidden></section>
+    </main>
 
-      <section class="card">
-        <div class="card-head">
-          <h2>Timeline</h2>
-          <span class="hint">Bigger dots are less likely or more consequential moments. Drag to scrub, or press space to play.</span>
-        </div>
-        <div id="timeline" class="chart"></div>
-        <div id="city-legend" class="legend"></div>
-      </section>
-
-      <nav class="tabs" role="tablist">
-        <button id="tab-walk" role="tab" type="button">Walk</button>
-        <button id="tab-map" role="tab" type="button">Map</button>
-        <button id="tab-circle" role="tab" type="button">Circle</button>
+    <header id="hud-top" class="hud">
+      <div class="hud-who">
+        <div id="hud-name">…</div>
+        <div id="hud-when"></div>
+        <div id="hud-circle"></div>
+      </div>
+      <nav class="tabs" role="tablist" aria-label="Views">
+        <button id="tab-walk" role="tab" type="button"><kbd>1</kbd>Walk</button>
+        <button id="tab-map" role="tab" type="button"><kbd>2</kbd>Map</button>
+        <button id="tab-circle" role="tab" type="button"><kbd>3</kbd>Circle</button>
+        <button id="tab-journal" role="tab" type="button"><kbd>4</kbd>Journal</button>
       </nav>
+      <div class="hud-menu">
+        <button id="lives-btn" type="button" title="Choose another life">Lives</button>
+      </div>
+    </header>
 
-      <section id="view-walk" class="pixel-view"></section>
-      <section id="view-map" class="pixel-view" hidden></section>
+    <footer id="hud-bottom" class="hud">
+      <div id="dialog" class="dialog" aria-live="polite">
+        <span class="dialog-when"></span>
+        <span class="dialog-text"></span>
+      </div>
+      <div class="bar">
+        <button id="play" type="button" aria-label="Play">▶</button>
+        <div id="timeline"></div>
+        <button id="speed" type="button" title="Playback speed">1×</button>
+      </div>
+    </footer>
 
-      <div id="view-circle" class="cols" hidden>
-        <section class="card">
-          <div class="card-head">
-            <h2>Who you know</h2>
-            <span class="hint">Closer to the centre is closer to you. People are placed clockwise in the order you met them.</span>
-          </div>
-          <div id="graph-wrap"><canvas id="graph"></canvas></div>
-          <div class="legend">
-            <span><i class="mark round"></i>friend</span>
-            <span><i class="mark diamond"></i>family or partner</span>
-            <span><i class="mark line"></i>they know each other</span>
-            <span class="muted">Colour is the city they live in.</span>
-          </div>
-        </section>
+    <aside id="person-card" class="panel" aria-label="You and this person over time" hidden></aside>
 
-        <div class="side">
-          <section class="card">
-            <div id="now" class="tiles"></div>
-          </section>
-          <section class="card">
-            <div class="card-head"><h2>Your circle over time</h2></div>
-            <div id="area" class="chart"></div>
-            <div id="tier-legend" class="legend"></div>
-          </section>
-          <section class="card feed-card">
-            <div class="card-head"><h2>Moments</h2></div>
-            <ol id="feed"></ol>
-          </section>
+    <div id="title-screen" class="overlay" hidden>
+      <div class="overlay-card">
+        <div class="eyebrow">Life Connections</div>
+        <h1 id="title-name">Loading…</h1>
+        <p id="title-sub"></p>
+        <button id="start" class="big" type="button">▶ Begin</button>
+        <div class="hint">or press space · drag the timeline to jump anywhere · 1–4 switch views</div>
+        <div class="lives-pick">
+          <div class="eyebrow">Other lives</div>
+          <div id="lives"></div>
         </div>
       </div>
     </div>
-    <aside id="person-card" class="card" aria-label="You and this person over time" hidden></aside>
+
+    <div id="end-screen" class="overlay" hidden>
+      <div class="overlay-card">
+        <div class="eyebrow" id="end-eyebrow"></div>
+        <h1 id="end-title"></h1>
+        <div id="end-lines"></div>
+        <div class="end-actions">
+          <button id="end-again" type="button">↺ Watch again</button>
+          <button id="end-journal" type="button">Read the journal</button>
+          <button id="end-next" class="big" type="button">Another life ▶</button>
+        </div>
+      </div>
+    </div>
+
     <div id="tip" role="tooltip" hidden></div>
     <script type="module" src="/src/web/main.ts"></script>
   </body>

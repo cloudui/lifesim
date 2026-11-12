@@ -30,9 +30,14 @@ export interface Ctx {
   openPerson(id: number): void;
   showTip(html: string, x: number, y: number): void;
   hideTip(): void;
+  /**
+   * The screen is one full-window stage with HUD overlays on top. These are the CSS pixels
+   * the overlays cover at the top and bottom, so a scene can keep its subject clear of them.
+   */
+  insets(): { top: number; bottom: number };
 }
 
-/** An animated view driven by the shared playhead. */
+/** An animated view driven by the shared playhead. It fills the whole stage. */
 export interface Scene {
   /** A new life was loaded. */
   reset(): void;
@@ -42,4 +47,8 @@ export interface Scene {
   frame(dt: number): void;
   /** 0 while the scene is dwelling on a moment and time should hold still, otherwise 1. */
   timeScale(): number;
+  /** The window or the overlays changed size. */
+  resize?(): void;
+  /** Which highlight the dialogue box should show, if the scene wants to choose. -1 for none yet. */
+  caption?(): number;
 }
