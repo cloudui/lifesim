@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { findArcs } from '../src/sim/arcs';
 import { findHighlights } from '../src/sim/highlights';
 import { runLife, type LifeOptions } from '../src/sim/sim';
 
@@ -63,5 +64,28 @@ describe('life simulation', () => {
   it('produces highlights with text', () => {
     const hs = findHighlights(runLife({ seed: 9, ...small, years: 8 }));
     for (const h of hs) expect(h.text.length).toBeGreaterThan(10);
+  });
+
+  it('retells a life as a cast of people, each with a beginning and an ending', () => {
+    const life = runLife({ seed: 3, ...small });
+    const arcs = findArcs(life);
+    expect(arcs.cast.length).toBeGreaterThan(2);
+    expect(new Set(arcs.cast.map((a) => a.id)).size).toBe(arcs.cast.length);
+    for (const a of arcs.cast) {
+      expect(life.ties.has(a.id)).toBe(true);
+      expect(a.beats.length).toBeGreaterThanOrEqual(2);
+      for (const b of a.beats) expect(b.text).not.toMatch(/undefined|NaN/);
+    }
+    expect(JSON.stringify(findArcs(runLife({ seed: 3, ...small })).cast)).toEqual(JSON.stringify(arcs.cast));
+  });
+
+  it('what if: leaving out one meeting changes nothing before it', () => {
+    const base = runLife({ seed: 3, ...small });
+    const met = base.events.find((e) => e.t === 'met' && e.week > 20);
+    if (!met || met.t !== 'met') throw new Error('expected a meeting to undo');
+    const alt = runLife({ seed: 3, ...small, skipMeeting: { week: met.week, other: met.other } });
+    const upTo = (l: typeof base) => JSON.stringify(l.events.filter((e) => e.week < met.week));
+    expect(upTo(alt)).toEqual(upTo(base));
+    expect(alt.events.some((e) => e.t === 'met' && e.other === met.other && e.week === met.week)).toBe(false);
   });
 });

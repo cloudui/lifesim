@@ -1,108 +1,100 @@
 # The experience we are aiming for
 
-A working draft, started 2026-11-12. This is current thinking, not a spec. Every part of it is meant to be tried, looked at and changed. When something here turns out wrong in practice, change this file rather than bending the build to fit it. Sections marked **Open** are undecided on purpose.
+A working draft, started 2026-11-12 and revised the same day after a first prototype. This is current thinking, not a spec. Every part of it is meant to be tried, looked at and changed. When something here turns out wrong in practice, change this file rather than bending the build to fit it. Sections marked **Open** are undecided on purpose. Nothing here is in priority order unless it says so.
 
 `docs/product-ideas.md` is the wider list of ideas. This file is narrower: what the core experience should feel like, and which parts of the simulation serve that feeling.
 
 ## The feeling
 
-The draw is watching people shift in and out of a life: how random events, and the odds behind them, change who is in it. The moment to capture is something like this: you decide on a whim to spend a weekend somewhere, and at the aquarium you run into someone you have not seen in ten years.
+People should look, keep digging, and come away appreciating their life and what the people in it mean to them. The draw is watching people shift in and out of a life, and seeing how much of that turned on chance.
 
-The page should make people feel how small and how big life is, and leave them with some sense of what their relationships mean. Realism matters where it makes that believable. It is not the goal on its own.
+One image that started this: deciding on a whim to spend a weekend somewhere and running into someone you have not seen in ten years. That is an inspiration, not a target. The simulation should not be bent to produce it.
 
-## What makes a moment feel magical
+Realism matters where it makes a life believable and gives the story more to tell. It is not the goal on its own.
 
-Our current guess at the ingredients, taken from the aquarium moment:
+## Two ways in
 
-1. **A setup.** You knew this person, and the story showed them to you while you did. A reunion with someone you never saw means nothing.
-2. **A gap.** Time passed, and both of you went off into other parts of life.
-3. **A departure from routine.** You were somewhere you do not usually go.
-4. **Odds you can read.** "About a 1-in-9,000 chance that weekend", or "if you had gone on Sunday instead…"
+1. **A life as it could be.** Given who you are and who you happen to meet, here is one life. You watch it, then dig into it.
+2. **Picking at it.** Choose a moment, make it never happen, and see how the life comes out differently.
 
-A working test for any new feature: **what moment does it create?** If we cannot name a moment it would put on screen, it waits. This test is a rule of thumb; override it when something is clearly worth trying.
+Current thinking: the first leads, because undoing a meeting only lands when you care about what would be lost. The second sits on top of it.
 
-Where the simulation stands against these today: it has the odds, and a weak version of the gap. It has little setup, because people arrive as "Met X (age, trait)" and seldom become characters. It has almost no departure from routine, because everyone lives in three cities and follows their routine.
+## The core: people, not events
 
-## Two scales
+The timeline as first built is a list of meetings ("Met X at Y"), and reads as repetitive. A relationship gets its meaning from its middle and its ending, and those were hardly told.
 
-- **How big life is:** you crossed paths with tens of thousands of people, spoke to hundreds, and a dozen mattered.
-- **How small it is:** the stranger at the aquarium is three handshakes from you, and the chain runs through your college roommate.
+So the unit of the story is the person. A life has a small cast, about ten people, and each one gets an arc:
 
-## Shape: a life in chapters
+- **How you met**, and the odds.
+- **What you were to each other:** the years you were close, how much you saw of each other, who and what they brought into your life.
+- **What changed:** a move, drifting, finding each other again.
+- **How it stands at the end:** still close, or the last time you saw them.
 
-Current thinking, to try. A life reads as a few chapters: home, maybe college, a first city, an era defined by a hobby or a job, a move. Each chapter has a small cast. Between chapters people scatter. The memorable moments are where threads cross chapters: a reunion, a college friend who turns out to know your partner, the person who keeps turning up in every chapter.
+Everyone else is background: "you met 223 other people along the way".
 
-Chapters are also how a long life could play in about a minute. Quiet stretches inside a chapter fold away, and the crossings get the screen time.
+The cast should hold:
 
-**Open:** whether chapters are detected from what happened (moves, job changes, a hobby era) or are part of the setup from the start. Detecting them is the more natural fit for a simulation; try that first.
+- **Family**, alongside friends. Parents and siblings are among the longest arcs in any life.
+- **Partners**, past and present.
+- **Variety.** Not ten coworkers. Someone from growing up, someone met by chance, a slow burn, a late arrival, someone who was close for a season and is gone. A cast that is all "there the whole way" is as dull as a list of meetings.
+
+**Who led to whom** matters as much as who was close. "Maren brought you to the pottery studio, where you met Dmitri, who became your partner. Thirteen of your friends trace back to Maren." These chains are what make one meeting feel large, and they point at the moments worth undoing.
+
+## The full simulation stays
+
+Nothing is being thrown away. The simulated world is the engine: every arc is read off what actually happened in it, and nothing is scripted. It is also the second layer of the experience. After the core story, people can dig into the rest: the map of where everyone is, the circle, the journal, the hundreds of people who passed through, the friendships between other people.
+
+A principle to hold on to: **never rig, only curate.** The odds only mean something if they are honest. The story comes from choosing what to show and how to tell it, never from forcing an outcome.
+
+## What the first prototype showed (2026-11-12)
+
+Two console commands, built as experiments on the existing simulation with no new rules:
+
+- `npm run people -- --seed 7` retells a life as a cast of about ten people (`src/sim/arcs.ts`).
+- `npm run whatif -- --seed 7` leaves out the meetings that mattered most, one at a time, and runs the same life again.
+
+What we learned:
+
+- **It reads better.** Ten people with a beginning, a middle and an ending are easier to care about than 95 moments. The chains of who led to whom are the most interesting new thing.
+- **The simulation rarely gives an ending.** In seed 7, of the 39 people who were ever close friends, almost all who became close stayed close for the full 40 years. There is very little falling away, falling out, or loss. The retelling can only tell the endings that exist. This is the strongest argument yet for the realism work below.
+- **Lives are too settled at the start.** Much of each cast is already close "from the first page", so their beginnings are never seen.
+- **Family arcs are thin.** Parents live to 105 and nothing happens to them. The good material is in the counts ("153 of those visits were in the first ten years and 43 in the last ten").
+- **"What if" works and is dramatic.** Undo one 1-in-47,000 meeting in seed 7 and the protagonist ends up with a different partner in a different city, and never meets 157 of the people from the original life.
+- **"What if" is also chaotic.** Delaying a meeting by a single week can change who you are close to decades later. One rerun shows *a* different life; it does not prove the meeting *caused* the difference. Saying "because of Axel" honestly would need many reruns. **Open:** whether to show one alternative life as a story, or many as odds.
+
+## What the story needs from the simulation
+
+These are the realism gaps that most limit the story. Not ranked; each is judged by one rule of thumb: **what does it give the story to tell?** Override the rule when something is worth trying anyway.
+
+- **Endings and sudden turns.** Falling out, making up, drifting after a move that actually ends things, busy years when contact drops. (Conflict and busy periods are already written up in the roadmap in `AGENTS.md`.)
+- **Ageing and loss.** Parents grow old and die; so, later, do friends. Decide the tone first.
+- **Travel and going home.** Weekend trips and holidays back home put people from different parts of a life into the same place. Today the only travel is visiting family in another of the three cities.
+- **Roots.** Family elsewhere that pulls you back: parents from China, grandparents in Texas. A short list of places, each with a pull.
+- **Background.** Career, school and money shape what happens in a life. Perhaps six to eight archetypes so it stays manageable. College is one path among several, not a stage for everyone.
+- **Influence.** A partner pulls you into their world: their friends, their clubs, what they want to do. Friends get you to try things. Today partners only come along to plans, and a changed hobby is often copied from a friend.
+- **Drift in who you are.** Traits shift with age and with what happens to you (a bike accident makes you warier of riding). Hobbies phase in and out and give a life its eras. To stay readable, each shift should show up in the story and shifts should be few.
+- **A start that is less settled.** Beginning at 18, or with fewer ready-made close friends, so more beginnings happen on screen.
 
 ## Whose life
 
-Current thinking: eventually the person sets a handful of knobs so the life resembles their own, or someone else's they would like to see. Then they watch it play, then dig into it by clicking people and moments. Watching comes first and exploring second.
+Eventually the person sets a handful of knobs so the life resembles their own, or someone else's they would like to see. A first guess at the knobs: where you grew up, family roots elsewhere, path or archetype, how outgoing, how adventurous (travel included), a few hobbies.
 
-A first guess at the knobs (six or so, each answerable in a few seconds):
+Start at 18 for now. Childhood can come later as a short prologue, for instance to appeal to younger people.
 
-1. Where you grew up.
-2. Family roots elsewhere: places you go back to.
-3. Path, as an archetype (see below), which covers whether you go to college.
-4. How outgoing you are.
-5. How adventurous you are, travel included.
-6. A few hobbies.
-
-**Open:** which knobs actually change a life enough to be worth asking. Measure each one by running lives with it set high and low.
-
-## Starting age
-
-Start at 18 for now. A short prologue for childhood can come later, for instance if we want the site to appeal to younger people. Not everyone goes to college, so college is one path among several, not a stage everyone passes through.
-
-## Three layers
-
-These ideas seem to belong together: a person is shaped by where they come from and who they are with, and they change over time.
-
-### 1. Background: who you start as
-
-- **Roots.** Family in other places that pull you back: parents from China, grandparents in Texas, a hometown you visit for the holidays. Model them as a short list of places, each with a pull (every holiday, every couple of years). Going back is where reunions come from. Roots can also shape who you click with.
-- **Archetypes for career, school and money.** Perhaps six to eight, so it stays manageable. An archetype bundles the size and turnover of your workplace, your hours, travel for work, the cities you are likely to live in, income (which pays for travel), and whether college is part of the path.
-- **Travel tendency.** Not in the model yet. A trait of its own, or part of "adventurous". Weekend trips and holidays put people from every part of your life into the same places for a few days.
-
-### 2. Influence: who you are with changes you
-
-This may be the most important layer, because it is about relationships, which is what the project is about.
-
-- **A partner pulls you into their world:** their clubs, their friends, what they want to do at the weekend. Over years two circles merge; after a breakup your share of the merged circle tends to fall away. Today partners only come along to plans.
-- **Friends pull you into things:** go along as a plus-one, try their hobby, and sometimes it sticks. "You took up climbing because of Sam, and were still climbing twenty years after Sam moved away." Today a changed hobby is often copied from a friend, but nothing makes a friend the reason for the change.
-- **Small nudges:** a gift, an invitation, a recommendation. The same mechanism on a smaller scale. Later.
-
-### 3. Drift: you change over time
-
-- Traits shift with age and with what happens to you. A bike accident makes you warier of biking; a great year in a club makes you more outgoing. One possible form is a table of event, the trait it moves, and by how much, varying with personality.
-- Interests mature and fade: hobbies phase in and out, giving a life its eras.
-- Two guidelines so drift stays readable: every shift should show up on screen ("after the crash, Maya stopped riding and drifted from the Saturday group"), and shifts should be few, limited in size and partly fade back.
-- Tone: light, never crude. Heavier events wait until we decide how to show them.
+**Open:** which knobs change a life enough to be worth asking.
 
 ## Where the world needs detail
 
-An idea to try, not a decision. Full person-by-person simulation where the camera is (the protagonist's cities and the few hundred people around them), and likelihoods elsewhere (destinations, distant people, the background crowd). That is what would make extra destinations affordable.
+An idea to try, not a decision. Full person-by-person simulation where the camera is (the protagonist's cities and the few hundred people around them), and likelihoods elsewhere (destinations, distant people, the background crowd). That would make extra destinations affordable. Several destinations, not many; reconsider the number later.
 
-Worth keeping either way: everyone near the protagonist follows the same rules as the protagonist, so friends meeting without you and other people's lives crossing still happen naturally. This would loosen the earlier rule that the protagonist is only a camera in a uniform world, so record it in `AGENTS.md` if we adopt it.
-
-Already in the model and worth keeping: friends of convenience, such as coworkers who fall away soon after the job ends.
-
-## Places
-
-Several destinations, but not many, so the world stays small. Destinations can be thinner than home cities: a few relatives, some locals, and whoever else is visiting that week.
-
-**Open, reconsider later:** how many destinations, which ones, and how detailed each is.
-
-## How this changes the order of work
-
-Current thinking: settle the experience first and the practical work after it. Conflict, speed and calibration are still needed, but they serve whatever shape comes out of this. A plausible first experiment that tests the feeling cheaply: add travel and holidays home to the existing three cities, then check whether reunions start to feel like the aquarium moment. Change the plan freely if it does not.
+Worth keeping either way: everyone near the protagonist follows the same rules as the protagonist, so friends meeting without you still happens naturally.
 
 ## Open questions
 
-- Watching versus exploring: how much of the page is a film, and how much a world to poke at.
-- Which knobs matter enough to ask for.
-- How chapters are found and shown.
+- How the cast is shown on the page: portraits you step through, threads woven into the walk, or something else. So far it exists only in the console.
+- What one minute of a life looks like, beat by beat. Writing a storyboard by hand would test this cheaply.
+- One alternative life or many, for "what if".
+- How loss and falling out are shown while keeping the tone light.
+- What the last screen leaves people with: who was there throughout, who was lost, who came back.
 - How many destinations, and how detailed.
-- How heavier events (injuries, deaths, falling out) are shown while keeping the tone light.
 - Whether trait drift is visible enough to be worth its complexity.

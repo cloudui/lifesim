@@ -8,10 +8,10 @@ This file is the shared brief for any coding agent or person picking the project
 
 Last updated 2026-11-12.
 
-- **Done:** the simulation core, highlight detection, a console highlight reel, a tuning harness, determinism tests, a JSON export, and a full-screen browser game with four tabs: Walk (pixel art), Map (pixel art), Circle and Journal.
+- **Done:** the simulation core, highlight detection, a retelling by people and a what-if rerun (both console experiments), a console highlight reel, a tuning harness, determinism tests, a JSON export, and a full-screen browser game with four tabs: Walk (pixel art), Map (pixel art), Circle and Journal.
 - **Branch:** everything is on `main`: the pixel views, the depth and contact tie model, messaging, breakups, the person card and the full-screen game layout.
 - **Not started:** running the sim in the browser, the intake form, a phone layout, sound.
-- **Next step:** settle what the core experience should feel like before more practical work. A working draft is in `docs/experience.md` (a life in chapters, travel and holidays home, roots, archetypes, influence from partner and friends, traits that drift); it is meant to be tried and changed, not followed to the letter. Conflict and busy periods (see the roadmap) give friendships sudden movement and are still wanted, but now come after the experience is settled. Wider ideas are in `docs/product-ideas.md`. Speed is parked; the page reads lives simulated ahead of time.
+- **Next step:** make the story about people, not events. `docs/experience.md` is the working draft of the core experience (meant to be tried and changed, not followed to the letter). A first prototype retells a life as a cast of about ten people (`npm run people`) and reruns a life with one meeting left out (`npm run whatif`); both are console only. What it showed: the retelling reads better, but the simulation rarely gives a friendship an ending, so the realism work (falling out, drifting, ageing and loss, travel, roots, influence) is what the story needs next. Still to do: decide how the cast appears on the page. Wider ideas are in `docs/product-ideas.md`. Speed is parked; the page reads lives simulated ahead of time.
 
 ## Run it
 
@@ -21,6 +21,8 @@ Node 18 or newer.
 npm install
 npm run life -- --seed 7              # one life, printed as a highlight reel
 npm run life -- --seed 7 --ext 0.9 --hobbies run,games --top 40
+npm run people -- --seed 7            # the same life retold as the ten or so people who mattered
+npm run whatif -- --seed 7 --n 2      # leave out the meetings that mattered most and run the life again (one extra run each)
 npm run harness -- --n 16             # many lives in parallel, aggregate sanity numbers
 npm run harness -- --n 8 --years 15 --set hlMin=30 --set invitePow=2   # try parameter changes without editing code
 npm run export -- --seeds 1,3,5,7     # simulate lives and write public/lives/<seed>.json for the page
@@ -77,8 +79,11 @@ src/sim/world.ts       cities, venues, families, starting ties
 src/sim/people.ts      compatibility index, personality wording, reasons two people clicked
 src/sim/sim.ts         the weekly loop, ties, event log, snapshots; runLife() is the entry point
 src/sim/highlights.ts  event log -> scored, worded highlights
+src/sim/arcs.ts        event log -> a cast of people, each with a beginning, middle and ending, and who led to whom (experiment)
 src/sim/stats.ts       summary numbers for one life
 src/cli/life.ts        console highlight reel
+src/cli/people.ts      console retelling by people
+src/cli/whatif.ts      console what-if: the same life with one meeting left out
 src/cli/harness.ts     many lives in parallel, aggregate numbers
 src/sim/export.ts      LifeResult -> LifeExport, the plain JSON the page reads
 src/cli/export.ts      writes public/lives/<seed>.json and index.json
@@ -128,6 +133,13 @@ The data flow is one-way: `runLife(options)` returns a `LifeResult` holding the 
 ### Highlight types
 
 Getting together with a partner, breaking up, unlikely origin of a close friend, small world (a new friend already knows someone from another part of your life), near miss (crossed paths many times before speaking), reunion after years, two close friends meeting without you, friends you introduced, drifting apart, growing close again, a friend moving away or into your city, picking up a hobby. Moves, job changes, getting together and breaking up are always shown as the scaffold of the timeline. New people are introduced with their age and most pronounced trait, and close friendships say what the two clicked over.
+
+### People and what-if (experiments)
+
+- `findArcs(life)` in `arcs.ts` is a pure function of the `LifeResult`, like highlights. It picks a cast (partners, the family you spent most time with, then friends ranked by closeness added up over the years, with a penalty for repeating a kind of friendship so the cast is varied) and writes each person's beats from the event log, contact rows and snapshots.
+- "Reached you through" means the person introduced you, or brought you into the club or job where you met.
+- `LifeOptions.skipMeeting` makes the protagonist and one person not meet in one given week. Nothing else changes, so the life is identical up to that week. The two may still meet later.
+- A single rerun is chaotic: a meeting delayed by a week can change who is close decades later. It shows a different life, not what one meeting caused.
 
 ### How to extend
 

@@ -80,6 +80,11 @@ export interface LifeOptions {
   cities?: CityConfig[];
   params?: Partial<Params>;
   ego?: EgoOverrides;
+  /**
+   * "What if": the protagonist and this person do not meet in this week. Nothing else is touched,
+   * so the life is identical up to that week and then goes wherever the same rules take it.
+   */
+  skipMeeting?: { week: number; other: number };
 }
 
 export interface StartProfile {
@@ -135,6 +140,8 @@ export class Sim {
   fs: number[][];
   fm: number[][];
   fk: boolean[][];
+  /** A single first meeting to leave out; see LifeOptions.skipMeeting. */
+  skip: { week: number; other: number } | null = null;
   events: SimEvent[] = [];
   contacts: number[] = [];
   snapshots: Snapshot[] = [];
@@ -346,6 +353,7 @@ export class Sim {
     let tie = this.adj[a].get(b);
     let isNew = false;
     if (!tie) {
+      if (egoInvolved && this.skip && w === this.skip.week && (a === this.skip.other || b === this.skip.other)) return;
       isNew = true;
       const A = this.world.agents[a];
       const B = this.world.agents[b];
@@ -1115,6 +1123,7 @@ export function runLife(opt: LifeOptions): LifeResult {
   const start: StartProfile = {
     city: e.city, work: e.work, clubs: [...e.clubs], hobbies: [...e.hobbies], age: startYear - e.birthYear, partner: e.partner,
   };
+  sim.skip = opt.skipMeeting ?? null;
   sim.startLogging();
   for (let w = 0; w < years * 52; w++) sim.step();
   sim.finish();

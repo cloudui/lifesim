@@ -4,6 +4,13 @@ What was added, when, and why, newest first. `AGENTS.md` describes the project a
 
 ## 2026-11-12
 
+### The life retold as people, and a first "what if" [branch `worktree-experience-doc`]
+
+- **What:** two console experiments. `npm run people` retells a life as about ten people (family, partners and a varied set of friends), each with how you met, what you were to each other, what changed and how it stands at the end, plus the chains of who led to whom. `npm run whatif` picks the meetings that mattered most, leaves each one out, and runs the same life again to compare. The simulation gained one option, `skipMeeting`; no rule changed, and existing lives are identical.
+- **Why:** the timeline read as a list of meetings. The project owner wants people to keep digging and to appreciate what the people in a life mean; a relationship's meaning is in its middle and ending, which were hardly told. `docs/experience.md` was written first, as a working draft of the experience.
+- **Result:** the retelling reads better and the chains are the most interesting new thing. It also showed that the simulation rarely ends a friendship: in seed 7 almost everyone who became close stayed close for 40 years. In the what-if, undoing one 1-in-47,000 meeting in seed 7 gives a different partner and a different city. A single rerun is chaotic, so it shows a different life and not what the meeting caused.
+- **Not done:** nothing on the page uses this yet.
+
 ### Full-screen game layout [branch `redesign-fullscreen`]
 
 - **What:** the page is now one full-window screen instead of a column of cards. The current view fills the window and a HUD floats on top. Top left shows who, when, where and the circle counts. The tabs are in the middle of the top bar. Along the bottom are a dialogue box for the current moment and a docked timeline scrubber. A title screen opens each life and an end card closes it. Circle became a full-screen view of its own. The charts, the moments list and a new cast list (pixel portraits of everyone who became a close friend) moved to a fourth tab, Journal. Everything is dark and set in VT323. The four circle colours are now the same in every view.

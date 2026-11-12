@@ -6,6 +6,8 @@
   "description": "Simulates one person's life and the social connections they form along the way.",
   "scripts": {
     "life": "tsx src/cli/life.ts",
+    "people": "tsx src/cli/people.ts",
+    "whatif": "tsx src/cli/whatif.ts",
     "harness": "tsx src/cli/harness.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
