@@ -146,3 +146,31 @@ h2 { font-size: 14px; margin: 0; }
 .pixel-legend { display: flex; flex-wrap: wrap; gap: 4px 18px; color: var(--text-2); font-size: 19px; }
 .pixel-legend span { display: inline-flex; align-items: center; gap: 7px; }
 .pixel-legend i { width: 10px; height: 10px; display: inline-block; outline: 1px solid rgb(0 0 0 / 0.35); }
+
+/* ------------------------------------------------------------ person card */
+#person-card {
+  position: fixed; right: 16px; bottom: 16px; z-index: 8; width: min(460px, calc(100vw - 32px));
+  box-shadow: 0 8px 28px rgb(0 0 0 / 0.2); font-size: 12.5px;
+}
+#person-card[hidden] { display: none; }
+.pc-head { padding-right: 32px; line-height: 1.45; }
+.pc-head b { display: block; font-size: 15px; }
+.pc-head .muted { display: block; color: var(--text-2); }
+.pc-close {
+  position: absolute; top: 8px; right: 8px; min-width: 0; width: 28px; height: 28px; padding: 0;
+  border-color: transparent; background: transparent; color: var(--text-2); font-size: 18px; line-height: 1;
+}
+.pc-chart { margin-top: 8px; }
+.pc-chart svg { display: block; width: 100%; height: auto; cursor: ew-resize; touch-action: none; }
+.pc-grid { stroke: var(--grid); stroke-width: 1; }
+.pc-tick { fill: var(--text-3); font-size: 10px; }
+.pc-label { fill: var(--text); font-size: 11px; font-weight: 600; }
+.pc-line { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.pc-you { stroke: var(--text); }
+.pc-them { stroke: var(--city-1); }
+.pc-depth { stroke-width: 1.25; stroke-dasharray: 1 4; opacity: 0.6; }
+.pc-moment { fill: var(--text-2); stroke: var(--surface); stroke-width: 1.5; cursor: pointer; }
+.pc-moment:hover { fill: var(--text); }
+.pc-playhead { stroke: var(--text); stroke-width: 1; }
+.pc-key { display: inline-block; width: 18px; height: 0; margin-right: 6px; vertical-align: middle; border-top: 2px solid var(--text); }
+.pc-key.dotted { border-top: 2px dotted var(--text-3); }

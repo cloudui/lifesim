@@ -26,6 +26,8 @@ export interface Ctx {
   /** Whether this person is or ever was the protagonist's partner. */
   wasPartner(id: number): boolean;
   personTip(id: number): string;
+  /** Open the card showing the protagonist and this person over time. */
+  openPerson(id: number): void;
   showTip(html: string, x: number, y: number): void;
   hideTip(): void;
 }

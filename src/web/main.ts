@@ -5,6 +5,7 @@ import type { LifeExport, PersonExport } from '../sim/export';
 import { formatOdds, LEVEL_NAMES } from '../sim/highlights';
 import '@fontsource/vt323';
 import { createMap } from './map';
+import { createPersonCard } from './person';
 import './style.css';
 import type { Ctx, Scene, View } from './types';
 import { createWalk } from './walk';
@@ -489,6 +490,9 @@ canvas.addEventListener('pointermove', (ev) => {
   if (best >= 0) showTip(personTip(best), ev.clientX, ev.clientY);
   else hideTip();
 });
+canvas.addEventListener('click', () => {
+  if (hoverId >= 0) card.open(hoverId);
+});
 canvas.addEventListener('pointerleave', () => {
   hoverId = -1;
   hideTip();
@@ -545,7 +549,9 @@ const ctx: Ctx = {
   playing: () => playing,
   yearOf, ageAt, cityAt, levelOf, strengthsAt, snapIndex, partnerAt, wasPartner, personTip, showTip,
   hideTip: () => hideTip(),
+  openPerson: (id) => card.open(id),
 };
+const card = createPersonCard($('person-card'), ctx, (w) => setWeek(w));
 const scenes: Partial<Record<Tab, Scene>> = {
   walk: createWalk($('view-walk'), ctx),
   map: createMap($('view-map'), ctx),
@@ -560,6 +566,7 @@ function setWeek(w: number): void {
 
 function render(): void {
   updateTimeline();
+  card.update();
   if (tab !== 'circle') return;
   const x = areaScale(week);
   areaPlayhead.setAttribute('x1', String(x));
@@ -631,6 +638,7 @@ async function load(seed: number): Promise<void> {
     return t;
   });
   view = { data, people, angle, totalWeeks: data.years * 52, tiers };
+  card.reset();
   week = Math.min(data.years * 52, Math.max(0, Number(new URLSearchParams(location.search).get('week')) || 0));
 
   const e = data.ego;
@@ -681,6 +689,11 @@ async function main(): Promise<void> {
     render();
   });
   await load(seed);
+  // ?person=<id> opens that person's card; ?person=closest picks whoever the protagonist was ever closest to outside the family.
+  if (query.has('person')) {
+    const closest = [...view.data.people].filter((p) => !p.kin).sort((x, y) => y.peak - x.peak)[0];
+    card.open(query.get('person') === 'closest' && closest ? closest.id : Number(query.get('person')));
+  }
   if (query.has('play')) setPlaying(true);
   // Testing aid: ?play&advance=2.5 runs the animation forward that many seconds before showing it.
   for (let i = 0, n = Math.round(Number(query.get('advance') ?? 0) * 30); i < n; i++) tick(1 / 30);
