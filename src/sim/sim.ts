@@ -22,8 +22,6 @@ export interface Tie {
   k: number;
   /** Week of the last interaction of any kind. */
   last: number;
-  /** Week they last spent time together in person. */
-  seen: number;
   met: number;
   /** Venue where they met, or -1. */
   venue: number;
@@ -184,7 +182,7 @@ export class Sim {
     for (const t of world.seedTies) {
       const tie: Tie = {
         // Family and childhood friends start as depth with no recent contact.
-        a: t.a, b: t.b, d: t.s, k: 0, last: startWeek, seen: startWeek, met: Math.min(t.met, startWeek), venue: -1, ctx: t.ctx,
+        a: t.a, b: t.b, d: t.s, k: 0, last: startWeek, met: Math.min(t.met, startWeek), venue: -1, ctx: t.ctx,
         p: 1, n: 0, peak: t.s, dp: t.s, kin: t.kin, via: -1, c: compat(world.agents[t.a], world.agents[t.b]),
       };
       this.adj[t.a].set(t.b, tie);
@@ -354,13 +352,13 @@ export class Sim {
       const c = compat(A, B);
       const spark = P.sparkMax * this.r(R.SPARK, a, b) ** P.sparkPow * Math.min(1.5, c / 0.3);
       // A first impression counts as depth: a few first meetings matter straight away.
-      tie = { a, b, d: spark, k: 0, last: w, seen: w, met: w, venue, ctx, p, n: 0, peak: 0, dp: spark, kin: false, via, c };
+      tie = { a, b, d: spark, k: 0, last: w, met: w, venue, ctx, p, n: 0, peak: 0, dp: spark, kin: false, via, c };
       this.adj[a].set(b, tie);
       this.adj[b].set(a, tie);
     } else {
-      if (this.logging && egoInvolved && !tie.kin && ctx !== 'call' && ctx !== 'message' && w - tie.seen >= P.reunionGap) {
+      if (this.logging && egoInvolved && !tie.kin && ctx !== 'call' && ctx !== 'message' && w - tie.last >= P.reunionGap) {
         this.events.push({
-          t: 'reunion', week: w, other: a === this.ego ? b : a, venue, ctx, gap: w - tie.seen, prevPeak: tie.peak,
+          t: 'reunion', week: w, other: a === this.ego ? b : a, venue, ctx, gap: w - tie.last, prevPeak: tie.peak,
           city: this.loc[this.ego],
         });
       }
@@ -400,7 +398,6 @@ export class Sim {
     }
     if (tie.k < cap) tie.k += gain * (cap - tie.k);
     tie.last = w;
-    if (ctx !== 'call' && ctx !== 'message') tie.seen = w;
     tie.n++;
     if (tie.d > tie.dp) tie.dp = tie.d;
     const s = tie.d + (1 - tie.d) * tie.k;
