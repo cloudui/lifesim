@@ -1,8 +1,6 @@
 // The Journal view: the reading page of the game. Who this life belongs to, how their
-// circle grew and shrank, the cast of people who mattered, and every moment in order.
+// circle grew and shrank, and every moment in order. The people are in the People view.
 
-import { formatOdds } from '../sim/highlights';
-import { drawPerson, lookFor } from './pixel';
 import type { Ctx, Scene } from './types';
 
 const SVG = 'http://www.w3.org/2000/svg';
@@ -29,11 +27,6 @@ export function createJournal(root: HTMLElement, ctx: Ctx, seek: (week: number) 
           <h3>Your circle over time</h3>
           <div class="j-area chart"></div>
           <div class="pixel-legend j-tier-legend"></div>
-        </section>
-        <section class="panel">
-          <h3>Cast</h3>
-          <p class="muted j-hint">Everyone who became a close friend, in order of appearance. Click one to see the two of you over time.</p>
-          <div class="j-cast"></div>
         </section>
       </div>
       <section class="panel j-moments">
@@ -126,37 +119,6 @@ export function createJournal(root: HTMLElement, ctx: Ctx, seek: (week: number) 
     q('.j-tier-legend').innerHTML = TIER_LABELS.map((l, i) => `<span><i style="background:var(--tier-${i})"></i>${l}</span>`).join('');
   }
 
-  function buildCast(): void {
-    const v = ctx.view();
-    const L = v.data.levels;
-    const cast = v.data.people
-      .filter((p) => (!p.kin || ctx.wasPartner(p.id)) && (p.peak >= L[2] || ctx.wasPartner(p.id)))
-      .sort((a, b) => a.met - b.met || b.peak - a.peak);
-    const host = q('.j-cast');
-    host.replaceChildren(
-      ...cast.map((p) => {
-        const b = document.createElement('button');
-        b.type = 'button';
-        b.className = 'cast';
-        const c = document.createElement('canvas');
-        c.width = 20;
-        c.height = 26;
-        const g = c.getContext('2d')!;
-        g.imageSmoothingEnabled = false;
-        drawPerson(g, 10, 25, lookFor(p.id), { pose: 'stand', frame: 0, outfit: 'casual' });
-        const when = p.met < 0 ? (p.ctx === 'childhood' ? 'since childhood' : 'from the start') : `met ${ctx.yearOf(p.met)}`;
-        const odds = p.met >= 0 && p.p < 0.2 ? ` · ${formatOdds(p.p).replace('about a ', '')}` : '';
-        b.append(c);
-        const label = document.createElement('span');
-        label.innerHTML = `<b>${esc(p.name.split(' ')[0])}${ctx.wasPartner(p.id) ? ' ♥' : ''}</b><small>${esc(when + odds)}</small>`;
-        b.append(label);
-        b.addEventListener('click', () => ctx.openPerson(p.id));
-        return b;
-      }),
-    );
-    if (!cast.length) host.innerHTML = '<p class="muted">Nobody became a close friend in this life.</p>';
-  }
-
   function buildFeed(): void {
     const v = ctx.view();
     feedItems = v.data.highlights.map((h) => {
@@ -201,7 +163,6 @@ export function createJournal(root: HTMLElement, ctx: Ctx, seek: (week: number) 
     reset() {
       layout();
       buildSummary();
-      buildCast();
       buildFeed();
       buildArea();
       lastWeek = -1;

@@ -39,6 +39,7 @@ export function createPersonCard(root: HTMLElement, ctx: Ctx, seek: (week: numbe
     <button class="pc-close" type="button" aria-label="Close">×</button>
     <div class="pc-head"></div>
     <div class="pc-chart"></div>
+    <ol class="pc-story"></ol>
     <div class="legend pc-legend">
       <span><i class="pc-key"></i>you</span>
       <span><i class="pc-key them"></i><span class="pc-name"></span></span>
@@ -47,6 +48,8 @@ export function createPersonCard(root: HTMLElement, ctx: Ctx, seek: (week: numbe
   const head = root.querySelector<HTMLElement>('.pc-head')!;
   const chart = root.querySelector<HTMLElement>('.pc-chart')!;
   root.querySelector('.pc-close')!.addEventListener('click', () => close());
+  const story = root.querySelector<HTMLElement>('.pc-story')!;
+  let beats: [number, HTMLElement][] = [];
   let id = -1;
   let playhead: SVGElement | undefined;
   let series: { week: number; s: number; d: number }[] = [];
@@ -69,7 +72,18 @@ export function createPersonCard(root: HTMLElement, ctx: Ctx, seek: (week: numbe
     const v = ctx.view();
     const person = v.people.get(id);
     chart.innerHTML = '';
+    beats = [];
+    story.replaceChildren();
     if (!person) return;
+    // Their part in the story, one line per turn. A line is dim until it has happened.
+    for (const b of v.arcs.get(id)?.beats ?? []) {
+      const li = document.createElement('li');
+      li.textContent = b.text;
+      li.title = `Go to ${ctx.yearOf(b.week)}`;
+      li.addEventListener('click', () => seek(b.week));
+      beats.push([b.week, li]);
+      story.append(li);
+    }
     const total = v.totalWeeks;
     const from = Math.max(0, person.met);
     x = (w) => LEFT + (w / total) * (W - LEFT - RIGHT);
@@ -163,6 +177,7 @@ export function createPersonCard(root: HTMLElement, ctx: Ctx, seek: (week: numbe
     if (id < 0) return;
     head.innerHTML = ctx.personTip(id);
     root.querySelector('.pc-name')!.textContent = ctx.view().people.get(id)?.name.split(' ')[0] ?? '';
+    for (const [w, li] of beats) li.classList.toggle('future', w > ctx.week());
     if (playhead) {
       const px = x(ctx.week());
       playhead.setAttribute('x1', String(px));

@@ -8,6 +8,7 @@ import { formatOdds, LEVEL_NAMES } from '../sim/highlights';
 import '@fontsource/vt323';
 import { createCircle } from './circle';
 import { createJournal } from './journal';
+import { createPeople } from './people';
 import { createMap } from './map';
 import { createPersonCard } from './person';
 import './style.css';
@@ -24,10 +25,10 @@ function el(name: string, attrs: Record<string, string | number> = {}, text?: st
 }
 const esc = (s: string) => s.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]!);
 
-type Tab = 'walk' | 'map' | 'circle' | 'journal';
-const TABS: Tab[] = ['walk', 'map', 'circle', 'journal'];
+type Tab = 'walk' | 'map' | 'circle' | 'people' | 'journal';
+const TABS: Tab[] = ['walk', 'map', 'circle', 'people', 'journal'];
 /** Weeks of life per second of playback. The pixel views run slower so moments can land. */
-const RATE: Record<Tab, number> = { walk: 30, map: 45, circle: 70, journal: 70 };
+const RATE: Record<Tab, number> = { walk: 30, map: 45, circle: 70, people: 70, journal: 70 };
 const SPEEDS = [1, 2, 4, 8];
 
 let view: View;
@@ -346,6 +347,7 @@ const scenes: Record<Tab, Scene> = {
   walk: createWalk($('view-walk'), ctx),
   map: createMap($('view-map'), ctx),
   circle: createCircle($('view-circle'), ctx),
+  people: createPeople($('view-people'), ctx, (w) => setWeek(w)),
   journal: createJournal($('view-journal'), ctx, (w) => setWeek(w)),
 };
 
@@ -448,7 +450,8 @@ async function load(seed: number, title = false): Promise<void> {
     }
     return t;
   });
-  view = { data, people, angle, totalWeeks: data.years * 52, tiers };
+  const arcs = new Map(data.arcs.people.map((a) => [a.id, a]));
+  view = { data, people, arcs, angle, totalWeeks: data.years * 52, tiers };
   card.reset();
   week = 0;
   hudKey = '';
@@ -509,7 +512,7 @@ async function main(): Promise<void> {
         $('title-screen').hidden = true;
         $('end-screen').hidden = true;
       }
-    } else if (/^Digit[1-4]$/.test(ev.code)) setTab(TABS[Number(ev.code.slice(5)) - 1]);
+    } else if (/^Digit[1-5]$/.test(ev.code)) setTab(TABS[Number(ev.code.slice(5)) - 1]);
   });
   let resizeTimer = 0;
   window.addEventListener('resize', () => {

@@ -1,6 +1,7 @@
 // A finished life as plain JSON. This is the only thing the browser views read.
 
 import { CLUBS, type Ctx } from './activities';
+import { findArcs, SHAPE_NAMES, type ArcBeat, type ArcRole } from './arcs';
 import { findHighlights, selectReel, type Highlight } from './highlights';
 import { descriptor } from './people';
 import type { LifeResult } from './sim';
@@ -30,6 +31,25 @@ export interface PersonExport {
   compat: number;
   /** [week, city] each time their home city changes, starting at week 0. */
   cities: [number, number][];
+}
+
+/** One person's part in the story: who they were to the protagonist, told as a few dated lines. */
+export interface ArcExport {
+  id: number;
+  role: ArcRole;
+  /** e.g. "met by chance" or "one of your parents". */
+  label: string;
+  /** The kind of friendship it was, e.g. "a slow burn". Empty for family and partners. */
+  shape: string;
+  /** One of the people the story is about. */
+  cast: boolean;
+  /** First and last week the two were close friends or better, or -1. */
+  closeFrom: number;
+  closeTo: number;
+  /** Times they saw each other in person, and the week of the last time (-1 if never). */
+  seen: number;
+  last: number;
+  beats: ArcBeat[];
 }
 
 export interface VenueExport {
@@ -73,6 +93,11 @@ export interface LifeExport {
   };
   people: PersonExport[];
   highlights: Highlight[];
+  /**
+   * The life retold as people. `people` lists everyone the protagonist ever knew, most relevant
+   * first; `cast` is the ids the story is about, in order of appearance.
+   */
+  arcs: { cast: number[]; people: ArcExport[]; threads: string[] };
   /** Venues referenced by highlights. */
   venues: VenueExport[];
   /** Everyone in the world: [id, [week, city][]]. Used by the map to show the whole population. */
@@ -136,6 +161,15 @@ export function exportLife(life: LifeResult, top = 90): LifeExport {
     if (e.t === 'partner') partners.push({ id: e.other, from: e.week, to: null });
     else if (e.t === 'breakup' && partners.length) partners[partners.length - 1].to = e.week;
   }
+  const told = findArcs(life);
+  const arcs: LifeExport['arcs'] = {
+    cast: told.cast.map((a) => a.id),
+    threads: told.threads.map((t) => t.text),
+    people: told.everyone.map((a) => ({
+      id: a.id, role: a.role, label: a.label, cast: a.cast, closeFrom: a.closeFrom, closeTo: a.closeTo, seen: a.seen, last: a.last,
+      shape: a.role === 'family' || a.role === 'partner' ? '' : SHAPE_NAMES[a.shape], beats: a.beats,
+    })),
+  };
   return {
     seed: life.seed, startYear: life.startYear, years: life.years, levels: L,
     cities: world.cities.map((c) => c.name),
@@ -146,6 +180,7 @@ export function exportLife(life: LifeResult, top = 90): LifeExport {
     },
     people,
     highlights,
+    arcs,
     venues: venueList,
     population: agents.map((a) => [a.id, cityTimeline(a.id)] as [number, [number, number][]]),
     snapshots,

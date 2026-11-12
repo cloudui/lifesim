@@ -4,6 +4,12 @@ What was added, when, and why, newest first. `AGENTS.md` describes the project a
 
 ## 2026-11-12
 
+### People tab, a catalog of everyone, and the story on the person card
+
+- **What:** a fifth tab, People. It shows the cast (now 7 to 14 people, depending on how many mattered, instead of a fixed ten) as cards with each person's story in a few lines, then who led to whom, then a catalog of everyone the protagonist ever knew, most relevant first, with search and filters. Lines that have not happened yet are dim, so the page fills in as time moves. The person card shows the same story under its chart. The export gained `arcs`, and the five lives were exported again. The Journal lost its cast list, which the People tab replaces. The dialogue box is now hidden on the People and Journal tabs, not just blanked, so they use the full height.
+- **Why:** to judge the people-centred retelling in the browser, and so that anyone can be looked up, not only the cast.
+- **Not done:** the timeline scrubber is unchanged; a lane per cast member is the next idea. The What-if is still console only. A phone layout is still not started.
+
 ### The life retold as people, and a first "what if" [branch `worktree-experience-doc`]
 
 - **What:** two console experiments. `npm run people` retells a life as about ten people (family, partners and a varied set of friends), each with how you met, what you were to each other, what changed and how it stands at the end, plus the chains of who led to whom. `npm run whatif` picks the meetings that mattered most, leaves each one out, and runs the same life again to compare. The simulation gained one option, `skipMeeting`; no rule changed, and existing lives are identical.

@@ -1,5 +1,5 @@
 // Runs one life and retells it as the people who mattered.
-//   npm run people -- --seed 7 [--years 40] [--cast 10]
+//   npm run people -- --seed 7 [--years 40] [--cast 10]   (--cast fixes the cast size; by default it is 7 to 14)
 
 import { findArcs, SHAPE_NAMES, type ArcsResult } from '../sim/arcs';
 import { runLife, type LifeResult } from '../sim/sim';
@@ -36,5 +36,6 @@ export function printPeople(life: LifeResult, arcs: ArcsResult): void {
 if (process.argv[1]?.endsWith('people.ts')) {
   const seed = num('seed') ?? 1;
   const life = runLife({ seed, years: num('years') });
-  printPeople(life, findArcs(life, num('cast') ?? 10));
+  const size = num('cast');
+  printPeople(life, findArcs(life, size === undefined ? {} : { min: size, max: size }));
 }

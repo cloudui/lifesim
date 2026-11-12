@@ -91,7 +91,7 @@ Worth keeping either way: everyone near the protagonist follows the same rules a
 
 ## Open questions
 
-- How the cast is shown on the page: portraits you step through, threads woven into the walk, or something else. So far it exists only in the console.
+- How the cast is shown on the page. A first version is the People tab: cast cards with their stories, then a catalog of everyone. Still open: bringing the cast into the Walk, and turning the timeline scrubber into a lane per cast member so scrubbing shows who was in your life when.
 - What one minute of a life looks like, beat by beat. Writing a storyboard by hand would test this cheaply.
 - One alternative life or many, for "what if".
 - How loss and falling out are shown while keeping the tone light.

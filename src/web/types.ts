@@ -1,8 +1,10 @@
-import type { LifeExport, PersonExport } from '../sim/export';
+import type { ArcExport, LifeExport, PersonExport } from '../sim/export';
 
 export interface View {
   data: LifeExport;
   people: Map<number, PersonExport>;
+  /** Each person's part in the story, by id. */
+  arcs: Map<number, ArcExport>;
   /** Fixed angle for each person, clockwise by when they met the protagonist. */
   angle: Map<number, number>;
   totalWeeks: number;

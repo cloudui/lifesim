@@ -38,6 +38,12 @@ export interface Arc {
   odds: number | null;
   /** Week you met, or -1 if you knew them before the story. */
   met: number;
+  /** Week you last saw each other in person during the story, or -1. */
+  last: number;
+  /** Whether they are one of the people the story is about. */
+  cast: boolean;
+  /** What the catalog of everyone is sorted by: closeness over the years, with family counting for more. */
+  relevance: number;
   /** People who reached you through them, directly or further down the chain, and became friends. */
   ledTo: number[];
   beats: ArcBeat[];
@@ -50,7 +56,10 @@ export interface Thread {
 }
 
 export interface ArcsResult {
+  /** The people the story is about, in order of appearance. */
   cast: Arc[];
+  /** Everyone the protagonist ever knew, cast included, most relevant first. */
+  everyone: Arc[];
   /** Chains of introductions worth telling: who led to whom. */
   threads: Thread[];
   /** People met during the story who are not in the cast. */
@@ -62,7 +71,16 @@ export interface ArcsResult {
 const IN_PERSON = CTX_LIST.map((c) => c !== 'call' && c !== 'message');
 const CALL = CTX_LIST.indexOf('call');
 
-export function findArcs(life: LifeResult, size = 10): ArcsResult {
+export interface ArcOptions {
+  /** The cast is at least this large when the life has enough people in it. */
+  min?: number;
+  /** And never larger than this. Between the two, a friend joins only if they mattered enough. */
+  max?: number;
+}
+
+export function findArcs(life: LifeResult, opt: ArcOptions = {}): ArcsResult {
+  const min = opt.min ?? 7;
+  const max = Math.max(min, opt.max ?? 14);
   const { world, ties, events, contacts, snapshots, params } = life;
   const { agents, venues, cities } = world;
   const L = params.levels;
@@ -267,11 +285,12 @@ export function findArcs(life: LifeResult, size = 10): ArcsResult {
   chosen.push(...partners.slice(-3));
   const contactCount = (id: number) => (seen.get(id)?.n ?? 0) + (seen.get(id)?.calls ?? 0);
   const family = cands.filter((c) => c.role === 'family').sort((a, b) => contactCount(b.id) - contactCount(a.id));
-  chosen.push(...family.slice(0, Math.min(3, Math.max(1, size - chosen.length - 5))));
+  chosen.push(...family.slice(0, 3));
   const friends = cands.filter((c) => c.role !== 'family' && c.role !== 'partner' && c.score > 0);
   const minPeak = friends.filter((c) => ties.get(c.id)!.peak >= L[2]).length >= 4 ? L[2] : L[1];
   const pool = friends.filter((c) => ties.get(c.id)!.peak >= minPeak);
-  while (chosen.length < size && pool.length) {
+  let firstScore = -1;
+  while (chosen.length < max && pool.length) {
     // Each repeat of a role or shape already in the cast costs a little, so the cast is not ten coworkers.
     let best = 0;
     let bestScore = -1;
@@ -283,6 +302,9 @@ export function findArcs(life: LifeResult, size = 10): ArcsResult {
       const s = (c.score * onScreen + (downstream.get(c.id)?.length ?? 0)) * 0.75 ** sameRole * 0.6 ** sameShape;
       if (s > bestScore) { bestScore = s; best = i; }
     }
+    if (firstScore < 0) firstScore = bestScore;
+    // A quiet life gets a small cast; a full one gets more, but only people who compare with the first.
+    if (chosen.length >= min && bestScore < 0.3 * firstScore) break;
     chosen.push(pool.splice(best, 1)[0]);
   }
   const castIds = new Set(chosen.map((c) => c.id));
@@ -345,7 +367,7 @@ export function findArcs(life: LifeResult, size = 10): ArcsResult {
       } else { label = 'met by chance'; text = `In ${year(met.week)} you got talking to ${intro}, a stranger at ${vname(met.venue)}.`; }
       if (met.p < 0.2) text += ` It was ${formatOdds(met.p)} that week.`;
       if (met.nearMisses >= 20) text += ` You had been in the same room ${met.nearMisses} times before without speaking.`;
-      const why = clickReasons(me, agents[id]);
+      const why = t.peak >= L[1] ? clickReasons(me, agents[id]) : [];
       if (why.length) text += ` You clicked over ${why.join(' and ')}.`;
       beats.push({ week: met.week, text });
     }
@@ -417,7 +439,8 @@ export function findArcs(life: LifeResult, size = 10): ArcsResult {
 
     // Middle: how much of each other you saw, and what they led to.
     const middle: string[] = [];
-    if (s && s.n > 0 && c.role !== 'partner') {
+    const brief = c.role !== 'family' && (s?.n ?? 0) <= 2 && t.peak < L[1];
+    if (s && s.n > 0 && c.role !== 'partner' && !brief) {
       const top = [...s.venues.entries()].sort((a, b) => b[1] - a[1])[0];
       const mostly = top && top[1] >= 5 && top[1] >= s.n * 0.25 ? `, more often at ${vname(top[0])} than anywhere else` : '';
       const calls = s.calls >= 10 ? `${mostly ? ',' : ''} and spoke on the phone ${s.calls} times` : '';
@@ -449,7 +472,11 @@ export function findArcs(life: LifeResult, size = 10): ArcsResult {
     const since = s && s.last >= 0 ? endWeek - s.last : endWeek;
     const elsewhere = agents[id].city !== me.city ? `, though ${who} lives in ${cities[agents[id].city].name}` : '';
     let ending: ArcBeat;
-    if (partnerIds.has(id) && me.partner === id) {
+    if (brief && s && s.last >= 0) {
+      ending = { week: s.last, text: s.n === 1 ? (met ? 'You only ever spoke that once.' : `You saw each other once, in ${year(s.last)}.`) : `You saw each other twice, the last time in ${year(s.last)}.` };
+    } else if (brief) {
+      ending = { week: beats[0].week, text: 'Your paths did not cross during the story.' };
+    } else if (partnerIds.has(id) && me.partner === id) {
       const sp = partnerSpans.find((p) => p.id === id && p.to < 0)!;
       ending = { week: endWeek, text: sp.from >= 0 ? `At ${ageOf(ego, endWeek)} you are still together, ${span(endWeek - sp.from)} on.` : `At ${ageOf(ego, endWeek)} you are still together.` };
     } else if (since >= 260 && nowS < L[2] && s && s.last >= 0) {
@@ -475,6 +502,8 @@ export function findArcs(life: LifeResult, size = 10): ArcsResult {
       id, name: agents[id].name, role: c.role, shape: c.shape, label, score: c.score,
       from: Math.max(0, t.met), closeFrom: c.closeFrom, closeTo: c.closeTo, seen: s?.n ?? 0,
       odds: met && met.p < 0.5 ? met.p : null, met: t.met >= 0 && met ? t.met : -1, ledTo: led, beats,
+      last: s?.last ?? -1, cast: castIds.has(id),
+      relevance: c.score * (c.role === 'family' || c.role === 'partner' ? 1.5 : 1) + t.peak + Math.min(1, (s?.n ?? 0) / 1000),
     };
 
     function nearest(a: Float32Array, w: number): number {
@@ -483,7 +512,8 @@ export function findArcs(life: LifeResult, size = 10): ArcsResult {
     }
   };
 
-  const cast = chosen.map(tell).sort((a, b) => a.from - b.from || b.score - a.score);
+  const everyone = cands.map(tell).sort((a, b) => b.relevance - a.relevance);
+  const cast = everyone.filter((a) => a.cast).sort((a, b) => a.from - b.from || b.score - a.score);
 
   // --- Threads: the introductions that link the cast together.
   const threads: Thread[] = [];
@@ -522,7 +552,7 @@ export function findArcs(life: LifeResult, size = 10): ArcsResult {
 
   let metCount = 0;
   for (const [o, t] of ties) if (t.met >= 0 && !castIds.has(o)) metCount++;
-  return { cast, threads, others: metCount, parent };
+  return { cast, everyone, threads, others: metCount, parent };
 }
 
 export const SHAPE_NAMES: Record<ArcShape, string> = {
