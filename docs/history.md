@@ -4,6 +4,14 @@ What was added, when, and why, newest first. `AGENTS.md` describes the project a
 
 ## 2026-11-13
 
+### A first film scene: the pier
+
+- **Why:** the owner watched the one-person story and said it still lacked emotional care. Narration ("this happened, then this") will not make people care; it needs a scene in the manner of a Stardew heart event, an intimate moment in dialogue with room to breathe. They suggested two people on a pier at night with a beer.
+- **What:** `src/web/film.ts` plays a scene with no narration: a title (place and year), then lines of dialogue with the speaker's face, and scripted silences during which the water moves and someone drinks. `src/web/scenes.ts` holds one scene written by hand for seed 7: Axel and Kofi on a pier in New York the week after Axel's father's funeral. Every fact in it is from that simulated life (the flag quizzes are from the detail library; the hoodie, the nine years apart, Kofi's partner Suki and who did the washing-up are from the log). About two and a half minutes; space or click goes sooner.
+- **Where:** `?seed=7&scene`, or "One scene: the pier (draft)" on seed 7's title screen.
+- **What it is for:** deciding the form. If dialogue scenes work, the plan is a short film of four or five per life, then "without them", then changing the starting conditions. Dialogue would be written per shipped life, ahead of time, from its log.
+- **Not done:** expressions on the faces, sound, any other set, any other life.
+
 ### Being there: close people come when something goes wrong
 
 - **Why:** the one-person story (below) could only say "they were there" when the log happened to put the two of you in a room after a death. Nothing caused it. In seed 7 the protagonist's brother died and the person the story was about did not appear. The owner asked for moments of duress, and for someone being there in them.

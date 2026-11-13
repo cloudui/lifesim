@@ -363,3 +363,31 @@ button.big:hover { filter: brightness(1.1); background: var(--accent); }
   border-radius: 6px; padding: 3px 10px; width: 12ch; margin-left: 6px;
 }
 #skip-story { margin-left: 8px; }
+
+/* A film scene: dialogue and silence over one place. */
+.film { position: fixed; inset: 0; z-index: 31; background: #04060c; cursor: pointer; overflow: hidden; }
+.film .pixel-canvas { position: absolute; left: 0; top: 0; }
+.film-skip { position: absolute; top: 10px; right: 16px; background: var(--panel); opacity: 0.55; }
+.film-skip:hover { opacity: 1; }
+.film-title { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; opacity: 0; transition: opacity 1.4s ease; pointer-events: none; text-align: center; }
+.film-title.on { opacity: 1; }
+.film-title-text { font-size: clamp(34px, 4vw, 60px); letter-spacing: 0.12em; text-transform: uppercase; }
+.film-title-sub { font-size: clamp(20px, 2vw, 30px); color: var(--text-2); }
+.film-box {
+  position: absolute; left: 50%; bottom: 5vh; transform: translateX(-50%); width: min(880px, 92vw);
+  display: flex; gap: 18px; align-items: stretch; padding: 14px 18px;
+  background: rgb(8 10 18 / 0.88); border: 2px solid rgb(244 241 222 / 0.55); box-shadow: 0 0 0 2px #04060c;
+}
+.film-box[hidden] { display: none; }
+.film-box.you { flex-direction: row-reverse; }
+.film-box.you .film-words { text-align: right; }
+.film-face { width: 140px; height: 112px; overflow: hidden; flex: none; background: rgb(255 255 255 / 0.05); }
+.film-face canvas { margin-top: -21px; display: block; }
+.film-words { flex: 1; min-width: 0; }
+.film-name { color: var(--accent); text-transform: uppercase; letter-spacing: 0.14em; font-size: 20px; }
+.film-line { font-size: clamp(28px, 2.6vw, 40px); line-height: 1.1; margin-top: 4px; min-height: 2.2em; text-wrap: pretty; }
+.film-end { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; text-align: center; padding: 0 6vw; }
+.film-end[hidden] { display: none; }
+.film-end-text { font-size: clamp(28px, 3vw, 46px); line-height: 1.15; max-width: 30ch; text-wrap: pretty; }
+.film-actions { display: flex; gap: 10px; }
+.film-hint { position: absolute; top: 14px; left: 16px; color: var(--text-3); font-size: 16px; opacity: 0.7; }

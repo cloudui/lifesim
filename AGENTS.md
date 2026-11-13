@@ -6,13 +6,13 @@ This file is the shared brief for any coding agent or person picking the project
 
 ## Status
 
-Last updated 2026-11-13 (the story is about one person; being there after a loss).
+Last updated 2026-11-13 (one-person story; being there after a loss; a first film scene in dialogue).
 
 - **Direction (agreed 2026-11-12):** story first, playground second. A short opening story makes you care about a few people; the tabs are for exploring the whole life afterwards. See "The opening story" below.
 - **Done:** the simulation core with endings (falling out, fading when out of sight, death), highlight detection, a retelling by people, a story editor that cuts a life to about 16 beats about one person, a library of invented details for its captions, a what-if rerun (console only), a console highlight reel, a tuning harness, determinism tests, a JSON export, and a full-screen browser game: an opening story, then five tabs: Walk (pixel art), Map (pixel art), Circle, People and Journal.
 - **Branch:** the story editor and the opening story are on `story-editor`, not committed or merged yet. Everything before that is on `main`. `codex/priya-walk` is a separate Codex experiment (walking through a life with one person); it has not been reviewed or merged.
 - **Not started:** running the sim in the browser, the intake form, a phone layout, sound.
-- **Next step:** the owner watches the one-person story on the page and reads a few (`npm run story -- --seeds 1-20`, or `docs/sample-stories.txt`; the hand-written target is `docs/story-script-seed7.md`), then answers the questions at the top of `docs/open-questions.md`. After that, engine work pulled by what the story could not show: more kinds of hard stretch (a lost job, an illness), fallings-out with a reason between people who matter, a place and a habit for a pair, then childhood. Then a hook before the story, and the setup screen with traits. `docs/experience.md` is the working draft of the experience. `npm run whatif` reruns a life with one meeting left out; it is console only. Speed is parked; the page reads lives simulated ahead of time. Phone layout is parked until the owner asks for it.
+- **Next step:** the owner watches the pier scene (`npm run dev`, then `?seed=7&scene`) and says whether dialogue scenes are the right form. If yes: a scene format with four or five scenes for one life, then the "without them" comparison. If no: make the data and what-if side the front door. The caption story (`?story`) stays as it is meanwhile. Engine work is paused except where a scene needs a cause. `docs/open-questions.md` lists the open questions. Speed and phone layout stay parked.
 
 ## Run it
 
@@ -31,6 +31,7 @@ npm run harness -- --n 8 --years 15 --set hlMin=30 --set invitePow=2   # try par
 npm run export -- --seeds 1,3,5,7     # simulate lives and write public/lives/<seed>.json for the page
 npm run dev                           # open the page (Vite); add ?seed=5&tab=walk&week=1100 to jump to a moment
                                       # ?play&advance=2.5 fast-forwards the animation, for screenshots
+                                      # ?seed=7&scene plays the hand-written pier scene (draft)
                                       # ?story&beat=4 opens the story at a beat; &name=Sam renames the person it is about
 npm test
 npm run typecheck
@@ -103,6 +104,8 @@ src/cli/export.ts      writes public/lives/<seed>.json and index.json
 index.html, src/web/   the page (vanilla TypeScript, SVG and canvas):
   main.ts              game shell: playhead, HUD, dialogue box, timeline scrubber, tabs, title and end screens
   story.ts             the opening story: one pixel scene and a caption per beat
+  film.ts              a film scene: two people, one place, dialogue and silence, no narration (draft)
+  scenes.ts            film scenes written by hand for one particular simulated life
   backdrop.ts          sky, skylines and venue fronts, shared by the story and the Walk
   walk.ts              Walk tab: the pixel-art walk through life
   map.ts               Map tab: where everyone is
@@ -174,6 +177,15 @@ Getting together with a partner, breaking up, falling out, making up, the death 
 - **To add a beat:** add a candidate in `story.ts` with a weight, a group and a `tell()` that writes the caption; give it a scene the page can draw, or add a template to `src/web/story.ts`.
 - **Being there** is told from `support` events, in both directions: they came to you, or you went to them. A beat says when someone got on a plane.
 - **What it cannot show yet:** hard stretches are only deaths and breakups; fallings-out rarely involve the one person and have no reason; childhood is not simulated, so early moments are invented.
+
+### Film scenes (draft, 2026-11-13)
+
+The owner's verdict on the opening story: better, but narration will not make anyone care. A caption says what happened; it has to be shown, in dialogue, with room to breathe. `film.ts` is a first try at that form, with one scene: `?seed=7&scene`, or the button on seed 7's title screen.
+
+- **No narration.** A place and a year, then only lines of dialogue with the speaker's face, and silences. Pauses are steps in the script, and the scene keeps moving while nothing is said.
+- **Written by hand per life.** `scenes.ts` holds the script. The simulation supplies the facts in it (who the two are, what just happened, the hoodie, who came when); the words are authored, not generated. A scene names the seed and the person it was written for and is only offered while they still match, because any new simulation rule changes every life.
+- **The direction being tested:** a short film of four or five such scenes about one person, then "without them" (take the person and everyone who reached you through them out of the life), then changing the starting conditions. A rerun shows another way a life could have gone, not what one meeting caused, and must be labelled so.
+- If this form works, the caption story (`story.ts`) becomes the outline the scenes are written from, or the silent passage of years between them.
 
 ### People and what-if (experiments)
 

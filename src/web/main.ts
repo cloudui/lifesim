@@ -13,6 +13,8 @@ import { portrait } from './pixel';
 import { createMap } from './map';
 import { createPersonCard } from './person';
 import './style.css';
+import { createFilm } from './film';
+import { sceneFor } from './scenes';
 import { createStory } from './story';
 import type { Ctx, Scene, View } from './types';
 import { createWalk } from './walk';
@@ -447,6 +449,7 @@ function fillTitle(): void {
   );
   const friend = d.story.leads.find((l) => l.main);
   $('title-friend').hidden = !friend;
+  $('one-scene').hidden = !sceneFor(d.seed, d.people);
   if (friend) $('title-friend-name').textContent = friend.name.split(' ')[0];
   $('lives').replaceChildren(
     ...lives.map((l) => {
@@ -519,6 +522,17 @@ const story = createStory($('story'), ctx, {
   // Keep the playhead with the story, so leaving it lands on the same moment in the full life.
   beat: (w) => setWeek(w),
 });
+// A hand-written scene for this life, when there is one: dialogue and silence, no narration.
+const film = createFilm($('film'), ctx, { done: () => showTitle(true) });
+function beginScene(): void {
+  const sc = sceneFor(view.data.seed, view.data.people);
+  if (!sc) return;
+  setPlaying(false);
+  story.stop();
+  $('title-screen').hidden = true;
+  $('end-screen').hidden = true;
+  film.start(sc);
+}
 function beginStory(beat = 0): void {
   setPlaying(false);
   $('title-screen').hidden = true;
@@ -572,6 +586,10 @@ function setTab(next: Tab): void {
 
 function tick(dt: number): void {
   if (!view) return;
+  if (film.active()) {
+    film.frame(dt);
+    return;
+  }
   if (story.active()) {
     story.frame(dt);
     return;
@@ -608,6 +626,7 @@ function layoutAll(): void {
   buildTimeline();
   for (const s of Object.values(scenes)) s.resize?.();
   story.resize();
+  film.resize();
   render();
 }
 
@@ -664,6 +683,7 @@ async function main(): Promise<void> {
   });
   $('start').addEventListener('click', () => beginStory());
   $('skip-story').addEventListener('click', () => showTitle(false));
+  $('one-scene').addEventListener('click', beginScene);
   $<HTMLInputElement>('friend-name').addEventListener('input', (ev) => story.rename((ev.target as HTMLInputElement).value));
   $('lives-btn').addEventListener('click', () => showTitle($('title-screen').hidden));
   $('end-again').addEventListener('click', () => {
@@ -694,6 +714,13 @@ async function main(): Promise<void> {
   window.addEventListener('keydown', (ev) => {
     if (ev.metaKey || ev.ctrlKey || ev.altKey) return;
     if ((ev.target as HTMLElement).tagName === 'INPUT') return;
+    if (film.active()) {
+      if (ev.code === 'Space' || ev.code === 'ArrowRight' || ev.code === 'Enter') {
+        ev.preventDefault();
+        film.next();
+      } else if (ev.code === 'Escape') { film.stop(); showTitle(true); }
+      return;
+    }
     if (story.active()) {
       if (ev.code === 'Space' || ev.code === 'ArrowRight' || ev.code === 'Enter') {
         ev.preventDefault();
@@ -723,7 +750,7 @@ async function main(): Promise<void> {
 
   // Deep links skip the title screen: ?week=1100, ?play, ?person=<id|closest>, ?advance=2.5,
   // ?story (the opening story; &beat=4 starts at that beat, &name=Sam renames the friend in it).
-  const deep = ['week', 'play', 'person', 'advance', 'story'].some((k) => query.has(k));
+  const deep = ['week', 'play', 'person', 'advance', 'story', 'scene'].some((k) => query.has(k));
   await load(seed, !deep);
   // The pixel font changes the HUD's size once it arrives.
   document.fonts.ready.then(layoutAll);
@@ -738,6 +765,8 @@ async function main(): Promise<void> {
     story.rename(query.get('name')!);
   }
   if (query.has('story')) beginStory(Number(query.get('beat') ?? 0) || 0);
+  // ?scene plays the hand-written scene for this life.
+  if (query.has('scene')) beginScene();
   // Testing aid: ?play&advance=2.5 runs the animation forward that many seconds before showing it.
   for (let i = 0, n = Math.round(Number(query.get('advance') ?? 0) * 30); i < n; i++) tick(1 / 30);
   lastFrame = performance.now();
