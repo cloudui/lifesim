@@ -70,8 +70,16 @@ export type SimEvent =
   | { t: 'club'; week: number; venue: number; via: number }
   | { t: 'partner'; week: number; other: number }
   | { t: 'breakup'; week: number; other: number; weeks: number }
+  /** Someone in the protagonist's family got together with `other`, or the two split. Week 0 means already together. */
+  | { t: 'kinCouple'; week: number; who: number; other: number }
+  | { t: 'kinSplit'; week: number; who: number; other: number }
   | { t: 'fight'; week: number; other: number; venue: number; s: number }
   | { t: 'mend'; week: number; other: number; gap: number }
+  /**
+   * Being there after a loss. `who` had the hard time and `other` came; one of the two is the protagonist.
+   * `lost` is the person who died or the partner they split from, and `far` says the one who came travelled.
+   */
+  | { t: 'support'; week: number; who: number; other: number; why: 'death' | 'widowed' | 'breakup'; lost: number; far: boolean }
   /** Every death in the world. `s` is how close the protagonist was to them, 0 for a stranger. */
   | { t: 'death'; week: number; who: number; age: number; s: number; kin: boolean; partner: boolean };
 
@@ -134,7 +142,7 @@ const R = {
   JOIN_PICK: 11, DRIFT: 12, DRIFT_PICK: 13, HOST: 14, SIZE: 15, INVITE: 16, ACCEPT: 17, INTRO: 18, SOLO: 19,
   HANG: 20, MIX: 21, MIX_ACC: 22, FAMILY: 23, CALL: 24, CALL_PICK: 25, SPARK: 26, ORDER: 27, REFER_PICK: 28,
   JOIN_FOLLOW: 29, DRIFT_FOLLOW: 30, AWAY_HANG: 31, PARTNER: 32, PLUS_ONE: 33, MSG: 34, MSG_PICK: 35, BREAKUP: 36,
-  FIGHT: 37, MEND: 38, DEATH: 39,
+  FIGHT: 37, MEND: 38, DEATH: 39, SUPPORT: 40, SUPPORT_FAR: 41,
 } as const;
 
 const CTX_INDEX: Record<Ctx, number> = Object.fromEntries(CTX_LIST.map((c, i) => [c, i])) as Record<Ctx, number>;
@@ -176,6 +184,12 @@ export class Sim {
   private lastMove: Int32Array;
   /** Week until which each agent has less time for friends, after a move, a new job or a new partner. */
   private busyUntil: Int32Array;
+  /** Being there: the week until which each agent is having a hard time, why, and over whom. */
+  private hardUntil: Int32Array;
+  private hardLost: Int32Array;
+  private hardDeath: Uint8Array;
+  /** The people who have already travelled to be there in this hard stretch. */
+  private cameFar: Set<number>[];
   private logging = false;
   private tick = 0;
   private yr = 0;
@@ -205,6 +219,10 @@ export class Sim {
     this.outCount = new Uint8Array(N);
     this.lastMove = new Int32Array(N).fill(-1e6);
     this.busyUntil = new Int32Array(N).fill(-1e6);
+    this.hardUntil = new Int32Array(N).fill(-1e6);
+    this.hardLost = new Int32Array(N).fill(-1);
+    this.hardDeath = new Uint8Array(N);
+    this.cameFar = Array.from({ length: N }, () => new Set<number>());
     this.since = new Int32Array(N).fill(-1e6);
     // Couples who exist when the world is generated have been together for a long time.
     for (const a of world.agents) if (a.partner >= 0) this.since[a.id] = startWeek - 1040;
@@ -652,6 +670,7 @@ export class Sim {
       });
     }
     a.died = this.week;
+    for (const f of a.family) this.hardTime(f, id, a.partner === f ? 2 : 1);
     if (a.partner >= 0) {
       const b = agents[a.partner];
       b.partner = -1;
@@ -682,6 +701,52 @@ export class Sim {
     this.adj[id].clear();
     this.fo[id].length = this.fs[id].length = this.fm[id].length = this.fk[id].length = 0;
     this.loc[id] = -1;
+  }
+
+  /** `kind` is 0 for a breakup, 1 for the death of a relative and 2 for the death of a partner. */
+  private hardTime(id: number, lost: number, kind: number): void {
+    if (this.P.supportRate <= 0) return;
+    this.hardUntil[id] = this.week + this.P.supportWeeks;
+    this.hardLost[id] = lost;
+    this.hardDeath[id] = kind;
+    this.cameFar[id].clear();
+  }
+
+  /** Being there: the people close to someone having a hard time come round, and a few travel to. */
+  private support(a: Agent): void {
+    const P = this.P;
+    const id = a.id;
+    if (this.week >= this.hardUntil[id] || this.loc[id] !== a.city) return;
+    const agents = this.world.agents;
+    const fo = this.fo[id];
+    const fs = this.fs[id];
+    let came = 0;
+    for (let i = 0; i < fo.length && came < P.supportMax; i++) {
+      const o = fo[i];
+      if (fs[i] < P.supportMin || this.fk[id][i]) continue;
+      const tie = this.adj[id].get(o);
+      if (!tie || tie.kin || tie.rift >= 0 || agents[o].died >= 0) continue;
+      let far = false;
+      if (this.loc[o] !== a.city) {
+        // Only someone who really matters gets on a plane, and only once.
+        if (this.loc[o] !== agents[o].city || this.cameFar[id].has(o) || this.depth(tie) < P.supportFarDepth) continue;
+        if (this.r(R.SUPPORT_FAR, id, o) >= P.supportFar * this.free(o)) continue;
+        far = true;
+        this.cameFar[id].add(o);
+        this.loc[o] = a.city;
+      } else if (this.r(R.SUPPORT, id, o) >= P.supportRate * this.free(o)) continue;
+      came++;
+      this.interact(id, o, 'outing', -1, 1, -1);
+      const t = this.adj[id].get(o);
+      if (t) {
+        const dcap = Math.min(P.depthMax, P.capBase + P.capCompat * t.c);
+        if (t.d < dcap) t.d += (P.supportBoost - 1) * P.depthGain * (dcap - t.d);
+        if (t.d > t.dp) t.dp = t.d;
+      }
+      if (this.logging && (id === this.ego || o === this.ego)) {
+        this.events.push({ t: 'support', week: this.week, who: id, other: o, why: this.hardDeath[id] === 2 ? 'widowed' : this.hardDeath[id] ? 'death' : 'breakup', lost: this.hardLost[id], far });
+      }
+    }
   }
 
   private lifeEvents(a: Agent): void {
@@ -821,6 +886,8 @@ export class Sim {
     a.family.splice(a.family.indexOf(b.id), 1);
     b.family.splice(b.family.indexOf(a.id), 1);
     this.since[a.id] = this.since[b.id] = this.week;
+    this.hardTime(a.id, b.id, 0);
+    this.hardTime(b.id, a.id, 0);
     // They stop being family to each other, and most of what they had goes with it.
     this.settle(tie);
     tie.kin = false;
@@ -831,6 +898,9 @@ export class Sim {
       this.breakups++;
       if (a.id === this.ego || b.id === this.ego) {
         this.events.push({ t: 'breakup', week: this.week, other: a.id === this.ego ? b.id : a.id, weeks });
+      } else if (this.egoKin.has(a.id) || this.egoKin.has(b.id)) {
+        const who = this.egoKin.has(a.id) ? a.id : b.id;
+        this.events.push({ t: 'kinSplit', week: this.week, who, other: who === a.id ? b.id : a.id });
       }
     }
   }
@@ -874,6 +944,9 @@ export class Sim {
     if (this.logging) this.couplesFormed++;
     if (this.logging && (a.id === this.ego || b.id === this.ego)) {
       this.events.push({ t: 'partner', week: this.week, other: a.id === this.ego ? b.id : a.id });
+    } else if (this.logging && (this.egoKin.has(a.id) || this.egoKin.has(b.id))) {
+      const who = this.egoKin.has(a.id) ? a.id : b.id;
+      this.events.push({ t: 'kinCouple', week: this.week, who, other: who === a.id ? b.id : a.id });
     }
   }
 
@@ -1227,6 +1300,7 @@ export class Sim {
     for (const a of agents) if (a.died < 0) this.lifeEvents(a);
     for (const a of agents) this.loc[a.id] = a.died >= 0 ? -1 : a.city;
     for (const a of agents) this.maybeVisitFamily(a);
+    if (this.P.supportRate > 0) for (const a of agents) if (this.week < this.hardUntil[a.id]) this.support(a);
     for (const a of agents) if (this.loc[a.id] === a.city) this.routine(a);
     // Rotate who gets to make plans first so low ids are not favoured.
     const start = Math.floor(this.r(R.ORDER, 0) * N);
@@ -1247,8 +1321,17 @@ export class Sim {
   }
 
   /** Start recording the protagonist's life from the current week. */
+  /** The family the protagonist grew up in. Only used to decide what gets written down. */
+  private egoKin = new Set<number>();
+
   startLogging(): void {
     this.logging = true;
+    const agents = this.world.agents;
+    for (const f of agents[this.ego].family) if (f !== agents[this.ego].partner) this.egoKin.add(f);
+    for (const f of this.egoKin) {
+      const p = agents[f].partner;
+      if (p >= 0 && !this.egoKin.has(p)) this.events.push({ t: 'kinCouple', week: 0, who: f, other: p });
+    }
     this.refreshFriends();
     this.checkEgoLevels(false);
     this.snapshot();

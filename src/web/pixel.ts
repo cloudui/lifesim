@@ -186,6 +186,7 @@ export const GLYPHS: Record<string, string[]> = {
   bang: ['11', '11', '11', '11', '00', '11'],
   star: ['0001000', '0011100', '1111111', '0111110', '0110110', '1100011'],
   note: ['0011', '0010', '0010', '1110', '1110'],
+  dots: ['00000', '00000', '10101', '00000'],
 };
 
 export function drawGlyph(ctx: CanvasRenderingContext2D, name: string, x: number, y: number, color: string): void {

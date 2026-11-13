@@ -2,11 +2,37 @@
 
 Big questions that came up while building, newest first. Each one says what was done in the meantime, so nothing is blocked. Delete an entry once it is decided, and record the decision in `AGENTS.md` or `docs/experience.md`.
 
+## From the one-person story (2026-11-13)
+
+1. **Is one person right?** The story now follows one person, chosen by how much happens between you, with family and any other partner underneath. In 8 of 20 lives that person is the partner and in 12 a friend. *In the meantime:* nothing forces a mix; say if you want a friend preferred.
+
+2. **Invented detail.** The small moments (the fort, the hoodie, who did the dishes) are written in the telling, not simulated. The event under each is real. Is that honest enough, or should the page mark what is invented?
+
+3. **Engine work this points to.** Done: close people now come after a death or a breakup, and it deepens the friendship. Next, in the order I would do it: more kinds of hard stretch (a lost job, an illness, a bad year); fallings-out with a reason between people who matter; a place and a habit for a pair; childhood, so the early moments are real. Agree with the order?
+
+5. **Being there raises the inner circle** (2.0 to 2.6 on average, and twice as many people ever reach it). I think that is right, since the inner circle was under target, but it is a visible change to every life. Keep the strength, or halve it?
+
+4. **The library is small.** About 100 lines, so two lives can share a moment. More lines are cheap to add; they could also be written by hand for the handful of lives the site ships.
+
+## From the story editor (2026-11-12)
+
+1. **(Superseded on 2026-11-13: the story is now about one person.)** It followed the longest partner and two friends, picked so one friendship lasts and one does not. Family are the anchor (the table) and are not leads. You said it need not be the three most important people; say if a parent or sibling should be able to be a lead.
+
+2. **The table as the anchor.** The story opens and closes on the family table and returns to it in the Decembers when it changed. It works when a family is nearby and thin when everyone has scattered ("You spend it without them"). Keep it as the spine, or let the anchor vary by life (a standing night out, a city)?
+
+3. **Which missing specifics first?** Reading the captions gave a list (in `docs/history.md`): reasons for moves, a place for couples, children and weddings, younger parents, real holidays. My order would be reasons for moves, then a place for couples, then children.
+
+4. **Naming a real friend.** The title screen can rename one friend. That friend may fade, fall out with you or die. *In the meantime:* nothing is softened.
+
+5. **Foreshadowing gives things away.** "You don't know it yet, but in 16 years you two will be together." It adds pull and removes surprise. Keep?
+
+6. **Auto-advance.** Captions move on by themselves after a reading pause; space or click goes sooner. Or should it wait for you every time?
+
 ## From the page work (2026-11-12)
 
-1. **Renaming people.** Letting a visitor rename mom, a sibling or a best friend would do a lot for "who is who", but names are written into every story line when a life is exported. Doing it properly means storing lines with name slots. Worth it now, or wait for the setup screen?
+1. **Renaming people.** One friend in the opening story can now be renamed on the title screen (the page swaps the name in the captions). Doing it everywhere, and for family, still means storing lines with name slots. Wait for the setup screen?
 
-2. **Opening credits give the story away.** The title screen now shows the cast before the life plays, including people not met until year 20. It helps you know who to watch for; it also spoils who matters. Keep, or show only the people there at the start?
+2. **Opening credits.** The title screen now shows only the two or three leads of the story, not the whole cast. It still tells you who to watch for. Keep, or show nobody?
 
 ## From starting at 18 (2026-11-12)
 

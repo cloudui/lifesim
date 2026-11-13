@@ -50,8 +50,10 @@ export function genderOf(a: Agent): 'f' | 'm' {
 export function kinWord(me: Agent, other: Agent): string {
   const m = genderOf(other) === 'm';
   const gap = me.birthYear - other.birthYear;
-  if (gap >= 16) return m ? 'dad' : 'mom';
-  if (gap <= -16) return m ? 'son' : 'daughter';
+  // Families can span twenty years, so age alone does not tell a parent from a much older sibling:
+  // everyone who grew up in the family home is one of the children.
+  if (gap >= 16 && !other.grewUpHere) return m ? 'dad' : 'mom';
+  if (gap <= -16 && !me.grewUpHere) return m ? 'son' : 'daughter';
   return `${gap > 0 ? 'older' : gap < 0 ? 'younger' : 'twin'} ${m ? 'brother' : 'sister'}`;
 }
 

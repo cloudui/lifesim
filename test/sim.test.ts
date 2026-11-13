@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { findArcs } from '../src/sim/arcs';
 import { findHighlights } from '../src/sim/highlights';
 import { runLife, type LifeOptions } from '../src/sim/sim';
+import { tellStory } from '../src/sim/story';
 
 const small: Omit<LifeOptions, 'seed'> = {
   years: 4,
@@ -128,10 +129,53 @@ describe('life simulation', () => {
   });
 
   it('is unchanged by the ending rules when they are switched off', () => {
-    const off = { fightRate: 0, apartFade: 1, deathRate: 0 };
+    const off = { fightRate: 0, apartFade: 1, deathRate: 0, supportRate: 0 };
     const life = runLife({ seed: 11, ...small, params: off });
-    expect(life.events.some((e) => e.t === 'fight' || e.t === 'mend' || e.t === 'death')).toBe(false);
+    expect(life.events.some((e) => e.t === 'fight' || e.t === 'mend' || e.t === 'death' || e.t === 'support')).toBe(false);
     const again = runLife({ seed: 11, ...small, params: off });
     expect(JSON.stringify(again.events)).toEqual(JSON.stringify(life.events));
+  });
+
+  it('close people come round after a loss, and only then', () => {
+    const life = runLife({ seed: 3, ...small, years: 8, params: { deathRate: 12 } });
+    const support = life.events.filter((e) => e.t === 'support');
+    expect(support.length).toBeGreaterThan(0);
+    for (const e of support) {
+      if (e.t !== 'support') continue;
+      expect(e.who === life.ego || e.other === life.ego).toBe(true);
+      // Something happened to them in the weeks before.
+      const cause = life.events.some((x) =>
+        (x.t === 'death' && x.who === e.lost && e.week - x.week >= 0 && e.week - x.week <= 8) ||
+        (x.t === 'breakup' && e.week - x.week >= 0 && e.week - x.week <= 8));
+      if (e.who === life.ego) expect(cause).toBe(true);
+    }
+  });
+
+  it('cuts a life down to a contained story', () => {
+    const life = runLife({ seed: 3, ...small, years: 12 });
+    const story = tellStory(life);
+    expect(story.beats.length).toBeGreaterThan(4);
+    expect(story.beats.length).toBeLessThanOrEqual(17);
+    // It opens on the family table and closes on the end card, in order.
+    expect(story.beats[0].scene).toBe('table');
+    expect(story.beats[story.beats.length - 1].scene).toBe('end');
+    for (let i = 1; i < story.beats.length; i++) expect(story.beats[i].week).toBeGreaterThanOrEqual(story.beats[i - 1].week);
+    for (const b of story.beats) {
+      expect(b.text.length).toBeGreaterThan(10);
+      expect(b.text).not.toMatch(/undefined|NaN/);
+    }
+    // Every lead has a beginning and is accounted for at the end.
+    const family = new Set([...life.ties].filter(([, t]) => t.ctx === 'family').map(([o]) => o));
+    const leads = new Set(story.leads.map((l) => l.id));
+    // The story is about one person; a partner who is someone else is in the background.
+    expect(story.leads.filter((l) => l.main).length).toBeLessThanOrEqual(1);
+    for (const l of story.leads) expect(story.beats.filter((b) => b.people.includes(l.id)).length).toBeGreaterThanOrEqual(l.main ? 3 : 1);
+    // Nobody else is put in front of the camera by name.
+    for (const b of story.beats) for (const p of b.people) expect(leads.has(p) || family.has(p)).toBe(true);
+    expect(JSON.stringify(tellStory(runLife({ seed: 3, ...small, years: 12 })).beats)).toEqual(JSON.stringify(story.beats));
+    // Renaming a lead changes the words and nothing else.
+    const renamed = tellStory(life, { rename: { lead: 0, name: 'Zzyzx' } });
+    expect(renamed.beats.length).toBe(story.beats.length);
+    if (story.leads.length) expect(renamed.beats.some((b) => b.text.includes('Zzyzx'))).toBe(true);
   });
 });

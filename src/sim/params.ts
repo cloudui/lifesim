@@ -163,6 +163,18 @@ export const DEFAULT_PARAMS = {
   // goes out on plans busyFactor times as often. Set busyFactor to 1 to turn it off.
   busyWeeks: 52,
   busyFactor: 0.7,
+  // --- Being there. For supportWeeks after someone loses a relative or a partner, or a couple splits, the people
+  // close to them come round: each week, each friend at least supportMin close who is in the same city does so
+  // with chance supportRate, at most supportMax a week. A friend in another city whose depth is at least
+  // supportFarDepth may travel once, with chance supportFar a week. Time spent this way counts as chosen time
+  // together, and builds depth supportBoost times faster. Set supportRate to 0 to turn all of it off.
+  supportWeeks: 8,
+  supportRate: 0.35,
+  supportMin: 0.4,
+  supportMax: 2,
+  supportFar: 0.2,
+  supportFarDepth: 0.45,
+  supportBoost: 3,
   // Before this age people do not work, change jobs or move on their own. They still have family, friends and clubs.
   adultAge: 18,
 

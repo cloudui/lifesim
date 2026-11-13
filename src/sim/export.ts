@@ -6,6 +6,7 @@ import { findHighlights, type Highlight } from './highlights';
 import { descriptor } from './people';
 import type { LifeResult } from './sim';
 import { computeStats, type LifeStats } from './stats';
+import { tellStory, type Story } from './story';
 
 export interface PersonExport {
   id: number;
@@ -104,6 +105,8 @@ export interface LifeExport {
    * first; `cast` is the ids the story is about, in order of appearance.
    */
   arcs: { cast: number[]; people: ArcExport[]; threads: string[] };
+  /** The life cut down to a dozen or so beats; what plays when you press Begin. */
+  story: Omit<Story, 'cut'>;
   /** Venues referenced by highlights. */
   venues: VenueExport[];
   /** Everyone in the world: [id, [week, city][]]. Used by the map to show the whole population. */
@@ -177,6 +180,7 @@ export function exportLife(life: LifeResult, top = 50): LifeExport {
     if (e.t === 'partner') partners.push({ id: e.other, from: e.week, to: null });
     else if ((e.t === 'breakup' || (e.t === 'death' && e.partner)) && partners.length) partners[partners.length - 1].to = e.week;
   }
+  const story = tellStory(life);
   const arcs: LifeExport['arcs'] = {
     cast: told.cast.map((a) => a.id),
     threads: told.threads.map((t) => t.text),
@@ -196,6 +200,7 @@ export function exportLife(life: LifeResult, top = 50): LifeExport {
     people,
     highlights,
     arcs,
+    story: { leads: story.leads, beats: story.beats },
     venues: venueList,
     population: agents.map((a) => [a.id, cityTimeline(a.id)] as [number, [number, number][]]),
     deaths: agents.filter((a) => a.died >= 0).map((a) => [a.id, a.died] as [number, number]),

@@ -7,6 +7,7 @@
   "scripts": {
     "life": "tsx src/cli/life.ts",
     "people": "tsx src/cli/people.ts",
+    "story": "tsx src/cli/story.ts",
     "whatif": "tsx src/cli/whatif.ts",
     "harness": "tsx src/cli/harness.ts",
     "test": "vitest run",

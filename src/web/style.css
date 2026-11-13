@@ -330,3 +330,36 @@ button.big:hover { filter: brightness(1.1); background: var(--accent); }
   .bar { gap: 8px; }
   #hud-circle span:last-child { display: none; }
 }
+
+/* ---------------------------------------------------------------- story */
+/* The opening story covers everything: one scene at a time with a caption under it. */
+.story { position: fixed; inset: 0; z-index: 30; background: var(--page); cursor: pointer; overflow: hidden; }
+.story .pixel-canvas { position: absolute; left: 0; top: 0; }
+.story-pips { position: absolute; top: 16px; left: 50%; transform: translateX(-50%); display: flex; gap: 5px; align-items: center; }
+.story-pips i { width: 24px; height: 6px; background: rgb(255 255 255 / 0.22); cursor: pointer; box-shadow: 0 1px 0 rgb(0 0 0 / 0.5); }
+.story-pips i.fact { width: 8px; }
+.story-pips i.past { background: rgb(255 255 255 / 0.75); }
+.story-pips i.now { background: var(--accent); }
+.story-skip { position: absolute; top: 10px; right: 16px; background: var(--panel); }
+.story-caption {
+  position: absolute; left: 0; right: 0; bottom: 0; min-height: 36vh; padding: 70px max(24px, 14vw) 30px;
+  display: flex; flex-direction: column; justify-content: flex-end;
+  background: linear-gradient(to top, rgb(6 8 14 / 0.97) 62%, transparent);
+}
+.story-title { color: var(--accent); text-transform: uppercase; letter-spacing: 0.14em; font-size: 22px; }
+.story-text { font-size: clamp(26px, 2.5vw, 38px); line-height: 1.12; max-width: 48ch; min-height: 3.4em; margin-top: 6px; text-wrap: pretty; }
+.story-hint { color: var(--text-3); font-size: 16px; margin-top: 10px; }
+.story-caption.card, .story-caption.end { top: 0; justify-content: center; align-items: center; text-align: center; }
+.story-caption.card { background: rgb(6 8 14 / 0.35); }
+.story-caption.end { top: auto; background: linear-gradient(to top, rgb(6 8 14 / 0.97) 70%, transparent); justify-content: flex-end; padding-bottom: 5vh; }
+.story-caption.card .story-text { font-size: clamp(32px, 3.4vw, 52px); max-width: 30ch; min-height: 0; }
+.story-caption.end .story-text { max-width: 44ch; min-height: 0; }
+.story-caption.end .story-title { font-size: 30px; }
+.story-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 20px; }
+.title-friend { display: block; color: var(--text-2); font-size: 19px; margin: 0 0 16px; }
+.title-friend b { color: var(--text); font-weight: 400; }
+.title-friend input {
+  font: inherit; color: var(--text); background: rgb(255 255 255 / 0.06); border: 1px solid var(--panel-edge);
+  border-radius: 6px; padding: 3px 10px; width: 12ch; margin-left: 6px;
+}
+#skip-story { margin-left: 8px; }

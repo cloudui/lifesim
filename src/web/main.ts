@@ -13,6 +13,7 @@ import { portrait } from './pixel';
 import { createMap } from './map';
 import { createPersonCard } from './person';
 import './style.css';
+import { createStory } from './story';
 import type { Ctx, Scene, View } from './types';
 import { createWalk } from './walk';
 
@@ -433,20 +434,20 @@ function fillTitle(): void {
   $('title-sub').textContent =
     `Born ${e.born} in ${d.cities[e.hometown]}: ${social}, ${e.trait}, into ${e.hobbies.join(' and ')}. ` +
     `Follow ${e.name.split(' ')[0]} through ${d.years} years of meeting people, losing touch and finding them again.`;
-  // The opening credits: the people this story turns out to be about, by what they are to you.
+  // Only the one person the opening story is about, not the whole cast.
   $('title-cast').replaceChildren(
-    ...d.arcs.cast.map((id) => {
-      const arc = view.arcs.get(id);
-      const p = view.people.get(id);
+    ...d.story.leads.filter((l) => l.main).map((l) => {
       const item = document.createElement('div');
       item.className = 'title-person';
-      if (!arc || !p) return item;
       const label = document.createElement('span');
-      label.innerHTML = `<b>${esc(p.name.split(' ')[0])}</b><small>${esc(arc.tag)}</small>`;
-      item.append(portrait(id, 2), label);
+      label.innerHTML = `<b>${esc(l.name.split(' ')[0])}</b><small>${esc(l.tag)}</small>`;
+      item.append(portrait(l.id, 2), label);
       return item;
     }),
   );
+  const friend = d.story.leads.find((l) => l.main);
+  $('title-friend').hidden = !friend;
+  if (friend) $('title-friend-name').textContent = friend.name.split(' ')[0];
   $('lives').replaceChildren(
     ...lives.map((l) => {
       const b = document.createElement('button');
@@ -506,6 +507,25 @@ const scenes: Record<Tab, Scene> = {
   journal: createJournal($('view-journal'), ctx, (w) => setWeek(w)),
 };
 
+const story = createStory($('story'), ctx, {
+  explore: () => {
+    story.stop();
+    $('title-screen').hidden = true;
+  },
+  another: () => {
+    const i = lives.findIndex((l) => l.seed === view.data.seed);
+    load(lives[(i + 1) % lives.length].seed, true);
+  },
+  // Keep the playhead with the story, so leaving it lands on the same moment in the full life.
+  beat: (w) => setWeek(w),
+});
+function beginStory(beat = 0): void {
+  setPlaying(false);
+  $('title-screen').hidden = true;
+  $('end-screen').hidden = true;
+  story.start(beat);
+}
+
 /** The user jumped to a point in time. */
 function setWeek(w: number): void {
   week = Math.min(view.totalWeeks, Math.max(0, w));
@@ -552,6 +572,10 @@ function setTab(next: Tab): void {
 
 function tick(dt: number): void {
   if (!view) return;
+  if (story.active()) {
+    story.frame(dt);
+    return;
+  }
   const scene = scenes[tab];
   if (playing && scene.timeScale() !== 0) {
     week = Math.min(view.totalWeeks, week + dt * speed * RATE[tab]);
@@ -583,11 +607,13 @@ function layoutAll(): void {
   placeCard();
   buildTimeline();
   for (const s of Object.values(scenes)) s.resize?.();
+  story.resize();
   render();
 }
 
 async function load(seed: number, title = false): Promise<void> {
   setPlaying(false);
+  story.stop();
   const data = (await (await fetch(`lives/${seed}.json`)).json()) as LifeExport;
   const people = new Map(data.people.map((p) => [p.id, p]));
   const order = [...data.people].sort((a, b) => a.met - b.met || a.id - b.id);
@@ -636,7 +662,9 @@ async function main(): Promise<void> {
     speed = SPEEDS[(SPEEDS.indexOf(speed) + 1) % SPEEDS.length];
     $('speed').textContent = `${speed}×`;
   });
-  $('start').addEventListener('click', () => setPlaying(true));
+  $('start').addEventListener('click', () => beginStory());
+  $('skip-story').addEventListener('click', () => showTitle(false));
+  $<HTMLInputElement>('friend-name').addEventListener('input', (ev) => story.rename((ev.target as HTMLInputElement).value));
   $('lives-btn').addEventListener('click', () => showTitle($('title-screen').hidden));
   $('end-again').addEventListener('click', () => {
     setWeek(0);
@@ -665,6 +693,15 @@ async function main(): Promise<void> {
 
   window.addEventListener('keydown', (ev) => {
     if (ev.metaKey || ev.ctrlKey || ev.altKey) return;
+    if ((ev.target as HTMLElement).tagName === 'INPUT') return;
+    if (story.active()) {
+      if (ev.code === 'Space' || ev.code === 'ArrowRight' || ev.code === 'Enter') {
+        ev.preventDefault();
+        story.next();
+      } else if (ev.code === 'ArrowLeft') story.prev();
+      else if (ev.code === 'Escape') story.stop();
+      return;
+    }
     if (ev.code === 'Space') {
       ev.preventDefault();
       setPlaying(!playing);
@@ -684,8 +721,9 @@ async function main(): Promise<void> {
     resizeTimer = window.setTimeout(layoutAll, 120);
   });
 
-  // Deep links skip the title screen: ?week=1100, ?play, ?person=<id|closest>, ?advance=2.5.
-  const deep = ['week', 'play', 'person', 'advance'].some((k) => query.has(k));
+  // Deep links skip the title screen: ?week=1100, ?play, ?person=<id|closest>, ?advance=2.5,
+  // ?story (the opening story; &beat=4 starts at that beat, &name=Sam renames the friend in it).
+  const deep = ['week', 'play', 'person', 'advance', 'story'].some((k) => query.has(k));
   await load(seed, !deep);
   // The pixel font changes the HUD's size once it arrives.
   document.fonts.ready.then(layoutAll);
@@ -695,6 +733,11 @@ async function main(): Promise<void> {
     openPerson(query.get('person') === 'closest' && closest ? closest.id : Number(query.get('person')));
   }
   if (query.has('play')) setPlaying(true);
+  if (query.has('name')) {
+    $<HTMLInputElement>('friend-name').value = query.get('name')!;
+    story.rename(query.get('name')!);
+  }
+  if (query.has('story')) beginStory(Number(query.get('beat') ?? 0) || 0);
   // Testing aid: ?play&advance=2.5 runs the animation forward that many seconds before showing it.
   for (let i = 0, n = Math.round(Number(query.get('advance') ?? 0) * 30); i < n; i++) tick(1 / 30);
   lastFrame = performance.now();
