@@ -19,7 +19,7 @@ SIT
 GIVE
 PAUSE 3.5
 KOFI: I'm not going to ask how you are. [1.6]
-YOU: Good.
+YOU (shut): Good.
 DRINK them
 PAUSE 2.5
 DRINK you
@@ -27,23 +27,23 @@ PAUSE 5
 YOU: He kept the flag quizzes. Every one we ever made him sit through. A whole drawer of them. [2]
 KOFI: Even the ones I made up? [1.2]
 YOU: He thought Zambovia was a real country until I was about thirty. [1.6]
-KOFI: Zambovia was good work.
+KOFI (smile): Zambovia was good work.
 PAUSE 5
-YOU: I left at twenty-three, Kof. I kept meaning to go back more. [1.2]
+YOU (sad): I left at twenty-three, Kof. I kept meaning to go back more. [1.2]
 PAUSE 4
 DRINK them
 KOFI: When Suki died you came round and did my washing-up for a week. [2]
 KOFI: You didn't say one useful thing. [1.4]
-YOU: I didn't have one. [1.6]
+YOU (sad): I didn't have one. [1.6]
 KOFI: No. Nobody does. [1.8]
-KOFI: You came, though.
+KOFI (sad): You came, though.
 PAUSE 6
 YOU: Is that my hoodie? [1.2]
 KOFI: It's been mine since 2030. [1.2]
 YOU: It was a loan.
-KOFI: It was not.
+KOFI (smile): It was not.
 DRINK you
 PAUSE 7
 KOFI: Same time tomorrow? [2.4]
-YOU: Yeah.
+YOU (smile): Yeah.
 PAUSE 6

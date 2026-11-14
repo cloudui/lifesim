@@ -4,6 +4,14 @@ What was added, when, and why, newest first. `AGENTS.md` describes the project a
 
 ## 2026-11-14
 
+### "Without them" after the film, and faces with moods
+
+- **Why:** the film was meant to lead somewhere: once you care about one person, take them away. That step did not exist. And the faces in the dialogue box could not show anything.
+- **Without them:** after the last scene and before the last words, the film says how many people were ever your friend (207 in seed 7), shows Kofi and the five people who reached Axel through him as portraits with how often each was seen, then "Take Kofi away" and they fade one at a time. It is this life with those people removed, not a rerun.
+- **Faces:** a mouth, a blink every few seconds, and four moods a script line can ask for (`KOFI (smile): ...`; also `sad`, `open`, `shut`). The five scripts are marked up, lightly.
+- **Title screen:** when a life has a film, the film is the main button and the caption story is offered as "The same life as captions".
+- **Not done:** the comparison view that should follow (the life with and without the person, side by side, in the data views); gestures; sound.
+
 ### A five-scene film for seed 7, as script files
 
 - **Why:** the owner watched the pier scene and said the form works. They want a handful of scenes prepared in advance for chosen lives, to refine the art later, to improve some of the dialogue themselves, and to flag things while reviewing scene by scene.

@@ -13,7 +13,7 @@ TITLE New York, 2065
 PAUSE 4
 KOFI: My knees don't do this any more.
 YOU: You say that every week.
-KOFI: It's true every week.
+KOFI (smile): It's true every week.
 DRINK them
 PAUSE 4
 YOU: Rafael wants to know if you're coming for the holidays.
@@ -22,15 +22,15 @@ YOU: He likes to be asked to ask. [1.5]
 PAUSE 5
 KOFI: Forty-seven years.
 YOU: Since what?
-KOFI: Zambovia. [2]
+KOFI (smile): Zambovia. [2]
 PAUSE 3
 YOU: I looked it up once. Just in case.
 KOFI: And?
 YOU: Still not a country.
-KOFI: Give it time. [2]
+KOFI (smile): Give it time. [2]
 DRINK you
 PAUSE 7
 KOFI: Same time next week? [2.4]
-YOU: Yeah.
+YOU (smile): Yeah.
 PAUSE 6
 END You and Kofi have seen each other {seen} times in forty years. {led} of the people in your life reached you through him.

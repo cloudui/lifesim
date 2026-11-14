@@ -7,7 +7,8 @@
 // (scenes.ts and the files in scenes/).
 
 import { drawSkyline } from './backdrop';
-import { drawPerson, hash, lookFor, mix, type Look } from './pixel';
+import { drawPerson, hash, lookFor, mix, portrait, type Look } from './pixel';
+import type { Mood } from './scenes';
 import type { FilmScene, Stance, Step, Who } from './scenes';
 import type { Ctx } from './types';
 
@@ -43,6 +44,8 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void }): F
       <div class="film-words"><div class="film-name"></div><div class="film-line"></div></div>
     </div>
     <div class="film-end" hidden>
+      <div class="film-without-line"></div>
+      <div class="film-without"></div>
       <div class="film-end-text"></div>
       <div class="film-actions">
         <button class="again" type="button">↺ Watch again</button>
@@ -58,6 +61,16 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void }): F
   const lineEl = root.querySelector<HTMLElement>('.film-line')!;
   const endEl = root.querySelector<HTMLElement>('.film-end')!;
   const reviewEl = root.querySelector<HTMLElement>('.film-review')!;
+  const withoutEl = root.querySelector<HTMLElement>('.film-without')!;
+  const withoutLine = root.querySelector<HTMLElement>('.film-without-line')!;
+  const endText = root.querySelector<HTMLElement>('.film-end-text')!;
+  const endActions = root.querySelector<HTMLElement>('.film-actions')!;
+  /** "Without them": when each card appears and goes, in seconds from the start of the ending. */
+  let without: { el: HTMLElement; on: number; off: number }[] = [];
+  let withoutTimes = { take: 0, last: 0 };
+  let faceCanvas: HTMLCanvasElement | null = null;
+  let faceMood: Mood = 'flat';
+  let faceId = -1;
   const scratch = document.createElement('canvas');
   scratch.width = 48;
   scratch.height = 56;
@@ -162,10 +175,14 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void }): F
       titleEl.querySelector('.film-title-sub')!.textContent = s.sub ?? '';
     } else if (s.t === 'say') {
       const key = s.who === 'voice' ? `voice` : `${s.who}${si}`;
+      faceMood = s.mood ?? 'flat';
       if (faceKey !== key) {
         faceKey = key;
-        face.replaceChildren(...(s.who === 'voice' ? [] : [faceFor(idOf(s.who))]));
+        faceCanvas = s.who === 'voice' ? null : faceFor(idOf(s.who));
+        faceId = s.who === 'voice' ? -1 : idOf(s.who);
+        face.replaceChildren(...(faceCanvas ? [faceCanvas] : []));
       }
+      paintFace();
       box.classList.toggle('you', s.who === 'you');
       box.classList.toggle('voice', s.who === 'voice');
       nameEl.textContent = s.who === 'voice' ? `${s.voice} · from inside` : nameOf(s.who);
@@ -178,10 +195,35 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void }): F
     else if (s.t === 'drink') (s.who === 'you' ? you : them).sip = clock;
     else if (s.t === 'leave') { const a = s.who === 'you' ? you : them; a.mode = 'leaving'; }
     else if (s.t === 'end') {
+      // Without them: the one person and everyone who reached you through them, and then not.
       const d = view().data;
+      const name = nameOf('them');
+      const ids = d.story.beats.find((x) => x.scene === 'without')?.stage ?? [scene!.other];
       const seen = d.arcs.people.find((p) => p.id === scene!.other)?.seen ?? 0;
-      const led = Math.max(0, (d.story.beats.find((b) => b.scene === 'without')?.stage.length ?? 1) - 1);
-      endEl.querySelector('.film-end-text')!.textContent = s.text.replace('{seen}', seen.toLocaleString('en-US')).replace('{led}', String(led));
+      const friends = d.people.filter((p) => !p.kin && p.peak >= d.levels[1]).length;
+      const led = Math.max(0, ids.length - 1);
+      without = ids.map((id, k) => {
+        const el = document.createElement('div');
+        el.className = `film-card${k === 0 ? ' main' : ''}`;
+        const arc = d.arcs.people.find((p) => p.id === id);
+        const label = document.createElement('span');
+        label.innerHTML = `<b></b><small></small>`;
+        label.querySelector('b')!.textContent = (view().people.get(id)?.name ?? '').split(' ')[0];
+        label.querySelector('small')!.textContent = k === 0 ? `seen ${seen.toLocaleString('en-US')} times` : `${arc?.tag ?? ''} · seen ${arc?.seen ?? 0}`;
+        el.append(portrait(id, k === 0 ? 5 : 4), label);
+        return { el, on: 2.2 + k * 0.5, off: 0 };
+      });
+      const take = 2.2 + ids.length * 0.5 + 4.5;
+      without.forEach((c, k) => { c.off = take + 1.2 + k * 1.3; });
+      withoutTimes = { take, last: take + 1.2 + ids.length * 1.3 + 1.5 };
+      withoutEl.replaceChildren(...without.map((c) => c.el));
+      withoutLine.textContent = led > 0
+        ? `${friends} people were your friend at some point. ${led === 1 ? 'One' : led} of them reached you through ${name}.`
+        : `${friends} people were your friend at some point. ${name} was one.`;
+      withoutLine.className = 'film-without-line';
+      endText.textContent = s.text.replace('{seen}', seen.toLocaleString('en-US')).replace('{led}', String(led));
+      endText.classList.remove('on');
+      endActions.classList.remove('on');
       endEl.hidden = false;
     }
     showReview();
@@ -195,8 +237,36 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void }): F
     c.style.width = '140px';
     c.style.height = '182px';
     c.style.imageRendering = 'pixelated';
-    drawPerson(c.getContext('2d')!, 10, 25, look(id), { pose: 'stand', frame: 0, outfit: 'casual', grey: greyOf(id) });
     return c;
+  }
+  /** Redraw the face with its mood: a mouth, brows when sad, and a blink now and then. */
+  function paintFace(): void {
+    if (!faceCanvas || faceId < 0) return;
+    const fg = faceCanvas.getContext('2d')!;
+    const lk = look(faceId);
+    fg.clearRect(0, 0, 20, 26);
+    drawPerson(fg, 10, 25, lk, { pose: 'stand', frame: 0, outfit: 'casual', grey: greyOf(faceId) });
+    const dark = mix(lk.skin, '#3a1f1a', 0.6);
+    // The sprite's eyes are at (10, 7) and (12, 7); the chin is row 9.
+    const blink = (clock + faceId * 0.37) % 4.2 < 0.14;
+    if (blink || faceMood === 'shut') {
+      fg.fillStyle = lk.skin;
+      fg.fillRect(10, 7, 1, 1);
+      fg.fillRect(12, 7, 1, 1);
+      fg.fillStyle = dark;
+      if (faceMood === 'shut') { fg.fillRect(10, 7, 1, 1); fg.fillRect(12, 7, 1, 1); }
+    }
+    fg.fillStyle = dark;
+    if (faceMood === 'smile') {
+      fg.fillRect(10, 9, 3, 1);
+      fg.fillRect(12, 8, 1, 1);
+    } else if (faceMood === 'sad') {
+      fg.fillRect(11, 9, 1, 1);
+      fg.fillStyle = mix(lk.skin, '#3a1f1a', 0.35);
+      fg.fillRect(9, 6, 1, 1);
+      fg.fillRect(12, 5, 1, 1);
+    } else if (faceMood === 'open') fg.fillRect(11, 8, 2, 2);
+    else fg.fillRect(11, 9, 2, 1);
   }
 
   function open(k: number): void {
@@ -237,7 +307,7 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void }): F
     if (after === 'between') { afterT = 99; return; }
     if (after !== 'none') return;
     const s = step();
-    if (s.t === 'end') return;
+    if (s.t === 'end') { t = Math.max(t, withoutTimes.last + 3); return; }
     if (s.t === 'say' && !lineDone()) { t = s.text.length / TYPE_RATE + 0.01; return; }
     if (s.t === 'enter' || s.t === 'leave') return;
     advance();
@@ -560,10 +630,21 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void }): F
       else if (s.t === 'say') {
         const n = Math.min(s.text.length, Math.floor(t * TYPE_RATE));
         if (n !== typed) { typed = n; lineEl.textContent = s.text.slice(0, n); }
+        paintFace();
         // A line stays up long enough to read twice, then the quiet after it.
         const read = s.text.length / TYPE_RATE + Math.max(1.4, s.text.split(' ').length * 0.3) + (s.after ?? 1);
         if (t >= read) advance();
-      } else if (s.t === 'end') veil = Math.min(0.82, veil + dt * 0.4);
+      } else if (s.t === 'end') {
+        veil = Math.min(0.92, veil + dt * 0.7);
+        withoutLine.classList.toggle('on', t > 1 && t < withoutTimes.last);
+        for (const c of without) {
+          c.el.classList.toggle('on', t >= c.on);
+          c.el.classList.toggle('gone', t >= c.off);
+        }
+        if (t >= withoutTimes.take && t < withoutTimes.last) withoutLine.textContent = `Take ${nameOf('them')} away.`;
+        endText.classList.toggle('on', t >= withoutTimes.last);
+        endActions.classList.toggle('on', t >= withoutTimes.last + 2.5);
+      }
     }
     draw();
   }

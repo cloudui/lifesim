@@ -23,9 +23,11 @@ DRINK them                or: DRINK you
 LEAVE you                 or: LEAVE them
 KOFI: A line.             the other person (THEM: also works)
 YOU: A line. [2]          optional: seconds of quiet after the line
+KOFI (smile): A line.     optional: the face for the line: smile | sad | open | shut
 VOICE Dad: A line.        someone off screen
 FLAG the joke is flat     a review note on the next line; shown in review mode
-END Last words. {seen} and {led} are filled in from the life.
+END Last words. {seen} and {led} are filled in from the life. Before them the film shows
+                          "without them": the person and everyone who reached you through them, fading out.
 ```
 
 Review: open `?seed=7&scene&review`. The file and line being played are shown top left; `[` and `]` jump between scenes, left and right arrows between lines.

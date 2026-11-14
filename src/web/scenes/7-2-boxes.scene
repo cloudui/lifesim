@@ -19,19 +19,19 @@ PAUSE 3
 KOFI: New York.
 YOU: New York. [1.5]
 KOFI: You don't know anyone in New York.
-YOU: That's sort of the idea.
+YOU (smile): That's sort of the idea.
 PAUSE 4
 YOU: You could come out. To visit.
 KOFI: Obviously.
 YOU: I'll call. Every week.
-KOFI: You won't.
+KOFI (sad): You won't.
 YOU: Every two weeks. [1.5]
 PAUSE 3
 YOU: Is that my hoodie?
 KOFI: It was in the donate pile.
 YOU: It was in the keep pile.
-KOFI: Then you should label your piles. [1.5]
+KOFI (smile): Then you should label your piles. [1.5]
 PAUSE 5
-KOFI: Go on. You'll miss it. [1.5]
+KOFI (sad): Go on. You'll miss it. [1.5]
 LEAVE you
 PAUSE 6

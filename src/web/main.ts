@@ -452,6 +452,9 @@ function fillTitle(): void {
   const written = scenesFor(d.seed, d.people);
   $('one-scene').hidden = !written.length;
   $('one-scene').textContent = `▶ Watch the film (${written.length} scenes, draft)`;
+  // With a film to watch, the caption story steps back to an ordinary button.
+  $('start').classList.toggle('big', !written.length);
+  $('start').textContent = written.length ? 'The same life as captions' : '▶ Begin the story';
   $('scene-list').replaceChildren(
     ...written.map((sc, k) => {
       const b = document.createElement('button');

@@ -9,6 +9,8 @@
 
 export type Who = 'you' | 'them';
 export type Stance = 'sitting' | 'standing' | 'away';
+/** The face in the dialogue box for one line. */
+export type Mood = 'flat' | 'smile' | 'sad' | 'open' | 'shut';
 
 export type Step = { line: number; flag?: string } & (
   /** A place and a time, alone on the screen. */
@@ -16,7 +18,7 @@ export type Step = { line: number; flag?: string } & (
   /** Nothing is said. The scene keeps running for `s` seconds. */
   | { t: 'pause'; s: number }
   /** `voice` is someone off screen, by name. */
-  | { t: 'say'; who: Who | 'voice'; voice?: string; text: string; after?: number }
+  | { t: 'say'; who: Who | 'voice'; voice?: string; text: string; after?: number; mood?: Mood }
   | { t: 'enter' }
   | { t: 'sit' }
   | { t: 'give' }
@@ -87,13 +89,17 @@ function parse(file: string, src: string): FilmScene {
     else if (head === 'END') push({ t: 'end', text: rest });
     else if (colon > 0) {
       // A spoken line: "YOU: ...", "KOFI: ..." or "VOICE Dad: ...", with an optional "[seconds]" of quiet after.
-      const speaker = text.slice(0, colon);
+      // "KOFI (smile): ..." sets the face for the line.
+      let speaker = text.slice(0, colon);
+      let mood: string | undefined;
+      const mm = /^(.*?)\s*\((\w+)\)$/.exec(speaker);
+      if (mm) { speaker = mm[1]; mood = mm[2]; }
       let words = text.slice(colon + 1).trim();
       let after: number | undefined;
       const m = /\s*\[([\d.]+)\]$/.exec(words);
       if (m) { after = Number(m[1]); words = words.slice(0, m.index); }
       if (speaker.startsWith('VOICE ')) push({ t: 'say', who: 'voice', voice: speaker.slice(6), text: words, after });
-      else push({ t: 'say', who: speaker === 'YOU' ? 'you' : 'them', text: words, after });
+      else push({ t: 'say', who: speaker === 'YOU' ? 'you' : 'them', text: words, after, mood });
     }
   });
   return sc;

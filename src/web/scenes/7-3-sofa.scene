@@ -12,22 +12,22 @@ TITLE New York, 2038 | One in the morning
 PAUSE 4
 KOFI: This sofa is a crime.
 YOU: It was free.
-KOFI: I can tell.
+KOFI (smile): I can tell.
 PAUSE 4
 YOU: Nine years.
-KOFI: Don't.
+KOFI (shut): Don't.
 YOU: I'm only saying the number. [1.5]
 PAUSE 5
-KOFI: I should have come when Ben died. [2.5]
+KOFI (sad): I should have come when Ben died. [2.5]
 PAUSE 3
 YOU: You sent a card.
-KOFI: I sent a card. [2]
+KOFI (sad): I sent a card. [2]
 KOFI: I wrote four. That was the worst one. The good ones were too much, so I threw them away. [2]
-YOU: I kept it.
+YOU (sad): I kept it.
 PAUSE 5
 YOU: I stopped calling first. If we're counting.
 KOFI: We're not counting. [2]
 PAUSE 5
 KOFI: Is there anything to eat in this city at one in the morning?
-YOU: There is everything to eat in this city at one in the morning. [1.5]
+YOU (smile): There is everything to eat in this city at one in the morning. [1.5]
 PAUSE 3
