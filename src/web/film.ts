@@ -32,7 +32,7 @@ interface Actor { mode: Stance | 'walking' | 'leaving'; x: number; bottle: boole
 /** Where a set puts people: the edge they sit on, the ground they walk on, and how far legs hang. */
 interface Stage { seatY: number; standY: number; legs: number; you: number; them: number }
 
-export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void }): FilmPlayer {
+export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; without(): void }): FilmPlayer {
   root.innerHTML = `
     <canvas class="pixel-canvas"></canvas>
     <div class="film-title"><div class="film-title-text"></div><div class="film-title-sub"></div></div>
@@ -49,7 +49,8 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void }): F
       <div class="film-end-text"></div>
       <div class="film-actions">
         <button class="again" type="button">↺ Watch again</button>
-        <button class="back big" type="button">Back ▶</button>
+        <button class="see big" type="button">See the life without them ▶</button>
+        <button class="back" type="button">Back</button>
       </div>
     </div>`;
   const canvas = root.querySelector('canvas')!;
@@ -661,6 +662,7 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void }): F
   }
   root.querySelector('.film-skip')!.addEventListener('click', leave);
   root.querySelector('.back')!.addEventListener('click', leave);
+  root.querySelector('.see')!.addEventListener('click', () => { on_ = false; root.hidden = true; titleEl.classList.remove('on'); on.without(); });
   root.querySelector('.again')!.addEventListener('click', () => open(0));
 
   return {

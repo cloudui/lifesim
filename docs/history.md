@@ -4,6 +4,13 @@ What was added, when, and why, newest first. `AGENTS.md` describes the project a
 
 ## 2026-11-14
 
+### The life with and without them, in the Circle
+
+- **Why:** the film ends by taking one person away. The data side should then show what that does to the life, which is the link between the film and the views.
+- **What:** "See the life without them" at the end of the film, or `?seed=7&without`, opens the Circle with the person and everyone who reached you through them taken out. They become dashed outlines with names; a bar gives each circle's size with and without them as the playhead moves, the number of people gone and how often you saw one of them (651 times in seed 7). The bar says plainly that this is the same life with people removed, not a rerun.
+- **What it shows about seed 7:** not much changes. At 33 it is one close friend and two friends fewer. Kofi matters to Axel for what passes between them, not for who he brought, and the partner came through someone else. A life chosen for a film should ideally have one person who is both.
+- **Not done:** the other views ignore the mode; nothing yet compares two different starting conditions.
+
 ### "Without them" after the film, and faces with moods
 
 - **Why:** the film was meant to lead somewhere: once you care about one person, take them away. That step did not exist. And the faces in the dialogue box could not show anything.

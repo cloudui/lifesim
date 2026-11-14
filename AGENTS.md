@@ -32,6 +32,7 @@ npm run export -- --seeds 1,3,5,7     # simulate lives and write public/lives/<s
 npm run dev                           # open the page (Vite); add ?seed=5&tab=walk&week=1100 to jump to a moment
                                       # ?play&advance=2.5 fast-forwards the animation, for screenshots
                                       # ?seed=7&scene plays the film written for seed 7; ?scene=3 starts at scene 3; &review shows file and line
+                                      # ?seed=7&without opens the Circle with the story's one person and everyone they led to taken out
                                       # ?story&beat=4 opens the story at a beat; &name=Sam renames the person it is about
 npm test
 npm run typecheck
@@ -188,6 +189,7 @@ The owner's verdict on the opening story: better, but narration will not make an
 - **Review.** `?seed=7&scene&review` (or a scene's button on the title screen) shows the file and line being played, the scene's notes and any `FLAG` on the line; `[` and `]` move between scenes and the arrows between lines. A `FLAG some note` line in a script marks the next line for attention, and the title screen shows which scenes are flagged. `status:` is `draft` or `reviewed`.
 - **Faces.** The face in the dialogue box has a mouth and blinks. A line can set it: `KOFI (smile): ...`, with `smile`, `sad`, `open` or `shut`.
 - **Without them.** The film's `END` line is preceded by a short sequence: how many people were ever your friend, then the one person and everyone who reached you through them as portraits with how often you saw each, then "Take Kofi away" and they fade one at a time. Nothing is rerun; it is this life with those people removed. The list is the `without` beat of the caption story.
+- **The comparison.** "See the life without them" at the end of the film (or `?seed=7&without`) opens the Circle with those people taken out: they are drawn as dashed outlines with their names, their ties are not drawn, and a bar under the tabs gives each circle's size with and without them at the playhead ("close 16 → 15"), how many people are gone and how many times you saw one of them. "Put them back" ends it. The playhead starts at the quarter when most of them were friends. `Ctx.without()` gives any view the set of people taken out; only the Circle uses it so far.
 - **Sets** are drawn in code in `film.ts`: `pier` (night or dusk), `steps` (the front of the family house, dusk or morning) and `sofa` (a flat at night). A set says where people sit and stand; children are the same sprites drawn smaller; hair greys with age; `wearing:` sets the other person's shirt. To add a set, add a drawing function and a case in `stage()`.
 - **Threads through the five scenes:** Zambovia (a country Kofi made up in a flag quiz), the father who sets a place for Kofi, the grey hoodie, "same time tomorrow?".
 - **Where this is going:** the film, then "without them" (take the person and everyone who reached you through them out of the life), then changing the starting conditions. A rerun shows another way a life could have gone, not what one meeting caused, and must be labelled so.

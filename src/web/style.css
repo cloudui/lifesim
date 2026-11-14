@@ -411,3 +411,14 @@ button.big:hover { filter: brightness(1.1); background: var(--accent); }
 .film-end-text, .film-actions { opacity: 0; transition: opacity 1.4s ease; }
 .film-end-text.on, .film-actions.on { opacity: 1; }
 .film-actions:not(.on) { pointer-events: none; }
+
+/* "Without them": a bar under the tabs while some people are taken out of the life. */
+.without-bar { position: fixed; top: 64px; left: 50%; transform: translateX(-50%); z-index: 12; background: rgb(8 10 18 / 0.92); border: 1px solid #ffd166; padding: 8px 14px; font-size: 18px; text-align: center; max-width: min(760px, 94vw); }
+.without-bar[hidden] { display: none; }
+.without-head b { color: #ffd166; }
+.without-head button { margin-left: 12px; font-size: 16px; padding: 1px 8px; }
+.without-rows { margin-top: 4px; color: var(--text-2); display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+.without-rows i { display: inline-block; width: 8px; height: 8px; margin-right: 5px; }
+.without-rows .changed { color: var(--text); }
+.without-rows b { color: #ffd166; font-weight: normal; }
+.without-note { margin-top: 4px; color: var(--text-3); font-size: 15px; }

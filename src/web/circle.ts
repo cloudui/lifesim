@@ -116,12 +116,15 @@ export function createCircle(root: HTMLElement, ctx: Ctx): Scene {
 
     // Friendships among the people you know.
     const snap = v.data.snapshots[ctx.snapIndex(week)];
+    // "Without them": the people taken out are drawn as empty outlines, and their ties are not drawn.
+    const gone = ctx.without();
     g.lineWidth = 1;
     g.globalAlpha = 0.12;
     g.strokeStyle = ink2;
     g.beginPath();
     for (const [a, b] of snap.edges) {
       if (a === hoverId || b === hoverId) continue;
+      if (gone && (gone.has(a) || gone.has(b))) continue;
       const p = pos.get(a);
       const q = pos.get(b);
       if (!p || !q) continue;
@@ -159,6 +162,20 @@ export function createCircle(root: HTMLElement, ctx: Ctx): Scene {
       const r = 3 + lv * 0.9;
       const isPartner = id === partner;
       const kin = isPartner || (person.kin && !ctx.wasPartner(id));
+      if (gone?.has(id)) {
+        g.globalAlpha = 0.9;
+        g.setLineDash([2, 2]);
+        g.strokeStyle = '#ffd166';
+        g.lineWidth = 1.25;
+        g.beginPath();
+        g.arc(p.x, p.y, r + 2, 0, Math.PI * 2);
+        g.stroke();
+        g.setLineDash([]);
+        g.globalAlpha = 1;
+        nodesDrawn.push({ id, x: p.x, y: p.y, r });
+        labels.push({ x: p.x, y: p.y - r - 7, text: person.name.split(' ')[0], strong: false, rank: 5 + p.s });
+        continue;
+      }
       g.globalAlpha = p.s < L[0] ? 0.35 : hoverId >= 0 && id !== hoverId && !linked.has(id) ? 0.4 : 1;
       g.fillStyle = cityColors[ctx.cityAt(person.cities, week)] ?? ink3;
       g.strokeStyle = page;

@@ -135,7 +135,8 @@ const hudTop = $('hud-top');
 const hudBottom = $('hud-bottom');
 function insets(): { top: number; bottom: number } {
   return {
-    top: hudTop.getBoundingClientRect().bottom + 8,
+    // The "without them" bar sits under the tabs and takes its space from the stage too.
+    top: Math.max(hudTop.getBoundingClientRect().bottom, withoutSet ? $('without-bar').getBoundingClientRect().bottom : 0) + 8,
     bottom: window.innerHeight - hudBottom.getBoundingClientRect().top + 8,
   };
 }
@@ -373,7 +374,70 @@ function updateTimeline(): void {
 let hudKey = '';
 let dialogIdx = -3;
 
+// "Without them": the same life with one person, and everyone who reached you through them, taken
+// out. Nothing is simulated again, so this is what those people were in this life, not another life.
+let withoutSet: Set<number> | null = null;
+let withoutKey = '';
+function setWithout(ids: number[] | null): void {
+  withoutSet = ids && ids.length ? new Set(ids) : null;
+  withoutKey = '';
+  hudKey = '';
+  $('without-bar').hidden = !withoutSet;
+  for (const sc of Object.values(scenes)) sc.seek();
+  layoutAll();
+}
+/** The quarter in which the most of these people were friends or closer. */
+function busiestWeek(ids: Set<number>): number {
+  const L = view.data.levels;
+  let best = 0;
+  let bestN = -1;
+  for (const snap of view.data.snapshots) {
+    const n = snap.nodes.filter(([id, s]) => ids.has(id) && s / 100 >= L[1]).length;
+    if (n > bestN) { bestN = n; best = snap.week; }
+  }
+  return best;
+}
+function beginWithout(): void {
+  const ids = view.data.story.beats.find((b) => b.scene === 'without')?.stage ?? view.data.story.leads.slice(0, 1).map((l) => l.id);
+  if (!ids.length) return;
+  $('title-screen').hidden = true;
+  $('end-screen').hidden = true;
+  setTab('circle');
+  setWithout(ids);
+  setWeek(busiestWeek(withoutSet!));
+}
+function updateWithout(): void {
+  if (!withoutSet) return;
+  const L = view.data.levels;
+  const now = strengthsAt(week);
+  const tiers = [0, 0, 0, 0];
+  const gone = [0, 0, 0, 0];
+  for (const [id, s] of now) {
+    const p = view.people.get(id);
+    if (!p || (p.kin && !wasPartner(id)) || s < L[0]) continue;
+    const t = s >= L[3] ? 0 : s >= L[2] ? 1 : s >= L[1] ? 2 : 3;
+    tiers[t]++;
+    if (withoutSet.has(id)) gone[t]++;
+  }
+  const key = `${tiers.join()}|${gone.join()}`;
+  if (key === withoutKey) return;
+  withoutKey = key;
+  const ids = [...withoutSet];
+  const main = view.people.get(ids[0])?.name.split(' ')[0] ?? 'them';
+  const seen = ids.reduce((sum, id) => sum + (view.arcs.get(id)?.seen ?? 0), 0);
+  const row = (i: number, label: string) =>
+    `<span class="${gone[i] ? 'changed' : ''}"><i style="background:var(--tier-${i})"></i>${label} ${tiers[i]}${gone[i] ? ` → <b>${tiers[i] - gone[i]}</b>` : ''}</span>`;
+  $('without-bar').innerHTML =
+    `<div class="without-head"><b>Without ${esc(main)}</b> · ${ids.length} ${ids.length === 1 ? 'person' : 'people'} gone · ${seen.toLocaleString('en-US')} times you saw one of them` +
+    `<button id="without-off" type="button">Put them back</button></div>` +
+    `<div class="without-rows">age ${ageAt(week)}: ${row(0, 'inner')}${row(1, 'close')}${row(2, 'friends')}${row(3, 'acquaintances')}</div>` +
+    `<div class="without-note">The same life with these people taken out. Not a rerun: in another life you would have met other people in their place.</div>`;
+  $('without-off').addEventListener('click', () => setWithout(null));
+  for (const sc of Object.values(scenes)) sc.resize?.();
+}
+
 function updateHud(): void {
+  updateWithout();
   const d = view.data;
   const t = view.tiers[snapIndex(week)];
   const p = partnerAt(week);
@@ -512,7 +576,7 @@ const ctx: Ctx = {
   view: () => view,
   week: () => week,
   playing: () => playing,
-  yearOf, ageAt, cityAt, levelOf, strengthsAt, snapIndex, partnerAt, wasPartner, personTip, showTip, insets,
+  yearOf, ageAt, cityAt, levelOf, strengthsAt, snapIndex, partnerAt, wasPartner, personTip, without: () => withoutSet, showTip, insets,
   hideTip: () => hideTip(),
   openPerson,
 };
@@ -538,7 +602,7 @@ const story = createStory($('story'), ctx, {
   beat: (w) => setWeek(w),
 });
 // The film: scenes written by hand for this life, when there are any. Dialogue and silence, no narration.
-const film = createFilm($('film'), ctx, { done: () => showTitle(true) });
+const film = createFilm($('film'), ctx, { done: () => showTitle(true), without: () => beginWithout() });
 function beginFilm(from = 0, review = false): void {
   const list = scenesFor(view.data.seed, view.data.people);
   if (!list.length) return;
@@ -648,6 +712,8 @@ function layoutAll(): void {
 async function load(seed: number, title = false): Promise<void> {
   setPlaying(false);
   story.stop();
+  withoutSet = null;
+  $('without-bar').hidden = true;
   const data = (await (await fetch(`lives/${seed}.json`)).json()) as LifeExport;
   const people = new Map(data.people.map((p) => [p.id, p]));
   const order = [...data.people].sort((a, b) => a.met - b.met || a.id - b.id);
@@ -769,7 +835,7 @@ async function main(): Promise<void> {
 
   // Deep links skip the title screen: ?week=1100, ?play, ?person=<id|closest>, ?advance=2.5,
   // ?story (the opening story; &beat=4 starts at that beat, &name=Sam renames the friend in it).
-  const deep = ['week', 'play', 'person', 'advance', 'story', 'scene'].some((k) => query.has(k));
+  const deep = ['week', 'play', 'person', 'advance', 'story', 'scene', 'without'].some((k) => query.has(k));
   await load(seed, !deep);
   // The pixel font changes the HUD's size once it arrives.
   document.fonts.ready.then(layoutAll);
@@ -778,6 +844,8 @@ async function main(): Promise<void> {
     const closest = [...view.data.people].filter((p) => !p.kin).sort((x, y) => y.peak - x.peak)[0];
     openPerson(query.get('person') === 'closest' && closest ? closest.id : Number(query.get('person')));
   }
+  // ?without opens the Circle with the story's one person, and everyone they led to, taken out.
+  if (query.has('without')) beginWithout();
   if (query.has('play')) setPlaying(true);
   if (query.has('name')) {
     $<HTMLInputElement>('friend-name').value = query.get('name')!;
