@@ -1,104 +1,112 @@
+/// <reference types="vite/client" />
 // Scenes written by hand for one particular simulated life.
 //
 // The simulation supplies the facts (who these two are, what has just happened, how long they
-// have known each other); the dialogue is authored for that life and is not generated. A scene
-// names the life it was written for, and the page only offers it while that life still matches,
-// because a new rule in the simulation changes every life.
+// have known each other); the dialogue is authored for that life and is not generated. Each scene
+// is a plain script file in scenes/ (the format is in scenes/README.md) so the words can be
+// edited without touching code. A scene names the life it was written for, and the page only
+// offers it while that life still matches, because a new simulation rule changes every life.
 
 export type Who = 'you' | 'them';
+export type Stance = 'sitting' | 'standing' | 'away';
 
-export type Step =
+export type Step = { line: number; flag?: string } & (
   /** A place and a time, alone on the screen. */
   | { t: 'title'; text: string; sub?: string; hold: number }
   /** Nothing is said. The scene keeps running for `s` seconds. */
   | { t: 'pause'; s: number }
-  | { t: 'say'; who: Who; text: string; /** Seconds of quiet after the line. */ after?: number }
-  /** The other person walks out along the pier, sits down, hands over a bottle, or drinks. */
+  /** `voice` is someone off screen, by name. */
+  | { t: 'say'; who: Who | 'voice'; voice?: string; text: string; after?: number }
   | { t: 'enter' }
   | { t: 'sit' }
   | { t: 'give' }
   | { t: 'drink'; who: Who }
-  /** The last line, alone on the screen. {seen} is how many times the two have seen each other. */
-  | { t: 'end'; text: string };
+  | { t: 'leave'; who: Who }
+  /** The last words of the film, alone on the screen. {seen} and {led} are filled in. */
+  | { t: 'end'; text: string }
+);
 
 export interface FilmScene {
-  /** What the title screen calls it. */
+  file: string;
   name: string;
-  set: 'pier';
-  /** The life this was written for: the seed, the other person, and their first name as a check. */
   seed: number;
   other: number;
   otherName: string;
-  /** What the other person is wearing, when the scene needs it: a shirt colour. */
-  wearing?: string;
-  /** The week it happens in, for ages and grey hair. */
+  set: 'pier' | 'steps' | 'sofa';
+  /** night, dusk or morning, for the sets that have more than one. */
+  time: string;
   week: number;
+  start: Record<Who, Stance>;
+  props: string[];
+  /** The other person's shirt colour, when the scene needs it. */
+  wearing?: string;
+  status: string;
+  notes: string;
   steps: Step[];
 }
 
-// Seed 7. Axel is 43 and lives in New York. His father Jonas has just died, aged 86, far away.
-// Kofi is the friend he grew up with in San Francisco: they made up flag quizzes as kids, Kofi kept
-// Axel's grey hoodie when Axel moved away at 23, they did not see each other for nine years, and
-// Kofi moved to New York in 2040. Three years ago Kofi's partner Suki died and Axel was the one
-// who came round. Rafael is Axel's partner. All of that is in the simulated life.
-const PIER_7: FilmScene = {
-  name: 'The pier',
-  set: 'pier',
-  seed: 7,
-  other: 1051,
-  otherName: 'Kofi',
-  // The grey hoodie.
-  wearing: '#8b8f98',
-  week: 1287,
-  steps: [
-    { t: 'title', text: 'New York, 2050', sub: 'The week after the funeral', hold: 4 },
-    { t: 'pause', s: 5 },
-    { t: 'enter' },
-    { t: 'pause', s: 1.5 },
-    { t: 'say', who: 'them', text: "Rafael said you'd be out here.", after: 1.4 },
-    { t: 'say', who: 'you', text: 'Rafael talks too much.', after: 1.2 },
-    { t: 'sit' },
-    { t: 'give' },
-    { t: 'pause', s: 3.5 },
-    { t: 'say', who: 'them', text: "I'm not going to ask how you are.", after: 1.6 },
-    { t: 'say', who: 'you', text: 'Good.', after: 1 },
-    { t: 'drink', who: 'them' },
-    { t: 'pause', s: 2.5 },
-    { t: 'drink', who: 'you' },
-    { t: 'pause', s: 5 },
-    { t: 'say', who: 'you', text: 'He kept the flag quizzes. Every one we ever made him sit through. A whole drawer of them.', after: 2 },
-    { t: 'say', who: 'them', text: 'Even the ones I made up?', after: 1.2 },
-    { t: 'say', who: 'you', text: 'He thought Zambovia was a real country until I was about thirty.', after: 1.6 },
-    { t: 'say', who: 'them', text: 'Zambovia was good work.', after: 1 },
-    { t: 'pause', s: 5 },
-    { t: 'say', who: 'you', text: 'I left at twenty-three, Kof. I kept meaning to go back more.', after: 1.2 },
-    { t: 'pause', s: 4 },
-    { t: 'drink', who: 'them' },
-    { t: 'say', who: 'them', text: 'When Suki died you came round and did my washing-up for a week.', after: 2 },
-    { t: 'say', who: 'them', text: "You didn't say one useful thing.", after: 1.4 },
-    { t: 'say', who: 'you', text: "I didn't have one.", after: 1.6 },
-    { t: 'say', who: 'them', text: 'No. Nobody does.', after: 1.8 },
-    { t: 'say', who: 'them', text: 'You came, though.', after: 1 },
-    { t: 'pause', s: 6 },
-    { t: 'say', who: 'you', text: 'Is that my hoodie?', after: 1.2 },
-    { t: 'say', who: 'them', text: "It's been mine since 2030.", after: 1.2 },
-    { t: 'say', who: 'you', text: 'It was a loan.', after: 1 },
-    { t: 'say', who: 'them', text: 'It was not.', after: 1 },
-    { t: 'drink', who: 'you' },
-    { t: 'pause', s: 7 },
-    { t: 'say', who: 'them', text: 'Same time tomorrow?', after: 2.4 },
-    { t: 'say', who: 'you', text: 'Yeah.', after: 1 },
-    { t: 'pause', s: 6 },
-    { t: 'end', text: 'You and Kofi have seen each other {seen} times in forty years. This was one of them.' },
-  ],
-};
+function parse(file: string, src: string): FilmScene {
+  const sc: FilmScene = {
+    file, name: file, seed: -1, other: -1, otherName: '', set: 'pier', time: 'night', week: 0,
+    start: { you: 'sitting', them: 'away' }, props: [], status: 'draft', notes: '', steps: [],
+  };
+  let body = false;
+  let flag: string | undefined;
+  src.split('\n').forEach((raw, k) => {
+    const text = raw.trim();
+    const line = k + 1;
+    if (!text) { if (sc.seed >= 0) body = true; return; }
+    const colon = text.indexOf(':');
+    if (!body && colon > 0 && /^[a-z]+$/.test(text.slice(0, colon))) {
+      const key = text.slice(0, colon);
+      const v = text.slice(colon + 1).trim();
+      if (key === 'name') sc.name = v;
+      else if (key === 'seed') sc.seed = Number(v);
+      else if (key === 'with') { sc.other = Number(v.split(' ')[0]); sc.otherName = v.split(' ').slice(1).join(' '); }
+      else if (key === 'set') { sc.set = v.split(' ')[0] as FilmScene['set']; sc.time = v.split(' ')[1] ?? 'night'; }
+      else if (key === 'week') sc.week = Number(v);
+      else if (key === 'start') for (const part of v.split(',')) { const [w, st] = part.trim().split(' '); if (w === 'you' || w === 'them') sc.start[w] = st as Stance; }
+      else if (key === 'props') sc.props = v.split(',').map((x) => x.trim()).filter(Boolean);
+      else if (key === 'wearing') sc.wearing = v;
+      else if (key === 'status') sc.status = v;
+      else if (key === 'notes') sc.notes = v;
+      return;
+    }
+    body = true;
+    const push = (s: Record<string, unknown>) => { sc.steps.push({ line, ...(flag ? { flag } : {}), ...s } as Step); flag = undefined; };
+    const [head, ...restWords] = text.split(' ');
+    const rest = restWords.join(' ');
+    if (head === 'FLAG') flag = rest;
+    else if (head === 'TITLE') { const [a, b] = rest.split('|').map((x) => x.trim()); push({ t: 'title', text: a, sub: b, hold: 4 }); }
+    else if (head === 'PAUSE') push({ t: 'pause', s: Number(rest) || 2 });
+    else if (head === 'ENTER') push({ t: 'enter' });
+    else if (head === 'SIT') push({ t: 'sit' });
+    else if (head === 'GIVE') push({ t: 'give' });
+    else if (head === 'DRINK') push({ t: 'drink', who: rest === 'you' ? 'you' : 'them' });
+    else if (head === 'LEAVE') push({ t: 'leave', who: rest === 'them' ? 'them' : 'you' });
+    else if (head === 'END') push({ t: 'end', text: rest });
+    else if (colon > 0) {
+      // A spoken line: "YOU: ...", "KOFI: ..." or "VOICE Dad: ...", with an optional "[seconds]" of quiet after.
+      const speaker = text.slice(0, colon);
+      let words = text.slice(colon + 1).trim();
+      let after: number | undefined;
+      const m = /\s*\[([\d.]+)\]$/.exec(words);
+      if (m) { after = Number(m[1]); words = words.slice(0, m.index); }
+      if (speaker.startsWith('VOICE ')) push({ t: 'say', who: 'voice', voice: speaker.slice(6), text: words, after });
+      else push({ t: 'say', who: speaker === 'YOU' ? 'you' : 'them', text: words, after });
+    }
+  });
+  return sc;
+}
 
-const ALL: FilmScene[] = [PIER_7];
+const files = import.meta.glob('./scenes/*.scene', { query: '?raw', import: 'default', eager: true }) as Record<string, string>;
+const ALL: FilmScene[] = Object.keys(files).sort().map((path) => parse(path.split('/').pop()!, files[path]));
 
-/** The scene written for this life, if there is one and the life is still the one it was written for. */
-export function sceneFor(seed: number, people: { id: number; name: string }[]): FilmScene | null {
-  const s = ALL.find((x) => x.seed === seed);
-  if (!s) return null;
-  const p = people.find((x) => x.id === s.other);
-  return p && p.name.split(' ')[0] === s.otherName ? s : null;
+/** The scenes written for this life, in order, if the life is still the one they were written for. */
+export function scenesFor(seed: number, people: { id: number; name: string }[]): FilmScene[] {
+  return ALL.filter((s) => {
+    if (s.seed !== seed) return false;
+    const p = people.find((x) => x.id === s.other);
+    return !!p && p.name.split(' ')[0] === s.otherName;
+  });
 }

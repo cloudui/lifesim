@@ -1,0 +1,49 @@
+name: The pier
+seed: 7
+with: 1051 Kofi
+set: pier night
+week: 1287
+start: you sitting, them away
+props: bottles
+wearing: #8b8f98
+status: draft
+notes: Axel is 43; his father Jonas has just died. Real: the death, Suki's death three years earlier and who came, the hoodie, Rafael.
+
+TITLE New York, 2050 | The week after the funeral
+PAUSE 5
+ENTER
+PAUSE 1.5
+KOFI: Rafael said you'd be out here. [1.4]
+YOU: Rafael talks too much. [1.2]
+SIT
+GIVE
+PAUSE 3.5
+KOFI: I'm not going to ask how you are. [1.6]
+YOU: Good.
+DRINK them
+PAUSE 2.5
+DRINK you
+PAUSE 5
+YOU: He kept the flag quizzes. Every one we ever made him sit through. A whole drawer of them. [2]
+KOFI: Even the ones I made up? [1.2]
+YOU: He thought Zambovia was a real country until I was about thirty. [1.6]
+KOFI: Zambovia was good work.
+PAUSE 5
+YOU: I left at twenty-three, Kof. I kept meaning to go back more. [1.2]
+PAUSE 4
+DRINK them
+KOFI: When Suki died you came round and did my washing-up for a week. [2]
+KOFI: You didn't say one useful thing. [1.4]
+YOU: I didn't have one. [1.6]
+KOFI: No. Nobody does. [1.8]
+KOFI: You came, though.
+PAUSE 6
+YOU: Is that my hoodie? [1.2]
+KOFI: It's been mine since 2030. [1.2]
+YOU: It was a loan.
+KOFI: It was not.
+DRINK you
+PAUSE 7
+KOFI: Same time tomorrow? [2.4]
+YOU: Yeah.
+PAUSE 6

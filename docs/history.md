@@ -2,6 +2,16 @@
 
 What was added, when, and why, newest first. `AGENTS.md` describes the project as it is now; this file is the record of how it got there. Add an entry whenever a change alters how the simulation behaves or what the page shows. Commit ids are in brackets.
 
+## 2026-11-14
+
+### A five-scene film for seed 7, as script files
+
+- **Why:** the owner watched the pier scene and said the form works. They want a handful of scenes prepared in advance for chosen lives, to refine the art later, to improve some of the dialogue themselves, and to flag things while reviewing scene by scene.
+- **What:** five scenes about Axel and Kofi (the steps 2018, the boxes 2030, the sofa 2038, the pier 2050, the pier again 2065), each a plain script file in `src/web/scenes/` that can be edited without touching code. The player (`film.ts`) plays them in order with a card for the years between, counted from the life ("Eight years. You and Kofi do not see each other once."). Two new sets: the front steps of the family house and a flat with a sofa; the pier has a dusk version. People can be children (smaller) and old (grey). An off-screen voice is possible (the father, from inside the house).
+- **Review tools:** `?seed=7&scene&review` shows file and line; `FLAG` lines in a script mark what needs attention; each scene has a `status` and `notes`; the title screen lists the scenes with their status.
+- **Facts and invention:** each script's `notes:` line says what is from the log. Invented: Zambovia, the card after Ben's death, what was said.
+- **Not done:** expressions and gestures (nobody turns to look at anyone), sound, films for other lives, the "without them" step after the film. The title screen is crowded with both the story and the film on it.
+
 ## 2026-11-13
 
 ### A first film scene: the pier

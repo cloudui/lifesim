@@ -6,13 +6,13 @@ This file is the shared brief for any coding agent or person picking the project
 
 ## Status
 
-Last updated 2026-11-13 (one-person story; being there after a loss; a first film scene in dialogue).
+Last updated 2026-11-14 (a five-scene film for seed 7, in dialogue, as editable script files).
 
 - **Direction (agreed 2026-11-12):** story first, playground second. A short opening story makes you care about a few people; the tabs are for exploring the whole life afterwards. See "The opening story" below.
 - **Done:** the simulation core with endings (falling out, fading when out of sight, death), highlight detection, a retelling by people, a story editor that cuts a life to about 16 beats about one person, a library of invented details for its captions, a what-if rerun (console only), a console highlight reel, a tuning harness, determinism tests, a JSON export, and a full-screen browser game: an opening story, then five tabs: Walk (pixel art), Map (pixel art), Circle, People and Journal.
-- **Branch:** the story editor and the opening story are on `story-editor`, not committed or merged yet. Everything before that is on `main`. `codex/priya-walk` is a separate Codex experiment (walking through a life with one person); it has not been reviewed or merged.
+- **Branch:** the story editor, the opening story and the film are committed on `story-editor`, not pushed or merged. Everything before that is on `main`. `codex/priya-walk` is a separate Codex experiment (walking through a life with one person); it has not been reviewed or merged.
 - **Not started:** running the sim in the browser, the intake form, a phone layout, sound.
-- **Next step:** the owner watches the pier scene (`npm run dev`, then `?seed=7&scene`) and says whether dialogue scenes are the right form. If yes: a scene format with four or five scenes for one life, then the "without them" comparison. If no: make the data and what-if side the front door. The caption story (`?story`) stays as it is meanwhile. Engine work is paused except where a scene needs a cause. `docs/open-questions.md` lists the open questions. Speed and phone layout stay parked.
+- **Next step:** the owner reviews the film scene by scene (`npm run dev`, then `?seed=7&scene&review`), edits the words in `src/web/scenes/*.scene` and adds `FLAG` lines for what to fix. Then: act on the flags, refine the art (faces have no expressions; some props and poses look wrong), sound, and the "without them" comparison after the film. Films for other lives come after this one is right. The caption story (`?story`) stays as it is meanwhile. Engine work is paused except where a scene needs a cause. Speed and phone layout stay parked.
 
 ## Run it
 
@@ -31,7 +31,7 @@ npm run harness -- --n 8 --years 15 --set hlMin=30 --set invitePow=2   # try par
 npm run export -- --seeds 1,3,5,7     # simulate lives and write public/lives/<seed>.json for the page
 npm run dev                           # open the page (Vite); add ?seed=5&tab=walk&week=1100 to jump to a moment
                                       # ?play&advance=2.5 fast-forwards the animation, for screenshots
-                                      # ?seed=7&scene plays the hand-written pier scene (draft)
+                                      # ?seed=7&scene plays the film written for seed 7; ?scene=3 starts at scene 3; &review shows file and line
                                       # ?story&beat=4 opens the story at a beat; &name=Sam renames the person it is about
 npm test
 npm run typecheck
@@ -104,8 +104,9 @@ src/cli/export.ts      writes public/lives/<seed>.json and index.json
 index.html, src/web/   the page (vanilla TypeScript, SVG and canvas):
   main.ts              game shell: playhead, HUD, dialogue box, timeline scrubber, tabs, title and end screens
   story.ts             the opening story: one pixel scene and a caption per beat
-  film.ts              a film scene: two people, one place, dialogue and silence, no narration (draft)
-  scenes.ts            film scenes written by hand for one particular simulated life
+  film.ts              the film: scenes of two people in one place, dialogue and silence, no narration; the years pass between scenes
+  scenes.ts            reads the scene scripts and offers the ones written for the life on screen
+  scenes/*.scene       one plain script file per scene, written by hand for one simulated life; format in scenes/README.md
   backdrop.ts          sky, skylines and venue fronts, shared by the story and the Walk
   walk.ts              Walk tab: the pixel-art walk through life
   map.ts               Map tab: where everyone is
@@ -178,14 +179,16 @@ Getting together with a partner, breaking up, falling out, making up, the death 
 - **Being there** is told from `support` events, in both directions: they came to you, or you went to them. A beat says when someone got on a plane.
 - **What it cannot show yet:** hard stretches are only deaths and breakups; fallings-out rarely involve the one person and have no reason; childhood is not simulated, so early moments are invented.
 
-### Film scenes (draft, 2026-11-13)
+### The film (draft)
 
-The owner's verdict on the opening story: better, but narration will not make anyone care. A caption says what happened; it has to be shown, in dialogue, with room to breathe. `film.ts` is a first try at that form, with one scene: `?seed=7&scene`, or the button on seed 7's title screen.
+The owner's verdict on the opening story: better, but narration will not make anyone care. A caption says what happened; it has to be shown, in dialogue, with room to breathe. The pier scene tested that form on 2026-11-13 and the owner said it works. Seed 7 now has five scenes about Axel and Kofi: the steps (2018, aged 11 and 14), the boxes (2030, the morning he leaves), the sofa (2038, after nine years apart), the pier (2050, after his father's funeral) and the pier again (2065).
 
-- **No narration.** A place and a year, then only lines of dialogue with the speaker's face, and silences. Pauses are steps in the script, and the scene keeps moving while nothing is said.
-- **Written by hand per life.** `scenes.ts` holds the script. The simulation supplies the facts in it (who the two are, what just happened, the hoodie, who came when); the words are authored, not generated. A scene names the seed and the person it was written for and is only offered while they still match, because any new simulation rule changes every life.
-- **The direction being tested:** a short film of four or five such scenes about one person, then "without them" (take the person and everyone who reached you through them out of the life), then changing the starting conditions. A rerun shows another way a life could have gone, not what one meeting caused, and must be labelled so.
-- If this form works, the caption story (`story.ts`) becomes the outline the scenes are written from, or the silent passage of years between them.
+- **No narration.** A place and a year, then only lines of dialogue with the speaker's face, and silences. Pauses are steps in the script, and the scene keeps moving while nothing is said. Between scenes one card says how many years passed and how often the two saw each other in them, counted from the life. The last scene ends on the numbers.
+- **Written by hand per life.** Each scene is a plain script file in `src/web/scenes/` (format in `scenes/README.md`): a header (seed, the other person, set, week, who starts where, props, status, notes) and then lines such as `KOFI: ...`, `YOU: ... [2]`, `PAUSE 5`, `ENTER`, `SIT`, `DRINK you`, `VOICE Dad: ...`. The simulation supplies the facts; the words are authored, not generated. A scene is only offered while its seed and person still match, because any new simulation rule changes every life.
+- **Review.** `?seed=7&scene&review` (or a scene's button on the title screen) shows the file and line being played, the scene's notes and any `FLAG` on the line; `[` and `]` move between scenes and the arrows between lines. A `FLAG some note` line in a script marks the next line for attention, and the title screen shows which scenes are flagged. `status:` is `draft` or `reviewed`.
+- **Sets** are drawn in code in `film.ts`: `pier` (night or dusk), `steps` (the front of the family house, dusk or morning) and `sofa` (a flat at night). A set says where people sit and stand; children are the same sprites drawn smaller; hair greys with age; `wearing:` sets the other person's shirt. To add a set, add a drawing function and a case in `stage()`.
+- **Threads through the five scenes:** Zambovia (a country Kofi made up in a flag quiz), the father who sets a place for Kofi, the grey hoodie, "same time tomorrow?".
+- **Where this is going:** the film, then "without them" (take the person and everyone who reached you through them out of the life), then changing the starting conditions. A rerun shows another way a life could have gone, not what one meeting caused, and must be labelled so.
 
 ### People and what-if (experiments)
 

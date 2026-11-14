@@ -1,0 +1,36 @@
+name: The pier, again
+seed: 7
+with: 1051 Kofi
+set: pier dusk
+week: 2070
+start: you sitting, them sitting
+props: bottles
+wearing: #8b8f98
+status: draft
+notes: Axel is 58, Kofi 61. The last scene; it ends on the numbers.
+
+TITLE New York, 2065
+PAUSE 4
+KOFI: My knees don't do this any more.
+YOU: You say that every week.
+KOFI: It's true every week.
+DRINK them
+PAUSE 4
+YOU: Rafael wants to know if you're coming for the holidays.
+KOFI: Rafael knows I'm coming for the holidays.
+YOU: He likes to be asked to ask. [1.5]
+PAUSE 5
+KOFI: Forty-seven years.
+YOU: Since what?
+KOFI: Zambovia. [2]
+PAUSE 3
+YOU: I looked it up once. Just in case.
+KOFI: And?
+YOU: Still not a country.
+KOFI: Give it time. [2]
+DRINK you
+PAUSE 7
+KOFI: Same time next week? [2.4]
+YOU: Yeah.
+PAUSE 6
+END You and Kofi have seen each other {seen} times in forty years. {led} of the people in your life reached you through him.

@@ -1,0 +1,37 @@
+name: The boxes
+seed: 7
+with: 1051 Kofi
+set: steps morning
+week: 209
+start: you sitting, them away
+props: boxes
+wearing: #8b8f98
+status: draft
+notes: Axel is 23 and leaving for New York. The hoodie goes with Kofi. Real: the move, and that the calls thinned out.
+
+TITLE San Francisco, 2030 | The morning you leave
+PAUSE 3
+ENTER
+KOFI: That's the last one. Your mom is crying into the cutlery.
+YOU: She's been doing that since Tuesday.
+SIT
+PAUSE 3
+KOFI: New York.
+YOU: New York. [1.5]
+KOFI: You don't know anyone in New York.
+YOU: That's sort of the idea.
+PAUSE 4
+YOU: You could come out. To visit.
+KOFI: Obviously.
+YOU: I'll call. Every week.
+KOFI: You won't.
+YOU: Every two weeks. [1.5]
+PAUSE 3
+YOU: Is that my hoodie?
+KOFI: It was in the donate pile.
+YOU: It was in the keep pile.
+KOFI: Then you should label your piles. [1.5]
+PAUSE 5
+KOFI: Go on. You'll miss it. [1.5]
+LEAVE you
+PAUSE 6

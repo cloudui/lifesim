@@ -14,7 +14,7 @@ import { createMap } from './map';
 import { createPersonCard } from './person';
 import './style.css';
 import { createFilm } from './film';
-import { sceneFor } from './scenes';
+import { scenesFor } from './scenes';
 import { createStory } from './story';
 import type { Ctx, Scene, View } from './types';
 import { createWalk } from './walk';
@@ -449,7 +449,19 @@ function fillTitle(): void {
   );
   const friend = d.story.leads.find((l) => l.main);
   $('title-friend').hidden = !friend;
-  $('one-scene').hidden = !sceneFor(d.seed, d.people);
+  const written = scenesFor(d.seed, d.people);
+  $('one-scene').hidden = !written.length;
+  $('one-scene').textContent = `▶ Watch the film (${written.length} scenes, draft)`;
+  $('scene-list').replaceChildren(
+    ...written.map((sc, k) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'life';
+      b.innerHTML = `<b>${k + 1}. ${esc(sc.name)}</b><small>${esc(sc.status)}${sc.steps.some((x) => x.flag) ? ' · flagged' : ''}</small>`;
+      b.addEventListener('click', () => beginFilm(k, true));
+      return b;
+    }),
+  );
   if (friend) $('title-friend-name').textContent = friend.name.split(' ')[0];
   $('lives').replaceChildren(
     ...lives.map((l) => {
@@ -522,16 +534,16 @@ const story = createStory($('story'), ctx, {
   // Keep the playhead with the story, so leaving it lands on the same moment in the full life.
   beat: (w) => setWeek(w),
 });
-// A hand-written scene for this life, when there is one: dialogue and silence, no narration.
+// The film: scenes written by hand for this life, when there are any. Dialogue and silence, no narration.
 const film = createFilm($('film'), ctx, { done: () => showTitle(true) });
-function beginScene(): void {
-  const sc = sceneFor(view.data.seed, view.data.people);
-  if (!sc) return;
+function beginFilm(from = 0, review = false): void {
+  const list = scenesFor(view.data.seed, view.data.people);
+  if (!list.length) return;
   setPlaying(false);
   story.stop();
   $('title-screen').hidden = true;
   $('end-screen').hidden = true;
-  film.start(sc);
+  film.start(list, from, review);
 }
 function beginStory(beat = 0): void {
   setPlaying(false);
@@ -683,7 +695,7 @@ async function main(): Promise<void> {
   });
   $('start').addEventListener('click', () => beginStory());
   $('skip-story').addEventListener('click', () => showTitle(false));
-  $('one-scene').addEventListener('click', beginScene);
+  $('one-scene').addEventListener('click', () => beginFilm());
   $<HTMLInputElement>('friend-name').addEventListener('input', (ev) => story.rename((ev.target as HTMLInputElement).value));
   $('lives-btn').addEventListener('click', () => showTitle($('title-screen').hidden));
   $('end-again').addEventListener('click', () => {
@@ -715,10 +727,14 @@ async function main(): Promise<void> {
     if (ev.metaKey || ev.ctrlKey || ev.altKey) return;
     if ((ev.target as HTMLElement).tagName === 'INPUT') return;
     if (film.active()) {
-      if (ev.code === 'Space' || ev.code === 'ArrowRight' || ev.code === 'Enter') {
+      if (ev.code === 'ArrowRight' && query.has('review')) film.jump(1, 0);
+      else if (ev.code === 'Space' || ev.code === 'ArrowRight' || ev.code === 'Enter') {
         ev.preventDefault();
         film.next();
       } else if (ev.code === 'Escape') { film.stop(); showTitle(true); }
+      else if (ev.code === 'ArrowLeft') film.jump(-1, 0);
+      else if (ev.code === 'BracketLeft') film.jump(0, -1);
+      else if (ev.code === 'BracketRight') film.jump(0, 1);
       return;
     }
     if (story.active()) {
@@ -765,8 +781,8 @@ async function main(): Promise<void> {
     story.rename(query.get('name')!);
   }
   if (query.has('story')) beginStory(Number(query.get('beat') ?? 0) || 0);
-  // ?scene plays the hand-written scene for this life.
-  if (query.has('scene')) beginScene();
+  // ?scene plays the film written for this life; ?scene=3 starts at the third scene; &review shows file and line.
+  if (query.has('scene')) beginFilm((Number(query.get('scene')) || 1) - 1, query.has('review'));
   // Testing aid: ?play&advance=2.5 runs the animation forward that many seconds before showing it.
   for (let i = 0, n = Math.round(Number(query.get('advance') ?? 0) * 30); i < n; i++) tick(1 / 30);
   lastFrame = performance.now();
