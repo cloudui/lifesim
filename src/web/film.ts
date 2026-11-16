@@ -535,13 +535,14 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
           // On a seat, from the side: thighs forward, knees bent, feet on the floor.
           const d = left ? -1 : 1;
           const knee = d > 0 ? 29 : 17;
+          // The thighs lie on top of the seat, so the whole person is drawn that much higher.
           // The body rests on the thighs: the thighs run forward under the torso, and the shins drop from the knee.
           const shinOf = (kx: number, dim: boolean) => {
             sg.fillStyle = lk.shorts ? lk.skin : lk.pants;
-            sg.fillRect(kx, 43, 2, len - 3);
+            sg.fillRect(kx, 43, 2, len);
             sg.fillStyle = lk.shoes ?? '#15151a';
-            sg.fillRect(d > 0 ? kx : kx - 1, 40 + len, 3, 1);
-            if (dim) { sg.fillStyle = 'rgba(0,0,0,0.3)'; sg.fillRect(kx - 1, 43, 4, len - 2); }
+            sg.fillRect(d > 0 ? kx : kx - 1, 43 + len, 3, 1);
+            if (dim) { sg.fillStyle = 'rgba(0,0,0,0.3)'; sg.fillRect(kx - 1, 43, 4, len + 1); }
           };
           shinOf(knee - d * 3, true);
           sg.fillStyle = lk.pants;
@@ -563,7 +564,7 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
         }
       }
       held(a, left, 33);
-      g.drawImage(scratch, 0, 0, 48, 56, Math.round(x - 24 * s), Math.round(st.seatY - 40 * s), Math.round(48 * s), Math.round(56 * s));
+      g.drawImage(scratch, 0, 0, 48, 56, Math.round(x - 24 * s), Math.round(st.seatY - (40 + lift(st)) * s), Math.round(48 * s), Math.round(56 * s));
     } else {
       drawPerson(sg, 24, 40, lk, { pose: a.mode === 'walking' ? 'walk' : 'stand', frame: Math.floor(clock * (a.fast ? 12 : 6)), outfit: 'casual', grey: greyOf(p), flip: left, call: a.hold === 'call' });
       if (a.bottle && a.key === 'THEM') {
@@ -600,13 +601,15 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
       sg.fillRect(hx, y, 2, 3);
     }
   }
+  /** How far a seated person is raised so that their thighs are on the seat, not in it. */
+  const lift = (st: Stage): number => (st.legs > 0 && scene!.set !== 'pier' && scene!.set !== 'steps' ? 3 : 0);
   /** The top of someone's head on the canvas. */
   function headTop(a: Actor, st: Stage): number {
     const p = person(a.key);
     const s = sizeOf(p);
     const hs = p.look.hairStyle;
     const hair = hs === 6 ? 3 : hs === 8 ? 2 : hs === 5 || hs === 7 || hs === 9 ? 1 : 0;
-    return Math.round((a.mode === 'sitting' ? st.seatY - 15 * s : st.standY - 22 * s) - (p.look.tall ?? 0) - hair);
+    return Math.round((a.mode === 'sitting' ? st.seatY - (15 + lift(st)) * s : st.standY - 22 * s) - (p.look.tall ?? 0) - hair);
   }
 
   function draw(): void {
