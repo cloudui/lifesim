@@ -8,12 +8,13 @@
 // Browsers only allow sound after a click or a key press, so nothing plays until then.
 // The choice to mute is remembered.
 
-export type Ambience = 'water' | 'room' | 'street' | 'rain' | 'none';
+export type Ambience = 'water' | 'room' | 'street' | 'rain' | 'party' | 'none';
 
 let ac: AudioContext | null = null;
 let master: GainNode | null = null;
-let bed: { src: AudioBufferSourceNode; gain: GainNode; lfo?: OscillatorNode } | null = null;
+let bed: { src: AudioBufferSourceNode; gain: GainNode; lfo?: OscillatorNode; extra?: OscillatorNode[] } | null = null;
 let bedKind: Ambience = 'none';
+let partyOut: GainNode | null = null;
 let muted = false;
 try { muted = localStorage.getItem('film-muted') === '1'; } catch { /* private window */ }
 let lastBlip = 0;
@@ -33,6 +34,8 @@ function context(): AudioContext | null {
 export function unlock(): void {
   const c = context();
   if (c && c.state === 'suspended') void c.resume();
+  // A file that was not allowed to start before the first click starts now.
+  if (tune && tune.paused) void tune.play().catch(() => { /* still not allowed, or no such file */ });
 }
 
 export function isMuted(): boolean {
@@ -42,7 +45,7 @@ export function setMuted(m: boolean): void {
   muted = m;
   try { localStorage.setItem('film-muted', m ? '1' : '0'); } catch { /* private window */ }
   if (ac && master) master.gain.setTargetAtTime(m ? 0 : 1, ac.currentTime, 0.05);
-  if (tune) tune.muted = m;
+  if (tune && !fileGain) tune.muted = m;
 }
 
 /** Four seconds of noise, looped: brown-ish for water and rooms, white for rain. */
@@ -64,10 +67,11 @@ export function ambience(kind: Ambience): void {
   if (!c || !master || kind === bedKind) return;
   bedKind = kind;
   const now = c.currentTime;
+  if (partyOut) { partyOut.gain.setTargetAtTime(0, now, 0.6); partyOut = null; }
   if (bed) {
     const old = bed;
     old.gain.gain.setTargetAtTime(0, now, 0.6);
-    window.setTimeout(() => { try { old.src.stop(); old.lfo?.stop(); } catch { /* already stopped */ } }, 3000);
+    window.setTimeout(() => { try { old.src.stop(); old.lfo?.stop(); old.extra?.forEach((o) => o.stop()); } catch { /* already stopped */ } }, 3000);
     bed = null;
   }
   if (kind === 'none') return;
@@ -78,6 +82,7 @@ export function ambience(kind: Ambience): void {
   const gain = c.createGain();
   gain.gain.value = 0;
   let lfo: OscillatorNode | undefined;
+  const extra: OscillatorNode[] = [];
   if (kind === 'water') {
     // Low and slow, swelling like small waves against the posts.
     filter.type = 'lowpass';
@@ -94,6 +99,46 @@ export function ambience(kind: Ambience): void {
     filter.frequency.value = 2600;
     filter.Q.value = 0.5;
     gain.gain.setTargetAtTime(0.035, now, 1.5);
+  } else if (kind === 'party') {
+    // A room full of people talking: a murmur that swells and falls, and a bass line coming through it.
+    filter.type = 'bandpass';
+    filter.frequency.value = 520;
+    filter.Q.value = 0.6;
+    lfo = c.createOscillator();
+    lfo.frequency.value = 0.31;
+    const depth = c.createGain();
+    depth.gain.value = 0.05;
+    lfo.connect(depth).connect(gain.gain);
+    lfo.start();
+    gain.gain.setTargetAtTime(0.16, now, 1.5);
+    const bass = c.createOscillator();
+    bass.type = 'sine';
+    bass.frequency.value = 55;
+    const pulse = c.createOscillator();
+    pulse.type = 'square';
+    pulse.frequency.value = 2;
+    const beat = c.createGain();
+    beat.gain.value = 0;
+    const amount = c.createGain();
+    amount.gain.value = 0.05;
+    const smooth = c.createBiquadFilter();
+    smooth.type = 'lowpass';
+    smooth.frequency.value = 12;
+    pulse.connect(smooth).connect(amount).connect(beat.gain);
+    const level = c.createGain();
+    level.gain.value = 0;
+    level.gain.setTargetAtTime(1, now, 1.5);
+    bass.connect(beat).connect(level).connect(gain);
+    // The bass goes round the murmur's filter, which would remove it.
+    level.disconnect();
+    const out = c.createGain();
+    out.gain.value = 0;
+    out.gain.setTargetAtTime(1.6, now, 1.5);
+    level.connect(out).connect(master);
+    bass.start();
+    pulse.start();
+    extra.push(bass, pulse);
+    partyOut = out;
   } else if (kind === 'room') {
     filter.type = 'lowpass';
     filter.frequency.value = 180;
@@ -106,7 +151,7 @@ export function ambience(kind: Ambience): void {
   }
   src.connect(filter).connect(gain).connect(master);
   src.start();
-  bed = { src, gain, lfo };
+  bed = { src, gain, lfo, extra };
 }
 
 /** One letter of a line, at the speaker's pitch in Hz. `soft` is someone off screen or on a phone. */
@@ -150,22 +195,50 @@ let tuneKind = 'none';
 let tuneTimer: number | undefined;
 let tuneGain: GainNode | null = null;
 let tune: HTMLAudioElement | null = null;
+let fileGain: GainNode | null = null;
 
-/** Change the music under the film: one of the tunes above, a file name, or 'none'. */
-export function music(kind: string): void {
-  if (kind === tuneKind) return;
-  tuneKind = kind;
+/**
+ * Change the music under the film: one of the tunes above, a file name, or 'none'.
+ * After a file name, `muffled` plays it as if through a wall, and a number sets how loud (1 is normal).
+ */
+export function music(spec: string): void {
+  if (spec === tuneKind) return;
+  tuneKind = spec;
+  const [kind, ...opts] = spec.split(/\s+/);
   window.clearInterval(tuneTimer);
   if (tuneGain && ac) { const old = tuneGain; old.gain.setTargetAtTime(0, ac.currentTime, 0.5); window.setTimeout(() => old.disconnect(), 3000); tuneGain = null; }
-  if (tune) { tune.pause(); tune = null; }
-  if (kind === 'none') return;
+  if (tune) {
+    const old = tune;
+    const g = fileGain;
+    if (g && ac) g.gain.setTargetAtTime(0, ac.currentTime, 0.5);
+    window.setTimeout(() => { old.pause(); g?.disconnect(); }, 2500);
+    tune = null;
+    fileGain = null;
+  }
+  if (kind === 'none' || !kind) return;
   const def = TUNES[kind];
   if (!def) {
-    tune = new Audio(`${import.meta.env.BASE_URL}music/${kind}.mp3`);
-    tune.loop = true;
-    tune.volume = 0.35;
-    tune.muted = muted;
-    void tune.play().catch(() => { /* no such file, or not allowed yet */ });
+    const level = Number(opts.find((o) => /^[\d.]+$/.test(o)) ?? 1) * 0.35;
+    const el = new Audio(`${import.meta.env.BASE_URL}music/${kind}.mp3`);
+    el.loop = true;
+    tune = el;
+    const c = context();
+    if (c && master) {
+      // Through the same output as everything else, so one mute covers it, and it can be filtered.
+      const src = c.createMediaElementSource(el);
+      const wall = c.createBiquadFilter();
+      wall.type = 'lowpass';
+      wall.frequency.value = opts.includes('muffled') ? 260 : 20000;
+      const g = c.createGain();
+      g.gain.value = 0;
+      g.gain.setTargetAtTime(opts.includes('muffled') ? level * 2.2 : level, c.currentTime, 1.2);
+      src.connect(wall).connect(g).connect(master);
+      fileGain = g;
+    } else {
+      el.volume = level;
+      el.muted = muted;
+    }
+    void el.play().catch(() => { /* no such file, or not allowed yet */ });
     return;
   }
   const c = context();

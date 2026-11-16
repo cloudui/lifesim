@@ -409,7 +409,7 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
     insert = null;
     after = 'none';
     faceKey = '';
-    sound.ambience(soundOf(scene.set, scene.time));
+    sound.ambience(scene.props.includes('crowd') ? 'party' : soundOf(scene.set, scene.time));
     sound.music(scene.music || (film ? 'warm' : 'none'));
     endEl.hidden = true;
     titleEl.classList.remove('card');

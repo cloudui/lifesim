@@ -2,6 +2,13 @@
 
 What was added, when, and why, newest first. `AGENTS.md` describes the project as it is now; this file is the record of how it got there. Add an entry whenever a change alters how the simulation behaves or what the page shows. Commit ids are in brackets.
 
+## 2026-11-16: Blue Shoes, the owner's music
+
+- Five tracks the owner found are in `public/music/` and named in the scenes: `morning`, `muzak`, `rain`, `cafe`, `bench`. At least one may not be free to publish; they are for the private demo and must not reach `main`.
+- Music files now play through the same output as the rest of the sound, fade in and out, and take two options: `muffled` (through a wall) and a volume.
+- The party scene has its own sound in place of music: a murmur of people and a bass line coming through it, synthesized.
+- None of this has been listened to by the agent.
+
 ## 2026-11-16: Blue Shoes, second round of looks
 
 - Jason was redrawn from two more photos: softer short hair that fades at the sides, a light grey tee and no jacket (the dark jacket and flat top read as an anime delinquent), and a smile as his resting face (`mood=smile` in the cast file).
