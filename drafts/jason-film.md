@@ -22,7 +22,7 @@ Threads that come back: the blue shoes, "the rain thing", "I'm so old", "I see y
 
 1. **"Hang back."** I wrote it as you asking the others to wait outside Jason's place while you talked to Emily, with Jason and Momo watching from the cold. Is that how it went, and is Emily happy to be in it?
 2. **Algorithms class:** which semester? I guessed 2023.
-3. **The gym scene** keeps the joke on Jason feeling small next to very big men, and leaves out anything about who they are.
+3. **Castro Street** (scene 8) is now Eric walking home from work and meeting Jason coming out of the gym, on the free trial from Berek. I guessed that Jason says "I can bring a guest", since you used his trial. The joke stays on Jason feeling small next to very big men.
 4. **Tomoka** is named. Say if she should be "someone at the bar".
 5. **The offer card** in the café scene says Jason was sitting across the table when you got it.
 6. **"The call"** is assembled: the pieces are true, the phone call is not, and Chipotle for the birthday dinner is my guess.
@@ -86,7 +86,7 @@ JASON: No, no. They were comfortable. I still think about it sometimes.
 
 JASON: I see you're also in this class.
 
-ERIC: I've kind of been randomly sitting around.
+ERIC: I've kind of been randomly sitting around the lecture hall.
 
 JASON: Yeah. Hmm. Glad you're joining me here. 
 
@@ -94,7 +94,7 @@ JASON: Yeah. Hmm. Glad you're joining me here.
 
 JASON: Do you get any of this?
 
-ERIC: I've kind of been playing chess. 
+ERIC: I've kind of been playing chess the whole class.  
 
 JASON: Ah, I see. I'm kind of lost. 
 
@@ -108,7 +108,9 @@ ERIC: It's ok we can figure it out on the homework.
 
 **H Mart, the checkout. 2023.** Two carts. Eric, Momo, Jason. The receipt keeps printing. *(real)*
 
-MOMO: Three hundred and twelve dollars.
+ERIC: Yo, what was the total?
+
+MOMO: It's like three hundred and twelve dollars.
 
 *(Jason stares at the receipt for a long time.)*
 
@@ -116,25 +118,23 @@ JASON: Hmm.
 
 ERIC: You okay there?
 
-JASON: That's a lot of money.
+JASON: Dang. That's a lot of money. That's like thirty chipotle bowls.
 
-ERIC: You put the short rib in the cart. Twice.
+ERIC: I mean, you didn't have to buy five short ribs.
 
 JASON: Yeah. I know. I just didn't think it would add up like that.
 
-MOMO: That's how adding works.
-
 *(Quiet.)*
 
-ERIC: We're not buying food. We're buying the memories.
+ERIC: How about we put it this way. We're not buying food, we're buying the memories.
 
 JASON: Ah.
 
 JASON: I see. That's a nice way to think about it.
 
-MOMO: It's still a hundred and four dollars each.
+MOMO: It's ok, Eric and I can split it. 
 
-JASON: Hmm. Yeah.
+JASON: No no. You know, memories are important. We can split it. 
 
 > *Card: Ten people came. One of them was Daniel.*
 
@@ -148,7 +148,7 @@ ERIC: *(to the others)* Can you guys hang back a second?
 
 JASON: Hmm. It's cold.
 
-MOMO: Shh.
+MOMO: Bro, let's go. 
 
 JASON: What's he doing?
 
@@ -158,13 +158,13 @@ MOMO: What do you think he's doing.
 
 JASON: Ah.
 
-JASON: I see.
+JASON: I see. I kind of forgot he was doing that today. 
 
 *(A long quiet. Their breath in the air.)*
 
 JASON: At my place, though. That's kind of nice.
 
-MOMO: Shh.
+MOMO: Ok.
 
 *(Eric comes back up the path.)*
 
@@ -208,33 +208,33 @@ ERIC: Loser does forty push-ups.
 
 **Under an awning, after.** All three soaked.
 
-JASON: My socks are wet.
+JASON: Dude. I can't believe this rain, man. My socks are pretty wet. 
 
 ERIC: Everything is wet.
 
-JASON: That was actually really fun.
+JASON: That was actually pretty fun. 
 
-ERIC: Memorable.
+ERIC: I told you. 
 
-JASON: Yeah. Memorable.
+JASON: Yeah. Pretty good idea, Eric. 
 
 JASON: Pho 75?
 
-MOMO: No.
+MOMO: Bro, no, why do you always want pho.
 
-JASON: It's right there, though.
+JASON: You know, the portion sizes are pretty big, and it's a pretty fair price. 
 
 MOMO: We went on Tuesday.
 
-JASON: Ah. But it's raining. It's pho weather.
+JASON: Ah. But it's raining. It's good weather for some pho.
 
 *(Quiet.)*
 
 JASON: I graduate in a month. I'm so old, man.
 
-ERIC: You're twenty-two.
+ERIC: You're still twenty-one.
 
-JASON: I know. It's crazy.
+JASON: I know. It's crazy. Where did all the time go? 
 
 ## 6. Plus one
 
@@ -242,15 +242,15 @@ JASON: I know. It's crazy.
 
 JASON: Happy birthday, Eric. Looking big.
 
-ERIC: I've lost weight.
+ERIC: No shot, I lost like fifteen pounds this semester. 
 
-JASON: Ah. Looking lean, then. This is Calvin.
+JASON: Ah. Looking lean, then. Oh yeah, this is Calvin. We play volleyball together. 
 
-CALVIN: I was told there'd be food.
+CALVIN: I was told there'd be some drinks.
 
-ERIC: There's so much food. He helped buy it.
+ERIC: "There are drinks" is probably underselling it a bit. 
 
-JASON: I couldn't pick.
+JASON: That's what I like to hear. 
 
 > *Card: Fifteen months later, Eric and Calvin share an apartment in San Francisco.*
 
@@ -258,37 +258,37 @@ JASON: I couldn't pick.
 
 **San Francisco. October 2025. One in the morning.** Jason on the couch under a blanket. Eric in the chair. *(real: the visit, the couch, the job, Cumberland. The words are mine.)*
 
-JASON: This is a nice couch.
+JASON: This is a pretty nice couch.
 
-ERIC: It was two hundred dollars.
+ERIC: It was free. Emily helped us get it off Facebook Marketplace. 
 
-JASON: Ah. It's comfortable, though.
+JASON: Ah. It's pretty comfortable, though.
 
 *(Quiet.)*
 
-JASON: Thanks for letting me stay. A whole month is a lot.
+JASON: Thanks for letting me stay. It's been a good change of pace. 
 
-ERIC: You're the one sleeping on it.
+ERIC: Of course man, you're welcome back any time. 
 
 *(A long quiet.)*
 
-JASON: I'm twenty-three, man.
+JASON: I can't believe I'm twenty-three, man.
 
 ERIC: You say that like it's a diagnosis.
 
 JASON: No, I mean it. I open the laptop at nine and close it at five, and I couldn't tell you one thing I did.
 
-JASON: Then I play games till two. Then it's nine again.
+JASON: Then I play games till two. Then it's nine again. At least I can't do that here. 
 
 *(Quiet.)*
 
-JASON: Everybody left. I'm the one who went back home.
+JASON: Everybody left. I can't believe I'm still living at home. 
 
 *(A long quiet.)*
 
-ERIC: You drove two and a half hours every time we did anything. For two years.
+ERIC: You drove two and a half hours every time we did anything. That's a lot of driving.
 
-ERIC: You didn't go back. You just have the worst commute of anyone I know.
+ERIC: You can think of it as simply having a bad commute.
 
 JASON: Hmm.
 
@@ -296,41 +296,63 @@ JASON: That's kind of nice, actually.
 
 ERIC: It wasn't meant to be.
 
-JASON: I'm going to teach you guys tennis tomorrow.
+JASON: Want to play some tennis tomorrow?
 
-ERIC: We're going to be terrible.
+ERIC: Bro, we're actually ass at hitting the ball. Isn't it boring for you?
 
-JASON: Yeah. Probably. It's okay.
+JASON: No no. I already asked Bereketab. We can play some doubles. 
 
-## 8. The gym
+## 8. Castro Street
 
-**A gym in the Castro. October 2025.** Jason and Eric by the racks. *(real: the gym, the lines. The scene is assembled.)*
+**Castro Street, outside the gym. October 2025. Early evening.** Eric is walking home from work with a backpack. Jason comes out of the gym door with a towel round his neck. *(real: the gym, Berek's free trial, Eric using it too, the lines. The meeting on the street is assembled.)*
+
+JASON: Oh. Eric.
+
+ERIC: Jason? What are you doing here?
+
+JASON: Berek got me a free trial. It's like two months.
+
+ERIC: You don't live here.
+
+JASON: Yeah. It's a pretty good deal, though.
+
+*(Quiet.)*
 
 JASON: Looking big, Eric.
 
-ERIC: You are twice my size.
+ERIC: I've been sitting at a desk all day. You're the one who just lifted. You're twice my size.
 
 JASON: What do you mean? I'm small, man.
 
-*(Jason looks around the room for a while.)*
+*(Two very large men come out of the door behind him. Jason watches them all the way down the street.)*
 
-JASON: Everyone in here is huge.
+JASON: Everyone in there is huge.
 
 ERIC: You're huge.
 
-JASON: No. Look at that guy. That guy's huge.
+JASON: No. Look at that guy. That guy's arm is my leg.
 
 ERIC: You could go and ask him what he eats.
 
 JASON: Hmm. No. I'm good.
 
-*(Quiet.)*
-
 ERIC: You talk to every stranger in this city.
 
 JASON: Yeah, but not that one.
 
-**Outside, after.** The hill up 15th Street towards Corona Heights.
+*(Quiet.)*
+
+JASON: You should come tomorrow. I can bring a guest.
+
+ERIC: On Berek's free trial.
+
+JASON: Yeah.
+
+ERIC: So I'd be the guest of a guest.
+
+JASON: Hmm. I think that's fine.
+
+**A block later.** The bottom of the hill up 15th Street towards Corona Heights.
 
 JASON: How far is it?
 
@@ -362,17 +384,17 @@ JASON: *(to the stranger)* I see you like tennis.
 
 STRANGER: Yeah?
 
-JASON: Nice. Us too.
+JASON: Nice. How long have you been playing? 
 
 *(The stranger nods and looks at his phone.)*
 
-CALVIN: Why.
+CALVIN: Get any numbers today, Jason? 
 
 ERIC: *(in Jason's voice)* "Ah. I see you like tennis."
 
-JASON: I don't sound like that.
+JASON: There's no way I sound like that.
 
-CALVIN: You sound exactly like that.
+CALVIN: That was pretty good, Eric. 
 
 JASON: Hmm. He seemed friendly, though.
 
@@ -382,31 +404,27 @@ JASON: Right. So he likes tennis.
 
 *(Quiet.)*
 
-JASON: Eric, your toss is too far forward.
+JASON: Eric, you should toss the ball more forward.
 
-ERIC: You taught me that toss.
+ERIC: I swear you told me to do this yesterday. 
 
 JASON: Hmm. I don't think I did. Here, hold it like this.
 
-CALVIN: Court's open in ten.
+CALVIN: The last court said ten more minutes.
 
-ERIC: Okay. Us two against him. If we win, he talks to a girl. Out loud. On purpose.
+ERIC: Okay. Hope you're ready for this forehand, Jason. 
 
-CALVIN: Emily says she'll coach him.
+JASON: Ah. That's what I like to hear. Calvin, I hope you guys are ready for this thirst trap. 
 
-JASON: Ah. That's nice of her.
+CALVIN: Any progress on that date? You only got two weeks left. 
 
-JASON: Ah. That's different, though. That's not the same as talking to a guy on a bench.
+JASON: It's so cooked, man. I swear all the girls here are dating someone already. 
 
-CALVIN: It's exactly the same.
+ERIC: It's ok. You can do an uwu dance instead of a thirst trap. 
 
-JASON: It's really not.
+JASON: I think I'd rather do the thirst trap. 
 
-ERIC: And if we lose?
-
-JASON: Hmm. You two do the dance. At Calvin's office. And post it.
-
-CALVIN: We're not losing.
+CALVIN: It's ok, you might have to do both. 
 
 > *Card: They lost. The video exists. There are hip thrusts.*
 
@@ -416,9 +434,7 @@ CALVIN: We're not losing.
 
 JASON: She was really nice.
 
-ERIC: Tomoka.
-
-JASON: Yeah. Tomoka. She was really nice.
+ERIC: Tomoka-chan!
 
 CALVIN: She's thirty.
 
@@ -426,7 +442,7 @@ JASON: Thirty's not that old.
 
 *(Quiet.)*
 
-JASON: I'm going to go back in.
+JASON: I'm going back in.
 
 ERIC: To say what?
 
@@ -436,15 +452,15 @@ JASON: I don't know. I'll think of something.
 
 CALVIN: Well?
 
-JASON: I asked her for a referral.
+JASON: I asked her for a referral for Apple.
 
-ERIC: A referral.
+ERIC: No shot. 
 
-JASON: To Apple. She works at Apple.
+JASON: It's a good opportunity.
 
 ERIC: She offered me that referral an hour ago.
 
-JASON: Ah. Yeah. She mentioned.
+JASON: Ah. Yeah. I got her email. 
 
 > *Card: He emailed twice.*
 
@@ -456,47 +472,47 @@ JASON: Hmm.
 
 ERIC: What.
 
-JASON: Should I apply to this one? It's in Austin.
+JASON: None of these recruiters are responding, man. Should I be doing more projects?
 
-ERIC: Do you want to live in Austin?
+ERIC: You should do something at least.
 
-JASON: I don't know. Maybe. It's hot there.
+JASON: How about My Cookbook? 
 
-ERIC: That's the fourth city today. I'm not judging. I'm counting.
+ERIC: I mean, sure. You keep saying that but not doing anything about it. 
 
-JASON: Ah. Yeah.
+JASON: I'm just a brick man, I just use AI without thinking. 
 
 *(Quiet. Typing.)*
 
-JASON: You had another one this morning?
+JASON: Did you finish your interview?
 
-ERIC: Third round.
+ERIC: Yeah, it was the third round. I kind of got grilled, though. 
 
-JASON: I see. That's really good, man. That's really good.
+JASON: I see. That's really good, man. 
+
+JASON: Dang, third round? Where's my first? 
+
+ERIC: The job market is cooked, man. Just keep trying. 
 
 *(A long quiet.)*
 
-JASON: Nobody's written back to me. Not even a no. Just nothing.
-
-JASON: I think a no would be nice, actually.
-
-*(Quiet.)*
-
 JASON: Do you ever think about what you'd do if you were me?
 
-ERIC: I'd have sent the Austin one twenty minutes ago.
+ERIC: I'd have sent five emails by now. 
 
 JASON: Hmm.
 
-ERIC: Send it. Then pick lunch. You have ninety seconds or I pick.
+ERIC: Bro, just send it. Then pick lunch. You have ninety seconds or I pick.
 
 JASON: Chipotle.
 
-ERIC: We had Chipotle yesterday. And on Tuesday.
+ERIC: Ok now use this decisiveness on your emails instead. 
 
-JASON: Ah. It's good, though.
+ERIC: So? 
 
-ERIC: Anything else. Seventy seconds.
+JASON: Man, why do I even send these emails.
+
+ERIC: Seventy seconds.
 
 *(A long quiet.)*
 
@@ -508,33 +524,49 @@ JASON: Chipotle.
 
 **The apartment, San Francisco. October 19, 2026. Late.** Paper plates, a few balloons. Jason and Eric. *(real: the party on the 19th, Eric flying out on the 20th, the birthday on the 21st. The words are mine.)*
 
-JASON: That was a good party.
+JASON: That was a pretty good time. I appreciate you for coming. 
 
-ERIC: It was. You took a phone call during the cake.
+ERIC: It was. I can't believe David make you a whole cake. 
 
-JASON: Ah. It was my mom.
-
-ERIC: You walked to the end of the block.
-
-JASON: The reception's better there.
+JASON: Dang. And he bought another one, too. What a nice guy. 
 
 *(Quiet.)*
 
-JASON: You fly out tomorrow.
+JASON: Is your flight tomorrow? 
 
-ERIC: In the morning.
+ERIC: Yeah. I think it's 11pm. 
 
-JASON: And I'm twenty-four on Wednesday.
+JASON: No shot man. How is it the end of October already. 
 
-ERIC: That's why the party was tonight.
+ERIC: Big twenty-four.
 
-JASON: I see. Yeah.
+JASON: How old do you think I look in this picture?
+
+*(Shows picture of himself from college on his phone to Eric)*
+
+ERIC: Dang you look way younger here.
+
+JASON: No, man. Where did all of the time go?
+
+ERIC: Bro, stop. You literally look exactly the same.
+
+JASON: There's no way, man. 
 
 *(A long quiet.)*
 
-JASON: I thought I'd have figured something out by twenty-four. You got your offer. Calvin's Calvin.
+ERIC: How do you feel about the last few weeks? You still going home Wednesday? 
 
-JASON: I come out here and it's great. Then I go home and it's the same room.
+JASON: You know, I'll figure it out tomorrow. 
+
+JASON: It was good. I appreciate you guys having me. The hills are crazy man.
+
+JASON: It was a good time. Got to meet some people. Played some tennis.
+
+ERIC: No date or job yet. 
+
+JASON: There's no way man. I swear the girls here are all taken. 
+
+ERIC: I'm just joking, man. How about that dance? 
 
 *(Quiet.)*
 
@@ -542,17 +574,25 @@ ERIC: You know what I'll remember about this year?
 
 ERIC: Not getting laid off. Not the offer.
 
-ERIC: Waiting forty minutes for a court while you fix my toss and talk to a stranger about his racket.
+ERIC: Waiting forty minutes for a court while you talk to a stranger about his racket.
 
 JASON: He did like tennis.
 
-ERIC: This is the good part, J. You can't tell from inside it.
+ERIC: We won't have time like this forever. We'll be married or in different cities or have kids. 
+
+ERIC: There honestly isn't much time for you visting for a month like this to still be possible. 
+
+ERIC: We're waiting for the good times now, but we'll look back on this time as the good times.
+
+JASON: You're so right, Eric. I really do appreciate you guys having me here.
+
+ERIC: This is the good part, Jason. You can't tell the good times while you're still in them.
 
 *(Quiet.)*
 
-JASON: Is this the rain thing?
+JASON: I see. Is this the rain thing?
 
-ERIC: It's always the rain thing.
+ERIC: I told you so. 
 
 JASON: Hmm.
 
@@ -560,61 +600,47 @@ JASON: I did like the rain thing.
 
 ## 13. The call
 
-**A tea shop in Rockville, Maryland. October 22, 2026.** Eric and Momo at a table. Calvin on speaker from San Francisco. *(assembled from true pieces.)*
+**A tea shop in Rockville, Maryland. October 22, 2026.** Eric and Momo at a cafe table outside. Calvin on speaker from San Francisco. *(assembled from true pieces.)*
 
 CALVIN: He just left for the airport.
 
-MOMO: How was the goodbye?
+ERIC: Did you drive him?
 
-CALVIN: He told the driver, "I see you drive a Prius."
+CALVIN: Nah, he took an uber. He told the driver, "I see you drive a Prius."
 
-ERIC: *(in Jason's voice)* "Ah. Hmm. I see you drive a Prius."
+ERIC: *(in Jason's voice)* "Ah. I see you drive a Prius."
 
-MOMO: That's really good.
+MOMO: That's pretty good.
 
 ERIC: I've had four years.
 
 MOMO: Did he pick a place for his birthday dinner?
 
-CALVIN: It took an hour.
+CALVIN: We had a party at Berek's house. We did eat dinner with Daniel and some guys a few days before. 
 
 MOMO: And?
 
-CALVIN: Chipotle.
+ERIC: We went back to some pho restaurant we had like a few weeks ago. 
 
-ERIC: For his birthday.
+MOMO: There's no way. Why does this guy always want pho.
 
-CALVIN: He was very sure about it. Then he said it was expensive.
+ERIC: He was very sure about it. I guess the portion sizes or something. 
 
-ERIC: Did he take a call?
-
-CALVIN: Twice. He did a lap of the restaurant.
-
-MOMO: I'm at a table with eight people and he's outside the window. Pacing. Like he's closing a deal.
-
-ERIC: It's his cousin asking what he wants for dinner.
+ERIC: At least he didn't randomly get up to take a phone call. 
 
 *(They laugh. Then a quiet.)*
 
-CALVIN: It's really quiet in here.
+ERIC: I assume he didn't get a date. 
 
-MOMO: Yeah.
+CALVIN: Oh yeah. 
 
-ERIC: He fixed my toss before I left.
-
-*(Quiet.)*
-
-CALVIN: He left his shoes.
-
-ERIC: Blue?
-
-CALVIN: Blue.
+ERIC: Looks like he'll be doing that dance. 
 
 > *Card: What comes next has not happened yet.*
 
 ## 14. The lanyard *(invented)*
 
-**Cumberland, outside the house. 2028.** A car packed to the roof. Jason, Eric.
+**Cumberland, outside the house. 2027.** A car packed to the roof. Jason, Eric.
 
 JASON: Ah. You came all the way out here.
 
@@ -630,9 +656,9 @@ ERIC: I know. I was on the phone for most of that month.
 
 JASON: Hmm. Yeah.
 
-JASON: I'm twenty-six, starting over. I'm so old, man.
+JASON: I can't believe I'm twenty-five. I'm so old, man.
 
-ERIC: You said that at twenty-two.
+ERIC: You said that like five years ago.
 
 JASON: I know. It's crazy.
 
@@ -642,9 +668,15 @@ JASON: Two blocks.
 
 ERIC: And a Chipotle?
 
-JASON: Hmm. One block.
+JASON: Hmm. You know Eric, I don't need Chipotle that much. 
 
-ERIC: Then you're fine.
+ERIC: So?
+
+JASON: Two blocks away.
+
+ERIC: Two blocks? That's too much walking. 
+
+ERIC: Looks like you'll be fine. 
 
 ## 15. The theory *(invented)*
 
@@ -668,7 +700,7 @@ MEI: It did work.
 
 ERIC: Enjoy your money while you still have it.
 
-JASON: Hmm. Emily said you'd say that.
+JASON: Hmm. Coming from personal experience? 
 
 *(Jason's phone rings.)*
 
@@ -744,7 +776,7 @@ JASON: They look comfortable.
 
 ## What building it needs
 
-- **New sets:** a car in a car park, a campsite, a lecture hall, a supermarket checkout, a front path at night, a campus in the rain, a gym, tennis courts with a bench, the outside of a bar, a café table by a window, a tea shop, a packed car outside a house. The sofa set exists.
+- **New sets:** a car in a car park, a campsite, a lecture hall, a supermarket checkout, a front path at night, a campus in the rain, a street outside a gym with a hill behind it, tennis courts with a bench, the outside of a bar, a café table by a window, a tea shop, a packed car outside a house. The sofa set exists.
 - **Three or four people on screen** in most scenes, and people walking off and coming back. The player handles two today.
 - **A voice on a phone** (Calvin in scene 12). The off-screen voice already works for this.
 - **A hand-written cast file** with the real names, ages and looks, in place of a simulated life.
