@@ -84,6 +84,8 @@ export interface SpriteOptions {
   alpha?: number;
   /** Eyes closed. */
   shut?: boolean;
+  /** On a call: the back arm is bent up with a phone at the ear, and does not swing. */
+  call?: boolean;
   /** Mid-change between outfits: the new outfit and progress 0 to 1. */
   melt?: { to: Outfit; t: number };
 }
@@ -99,7 +101,7 @@ function scratch(): [HTMLCanvasElement, CanvasRenderingContext2D] {
 let buffers: ReturnType<typeof scratch>[] | undefined;
 
 /** Paint one person, facing right, feet on the bottom row. */
-function paint(g: CanvasRenderingContext2D, look: Look, outfit: Outfit, pose: Pose, frame: number, grey: number, shut = false): void {
+function paint(g: CanvasRenderingContext2D, look: Look, outfit: Outfit, pose: Pose, frame: number, grey: number, shut = false, call = false): void {
   g.clearRect(0, 0, SW, SH);
   const px = (x: number, y: number, w: number, h: number, c: string) => {
     g.fillStyle = c;
@@ -147,8 +149,10 @@ function paint(g: CanvasRenderingContext2D, look: Look, outfit: Outfit, pose: Po
 
   // Back arm, torso, front arm.
   const swing = stride ? ((frame & 2) === 0 ? 1 : -1) : 0;
-  px(6 - swing, by + 8, 1, 6, sleeve);
-  px(6 - swing, by + 14, 1, 1, look.skin);
+  if (!call) {
+    px(6 - swing, by + 8, 1, 6, sleeve);
+    px(6 - swing, by + 14, 1, 1, look.skin);
+  }
   px(7, by + 8, 6, 7, shirt);
   if (jacket) { px(7, by + 8, 2, 7, jacket); px(11, by + 8, 2, 7, jacket); }
   if (look.big) {
@@ -228,6 +232,14 @@ function paint(g: CanvasRenderingContext2D, look: Look, outfit: Outfit, pose: Po
     px(7, by, 6, 3, hair);
     px(6, by + 1, 1, 3, hair);
   }
+  if (call) {
+    // The arm that holds the phone: elbow out, forearm up, the phone against the ear. It moves with the head.
+    px(5, by + 8, 2, 2, sleeve);
+    px(5, by + 6, 1, 2, sleeve);
+    px(5, by + 5, 1, 1, look.skin);
+    px(5, by + 1, 2, 4, '#0c0d12');
+    px(5, by + 2, 1, 2, '#9fd0e6');
+  }
   if (look.glasses) {
     // A frame round both eyes, and an arm back to the ear.
     // At this size a frame drawn in full joins up with the eyes into one line. So the eyes stay
@@ -246,7 +258,7 @@ function paint(g: CanvasRenderingContext2D, look: Look, outfit: Outfit, pose: Po
 export function drawPerson(ctx: CanvasRenderingContext2D, x: number, y: number, look: Look, o: SpriteOptions): void {
   buffers ??= [scratch(), scratch(), scratch()];
   const [[c0, g0], [, g1], [c2, g2]] = buffers;
-  paint(g0, look, o.outfit, o.pose, o.frame, o.grey ?? 0, o.shut);
+  paint(g0, look, o.outfit, o.pose, o.frame, o.grey ?? 0, o.shut, o.call);
   let src = c0;
   if (o.melt && o.melt.t > 0 && o.melt.t < 1) {
     // The new outfit pours down from the top through a ragged, sparkling edge.

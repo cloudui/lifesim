@@ -514,7 +514,7 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
       sg.rect(0, 0, 48, 40);
       sg.clip();
       // Slumped: forward and down, head on the desk.
-      drawPerson(sg, 24 + (a.slump ? (left ? -4 : 4) : 0), 47 - breathe + (a.slump ? 6 : 0), lk, { pose: 'stand', frame: 0, outfit: 'casual', grey: greyOf(p), flip: left, shut: a.slump });
+      drawPerson(sg, 24 + (a.slump ? (left ? -4 : 4) : 0), 47 - breathe + (a.slump ? 6 : 0), lk, { pose: 'stand', frame: 0, outfit: 'casual', grey: greyOf(p), flip: left, shut: a.slump, call: a.hold === 'call' });
       sg.restore();
       if (st.legs > 0) {
         const hang = scene!.set === 'pier' || scene!.set === 'steps';
@@ -535,16 +535,17 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
           // On a seat, from the side: thighs forward, knees bent, feet on the floor.
           const d = left ? -1 : 1;
           const knee = d > 0 ? 29 : 17;
+          // The body rests on the thighs: the thighs run forward under the torso, and the shins drop from the knee.
           const shinOf = (kx: number, dim: boolean) => {
             sg.fillStyle = lk.shorts ? lk.skin : lk.pants;
-            sg.fillRect(kx, 40, 2, len);
+            sg.fillRect(kx, 43, 2, len - 3);
             sg.fillStyle = lk.shoes ?? '#15151a';
             sg.fillRect(d > 0 ? kx : kx - 1, 40 + len, 3, 1);
-            if (dim) { sg.fillStyle = 'rgba(0,0,0,0.3)'; sg.fillRect(kx - 1, 40, 4, len + 1); }
+            if (dim) { sg.fillStyle = 'rgba(0,0,0,0.3)'; sg.fillRect(kx - 1, 43, 4, len - 2); }
           };
           shinOf(knee - d * 3, true);
           sg.fillStyle = lk.pants;
-          sg.fillRect(d > 0 ? 23 : 17, 37, 8, 3);
+          sg.fillRect(d > 0 ? 21 : 17, 40, 10, 3);
           shinOf(knee, false);
         }
       }
@@ -564,7 +565,7 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
       held(a, left, 33);
       g.drawImage(scratch, 0, 0, 48, 56, Math.round(x - 24 * s), Math.round(st.seatY - 40 * s), Math.round(48 * s), Math.round(56 * s));
     } else {
-      drawPerson(sg, 24, 40, lk, { pose: a.mode === 'walking' ? 'walk' : 'stand', frame: Math.floor(clock * (a.fast ? 12 : 6)), outfit: 'casual', grey: greyOf(p), flip: left });
+      drawPerson(sg, 24, 40, lk, { pose: a.mode === 'walking' ? 'walk' : 'stand', frame: Math.floor(clock * (a.fast ? 12 : 6)), outfit: 'casual', grey: greyOf(p), flip: left, call: a.hold === 'call' });
       if (a.bottle && a.key === 'THEM') {
         sg.fillStyle = '#4f8a63';
         sg.fillRect(29, 31, 2, 4);
@@ -587,19 +588,6 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
       sg.fillRect(hx, y - 10, 4, 6);
       sg.fillStyle = Math.floor(clock * 2) % 5 ? '#9fd0e6' : '#e6f4fa';
       sg.fillRect(hx + 1, y - 9, 2, 4);
-    } else if (a.hold === 'call') {
-      // On a call: the forearm up, the phone flat against the ear on the side facing us.
-      const lk = person(a.key).look;
-      const hy = y - (a.mode === 'sitting' ? 9 : 5) - (lk.tall ?? 0);
-      const ex = d > 0 ? 20 : 26;
-      sg.fillStyle = lk.jacket ?? lk.shirt;
-      sg.fillRect(ex, hy + 3, 2, 5);
-      sg.fillStyle = lk.skin;
-      sg.fillRect(ex, hy + 1, 2, 2);
-      sg.fillStyle = '#0c0d12';
-      sg.fillRect(ex, hy - 4, 2, 5);
-      sg.fillStyle = '#9fd0e6';
-      sg.fillRect(ex + (d > 0 ? 0 : 1), hy - 3, 1, 3);
     } else if (a.hold === 'racket') {
       sg.fillStyle = '#2a2d33';
       sg.fillRect(hx, y - 3, 1, 7);
