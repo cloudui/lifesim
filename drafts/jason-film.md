@@ -1,30 +1,32 @@
-# Blue Shoes: a film about Eric and Jason (draft 2)
+# Blue Shoes: a film about Eric and Jason (draft 3)
 
-A draft to read and correct before anything is built. Fifteen short scenes, about eleven minutes. Scenes 1 to 12 are things that happened, as you told them; scenes 13 to 15 are invented and say so.
+A draft to read and correct before anything is built. Sixteen short scenes, about twelve minutes. Scenes 1 to 13 are things that happened, as you told them; scenes 14 to 16 are invented and say so.
 
-## What changed from draft 1
+## What changed from draft 2
 
-- **Jason's voice.** He is not sarcastic. He is friendly and earnest, makes conversation about obvious things, says "Ah", "I see" and "Hmm", and compliments people ("Looking big, Eric"). The dry lines are Eric's now.
-- **Who is struggling.** Eric is good at applications and gets interviews; Jason cannot decide what to apply for and hears nothing back. The café scene is rewritten around that, and around Eric getting an offer just before Jason's birthday.
-- **The Capital One Café** is a three-floor café and place to work at Post and Kearny, near Montgomery station, not a bank branch. Scene 10 is set there properly.
-- **New scenes:** the gym ("What do you mean, I'm small, man"), the bar (Tomoka, the referral), the night before Eric flies out (two days before the birthday), and the call (Eric, Momo and Calvin on what is charming and annoying about him).
-- **His habits are in it:** standing up mid-meal to take a call and wandering off, talking to strangers about the obvious, being impulsive and then stubborn, not being able to pick.
-- **Scene 1** is your version, untouched.
+- **Your edits are kept** (the shoes, the seat, the rain) and tidied into the same format as the rest. I did not change your words.
+- **Eric's voice** follows your edits: friendly first, with a jab slipped in, not a wall of sarcasm. He also does Jason's voice back at him ("Ah. I see."), in three scenes.
+- **The grill scene is replaced by two true ones.** "The receipt": the three of you at H Mart looking at three hundred dollars, and "we're buying the memories, not the food." Then "Hang back": November 2023, outside Jason's place in the cold, while you ask Emily.
+- **"We're buying the memories"** turns out to be the first time Eric says the rain thing. It now runs receipt, rain, the night before, the bench.
+- **Emily** is in it from November 2023, and Eric's line about money comes back when Jason finally meets someone.
+- **Daniel** arrives at a barbecue night, which is how you met him.
+- The joke that Jason does not own a grill is gone, since he hosted.
 
 ## The idea
 
-Jason says he is old. He has said it since he was 22. The last scene is the two of you at 64, when he finally knows what young was. The thread that carries it is Eric's: "if we run in the rain you'll remember it." He says it about a run in 2024, and it turns out to be about the whole stretch Jason thinks he is wasting.
+Jason says he is old. He has said it since he was 22. The last scene is the two of you at 64, when he finally knows what young was. The thread that carries it is Eric's: you are buying the memory, not the thing. He says it about a receipt in 2023 and a run in the rain in 2024, and it turns out to be about the whole stretch Jason thinks he is wasting.
 
-Threads that come back: the blue shoes, "the rain thing", "I'm so old", "I see you like tennis", the phone call he walks off to take, Chipotle, the two-and-a-half-hour drive.
+Threads that come back: the blue shoes, "the rain thing", "I'm so old", "I see you like tennis", Eric doing Jason's voice, the phone call he walks off to take, Chipotle, the two-and-a-half-hour drive.
 
 ## Still to check
 
-1. **Algorithms class:** which semester? I guessed 2023.
-2. **The gym scene** keeps the joke on Jason feeling small next to very big men. I left out anything about who they are. Say if you want it played differently.
-3. **Tomoka** is named. She is a real person outside the group, so say if she should be "someone at the bar" instead.
-4. **The offer card** in scene 10 says Jason was sitting across the table when you got it. True, or change it?
-5. **Scene 12** has you and Momo in Rockville with Calvin on speaker, the day Jason flew home. It is assembled from true pieces, but that conversation did not happen as written.
-6. **Momo and Calvin's lines.** Check they sound like them.
+1. **"Hang back."** I wrote it as you asking the others to wait outside Jason's place while you talked to Emily, with Jason and Momo watching from the cold. Is that how it went, and is Emily happy to be in it?
+2. **Algorithms class:** which semester? I guessed 2023.
+3. **The gym scene** keeps the joke on Jason feeling small next to very big men, and leaves out anything about who they are.
+4. **Tomoka** is named. Say if she should be "someone at the bar".
+5. **The offer card** in the café scene says Jason was sitting across the table when you got it.
+6. **"The call"** is assembled: the pieces are true, the phone call is not, and Chipotle for the birthday dinner is my guess.
+7. **Momo's and Calvin's lines** are guesses at how they talk.
 
 ---
 
@@ -48,11 +50,13 @@ MOMO: Bro.
 
 ERIC: These aren't my shoes.
 
-MOMO: We are twenty minutes away.
+MOMO: Dumbass, it's twenty minutes back the other way.
 
-ERIC: Oops. Finish your donut.
+ERIC: Oops. Looks like we have to go back.  
 
-**The campsite, half an hour later.** A guy standing there wearing my blue shoes.
+*(Momo says nothing for a while.)*
+
+**The campsite, half an hour later.** A guy standing there, wearing Eric's blue shoes.
 
 JASON: Ah. Seems like you took my shoes.
 
@@ -68,89 +72,137 @@ JASON: Honestly, no worries, I'd have done the same. I'll catch you later.
 
 ## 2. The seat
 
-**An algorithms lecture, College Park. 2023.** Jason sitting. An empty seat. Eric in the aisle. *(real)*
+**The big lecture hall in Iribe, College Park. 2023.** Algorithms, a few weeks into the semester. Jason sitting. An empty seat. Eric in the aisle. *(real)*
 
 ERIC: Is this taken?
 
-JASON: Ah. It's you. Shoe guy.
+JASON: Ah. It's you. The shoe guy.
 
 ERIC: I was hoping you'd forgotten.
 
-JASON: No, no. They were comfortable. I think about it sometimes.
+JASON: No, no. They were comfortable. I still think about it sometimes.
 
 *(Eric sits.)*
 
-JASON: I see you're taking algorithms.
+JASON: I see you're also in this class.
 
-ERIC: We're in the algorithms lecture.
+ERIC: I've kind of been randomly sitting around.
 
-JASON: Yeah. Hmm.
+JASON: Yeah. Hmm. Glad you're joining me here. 
 
 *(Quiet.)*
 
 JASON: Do you get any of this?
 
-ERIC: Not a word.
+ERIC: I've kind of been playing chess. 
 
-JASON: Ah. Good. Me neither.
+JASON: Ah, I see. I'm kind of lost. 
 
-> *Card: The rest of the semester, the same two seats.*
+ERIC: It's ok we can figure it out on the homework.
 
-## 3. The grill
+*(Jason puts his head on the desk. A small "z" floats up, then another.)*
 
-**Eric's apartment. 2023.** A grill on the table and far too much meat. Eric, Jason, Momo. *(real)*
+> *Card: The rest of the semester, next to each other. Not always the same seats.*
 
-MOMO: How much did you two spend?
+## 3. The receipt
 
-ERIC: Ask him. I said one tray.
+**H Mart, the checkout. 2023.** Two carts. Eric, Momo, Jason. The receipt keeps printing. *(real)*
 
-JASON: They had three kinds. I couldn't pick.
+MOMO: Three hundred and twelve dollars.
 
-MOMO: So you bought all three.
+*(Jason stares at the receipt for a long time.)*
 
-JASON: Yeah. It felt right in the store.
+JASON: Hmm.
 
-*(Quiet. Sizzling.)*
+ERIC: You okay there?
 
-JASON: That was a lot of money, though.
+JASON: That's a lot of money.
 
-ERIC: You chose it. All of it.
+ERIC: You put the short rib in the cart. Twice.
 
-JASON: Yeah. Hmm. It's really good.
+JASON: Yeah. I know. I just didn't think it would add up like that.
 
-ERIC: It's incredible. I'm furious.
+MOMO: That's how adding works.
 
-JASON: We should do this every month. My place next.
+*(Quiet.)*
 
-MOMO: You don't own a grill.
+ERIC: We're not buying food. We're buying the memories.
 
-JASON: Ah. I'll get one.
+JASON: Ah.
 
-ERIC: He's going to buy three.
+JASON: I see. That's a nice way to think about it.
 
-## 4. The rain
+MOMO: It's still a hundred and four dollars each.
+
+JASON: Hmm. Yeah.
+
+> *Card: Ten people came. One of them was Daniel.*
+
+## 4. Hang back
+
+**Outside Jason's place. November 2023. Late, and cold.** Everyone leaving after barbecue. Jason and Momo on the steps. Eric and Emily a little way down the path. *(real, as far as I understand it)*
+
+ERIC: *(to the others)* Can you guys hang back a second?
+
+*(He walks off with Emily. Jason and Momo stand in the cold.)*
+
+JASON: Hmm. It's cold.
+
+MOMO: Shh.
+
+JASON: What's he doing?
+
+MOMO: What do you think he's doing.
+
+*(Quiet. Jason looks.)*
+
+JASON: Ah.
+
+JASON: I see.
+
+*(A long quiet. Their breath in the air.)*
+
+JASON: At my place, though. That's kind of nice.
+
+MOMO: Shh.
+
+*(Eric comes back up the path.)*
+
+MOMO: Well?
+
+ERIC: She said yes.
+
+JASON: Looking big, Eric.
+
+ERIC: That's not what that's for.
+
+JASON: Ah. Congratulations, then.
+
+## 5. The rain
 
 **Outside, on campus. Spring 2024.** Eric, Jason, Momo in running clothes. It is pouring. *(real)*
 
 JASON: Hmm. It's raining.
 
-ERIC: Yes.
+ERIC: Yes. It does seem like it is.
 
-JASON: Maybe we go tomorrow.
+JASON: Sorry guys, I should've checked the weather report. Maybe we can just do it next week instead.
 
 ERIC: If we run on a nice day you'll have forgotten it by Friday.
 
-ERIC: If we run in this you'll still be telling people when you're forty.
+ERIC: Think about it. When you're forty you'll remember: "oh yeah, remember that time we ran in the pouring rain?"
 
 *(Quiet. Rain.)*
 
-JASON: I see.
+JASON: I see. Not a bad idea, Eric. 
 
-MOMO: He's not going to drop it. Just so you know.
+MOMO: This is the receipt again.
 
-JASON: Okay. Yeah. Okay. To the Xfinity Center?
+ERIC: It's always the receipt.
 
-ERIC: Loser buys tea.
+JASON: Okay. Yeah. Hmm. I guess we can run toward the Xfinity Center?
+
+ERIC: Loser does forty push-ups.
 
 *(They go.)*
 
@@ -184,7 +236,7 @@ ERIC: You're twenty-two.
 
 JASON: I know. It's crazy.
 
-## 5. Plus one
+## 6. Plus one
 
 **Eric's birthday, his apartment. May 2024.** Jason at the door with someone. *(real)*
 
@@ -202,7 +254,7 @@ JASON: I couldn't pick.
 
 > *Card: Fifteen months later, Eric and Calvin share an apartment in San Francisco.*
 
-## 6. The couch
+## 7. The couch
 
 **San Francisco. October 2025. One in the morning.** Jason on the couch under a blanket. Eric in the chair. *(real: the visit, the couch, the job, Cumberland. The words are mine.)*
 
@@ -222,7 +274,7 @@ ERIC: You're the one sleeping on it.
 
 JASON: I'm twenty-three, man.
 
-ERIC: Here we go.
+ERIC: You say that like it's a diagnosis.
 
 JASON: No, I mean it. I open the laptop at nine and close it at five, and I couldn't tell you one thing I did.
 
@@ -250,7 +302,7 @@ ERIC: We're going to be terrible.
 
 JASON: Yeah. Probably. It's okay.
 
-## 7. The gym
+## 8. The gym
 
 **A gym in the Castro. October 2025.** Jason and Eric by the racks. *(real: the gym, the lines. The scene is assembled.)*
 
@@ -302,7 +354,7 @@ JASON: I see.
 
 JASON: Is there a Chipotle on the way?
 
-## 8. Court three
+## 9. Court three
 
 **Mission Dolores courts. October 2026.** Waiting for a court. Eric, Calvin, Jason. A stranger with a racket on the next bench. *(real: the courts, the waiting, the bets. Assembled.)*
 
@@ -316,11 +368,15 @@ JASON: Nice. Us too.
 
 CALVIN: Why.
 
-ERIC: Every time.
+ERIC: *(in Jason's voice)* "Ah. I see you like tennis."
 
-JASON: What? He seemed friendly.
+JASON: I don't sound like that.
 
-ERIC: He is holding a racket. On a tennis court.
+CALVIN: You sound exactly like that.
+
+JASON: Hmm. He seemed friendly, though.
+
+ERIC: He's holding a racket. On a tennis court.
 
 JASON: Right. So he likes tennis.
 
@@ -336,6 +392,10 @@ CALVIN: Court's open in ten.
 
 ERIC: Okay. Us two against him. If we win, he talks to a girl. Out loud. On purpose.
 
+CALVIN: Emily says she'll coach him.
+
+JASON: Ah. That's nice of her.
+
 JASON: Ah. That's different, though. That's not the same as talking to a guy on a bench.
 
 CALVIN: It's exactly the same.
@@ -350,7 +410,7 @@ CALVIN: We're not losing.
 
 > *Card: They lost. The video exists. There are hip thrusts.*
 
-## 9. The bar
+## 10. The bar
 
 **A bar in San Francisco. October 2026.** Outside, just after leaving. Eric, Jason, Calvin. *(real, as you told it.)*
 
@@ -388,7 +448,7 @@ JASON: Ah. Yeah. She mentioned.
 
 > *Card: He emailed twice.*
 
-## 10. The café
+## 11. The café
 
 **The Capital One Café, Post and Kearny, San Francisco. October 2026.** The second floor. Two laptops, two coffees. *(real: the place, both of you looking for work, who was getting replies. The words are mine.)*
 
@@ -402,7 +462,7 @@ ERIC: Do you want to live in Austin?
 
 JASON: I don't know. Maybe. It's hot there.
 
-ERIC: That is the fourth city today.
+ERIC: That's the fourth city today. I'm not judging. I'm counting.
 
 JASON: Ah. Yeah.
 
@@ -444,13 +504,13 @@ JASON: Chipotle.
 
 > *Card: Eric got an offer that week. Jason was sitting across the table.*
 
-## 11. The night before
+## 12. The night before
 
 **The apartment, San Francisco. October 19, 2026. Late.** Paper plates, a few balloons. Jason and Eric. *(real: the party on the 19th, Eric flying out on the 20th, the birthday on the 21st. The words are mine.)*
 
 JASON: That was a good party.
 
-ERIC: You took a phone call during the cake.
+ERIC: It was. You took a phone call during the cake.
 
 JASON: Ah. It was my mom.
 
@@ -498,7 +558,7 @@ JASON: Hmm.
 
 JASON: I did like the rain thing.
 
-## 12. The call
+## 13. The call
 
 **A tea shop in Rockville, Maryland. October 22, 2026.** Eric and Momo at a table. Calvin on speaker from San Francisco. *(assembled from true pieces.)*
 
@@ -508,9 +568,11 @@ MOMO: How was the goodbye?
 
 CALVIN: He told the driver, "I see you drive a Prius."
 
-ERIC: To the man in the Prius.
+ERIC: *(in Jason's voice)* "Ah. Hmm. I see you drive a Prius."
 
-CALVIN: To the man in the Prius.
+MOMO: That's really good.
+
+ERIC: I've had four years.
 
 MOMO: Did he pick a place for his birthday dinner?
 
@@ -550,7 +612,7 @@ CALVIN: Blue.
 
 > *Card: What comes next has not happened yet.*
 
-## 13. The lanyard *(invented)*
+## 14. The lanyard *(invented)*
 
 **Cumberland, outside the house. 2028.** A car packed to the roof. Jason, Eric.
 
@@ -584,7 +646,7 @@ JASON: Hmm. One block.
 
 ERIC: Then you're fine.
 
-## 14. The theory *(invented)*
+## 15. The theory *(invented)*
 
 **A tennis court. 2031.** Jason, Eric, Calvin, and someone new with a racket.
 
@@ -604,6 +666,10 @@ JASON: What? It worked.
 
 MEI: It did work.
 
+ERIC: Enjoy your money while you still have it.
+
+JASON: Hmm. Emily said you'd say that.
+
 *(Jason's phone rings.)*
 
 JASON: Ah. One sec.
@@ -614,7 +680,7 @@ MEI: Does he always do that?
 
 ERIC: Since 2022.
 
-## 15. The bench *(invented)*
+## 16. The bench *(invented)*
 
 **Mission Dolores courts. 2066.** Two men of about sixty-four on the bench, waiting for a court. Grey hair. Rackets.
 
@@ -640,9 +706,13 @@ ERIC: Every day.
 
 JASON: Hmm. Somebody should have told me.
 
-ERIC: I told you. The night before I flew out.
+ERIC: I told you. At H Mart. And in the rain. And the night before I flew out.
 
-JASON: The rain thing.
+JASON: Ah. The rain thing.
+
+ERIC: *(in Jason's voice)* "Hmm. I see."
+
+JASON: I still don't sound like that.
 
 *(Jason's phone rings. He stands up.)*
 
@@ -667,13 +737,14 @@ JASON: They look comfortable.
 ## Who is in it and how they talk
 
 - **Jason:** warm, earnest, never sarcastic. States the obvious as a way of being friendly ("I see you like tennis"). "Ah", "I see", "Hmm". Compliments first ("Looking big"). Cannot choose, then will not change his mind. Takes calls standing up and walks away with them. Shy only when it is a girl. Loves any sport (tennis above all) and will not walk anywhere. Spends freely and then says it was a lot. Would eat Chipotle or Pho 75 every day. Says the hard thing plainly when he gets to it.
-- **Eric:** the dry one. Good at getting things done and at making other people do them. Short lines. Says the one sincere thing in the film, twice.
+- **Eric:** friendly, with a jab slipped in. Good at getting things done and at talking other people into them. Does Jason's voice back at him. Says the one sincere thing in the film, four times, in slightly different words.
+- **Emily:** Eric's girlfriend since November 2023. Around, liked, and outnumbered.
 - **Momo:** tells the other two what is going on.
 - **Calvin:** deadpan, reports facts.
 
 ## What building it needs
 
-- **New sets:** a car in a car park, a campsite, a lecture hall, a table with a grill, a campus in the rain, a gym, tennis courts with a bench, the outside of a bar, a café table by a window, a tea shop, a packed car outside a house. The sofa set exists.
+- **New sets:** a car in a car park, a campsite, a lecture hall, a supermarket checkout, a front path at night, a campus in the rain, a gym, tennis courts with a bench, the outside of a bar, a café table by a window, a tea shop, a packed car outside a house. The sofa set exists.
 - **Three or four people on screen** in most scenes, and people walking off and coming back. The player handles two today.
 - **A voice on a phone** (Calvin in scene 12). The off-screen voice already works for this.
 - **A hand-written cast file** with the real names, ages and looks, in place of a simulated life.
