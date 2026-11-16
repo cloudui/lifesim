@@ -36,6 +36,7 @@ VOICE Dad: A line.        someone off screen
 PHONE Calvin: A line.     someone on a phone
 ENTER JASON left          walks in from left | right | door, to their place (or: ENTER JASON left -20)
 LEAVE JASON right         walks off to left | right | door
+RUN JASON right           the same, running
 WALK ERIC 80              walks to a place
 ENTER MOMO right 50 &     "&" at the end of a move: do not wait for it
 SIT ERIC                  also STAND ERIC

@@ -28,10 +28,10 @@ PAUSE 4
 JASON: Do you get any of this?
 ERIC: I've kind of been playing chess the whole class.
 JASON: Ah, I see. I'm kind of lost.
-ERIC: It's ok we can figure it out on the homework.
+ERIC: It's ok, we can figure it out on the homework.
 PAUSE 2
 POSE JASON slump
 PAUSE 1
 EMOTE JASON z 9
 PAUSE 7
-CARD The rest of the semester, next to each other. Not always the same seats.
+CARD We sat next to each other for the rest of the semester.

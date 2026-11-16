@@ -31,7 +31,7 @@ export type Step = { line: number; flag?: string } & (
   | { t: 'say'; who: string; off?: 'voice' | 'phone'; text: string; after?: number; mood?: Mood; as?: string }
   /** `wait` false lets the script carry on while they walk. */
   | { t: 'enter'; who: string; from: Side | 'door'; to: number | null; wait: boolean }
-  | { t: 'leave'; who: string; to: Side | 'door'; wait: boolean }
+  | { t: 'leave'; who: string; to: Side | 'door'; wait: boolean; run?: boolean }
   | { t: 'walk'; who: string; x: number; wait: boolean }
   | { t: 'sit'; who: string }
   | { t: 'stand'; who: string }
@@ -216,6 +216,7 @@ function parse(file: string, src: string): FilmScene {
     else if (head === 'PAUSE') push({ t: 'pause', s: Number(rest) || 2 });
     else if (head === 'ENTER') push({ t: 'enter', who: who('THEM'), from: side('left'), to: num(), wait });
     else if (head === 'LEAVE') push({ t: 'leave', who: who('YOU'), to: side('right'), wait });
+    else if (head === 'RUN') push({ t: 'leave', who: who('YOU'), to: side('right'), wait, run: true });
     else if (head === 'WALK') push({ t: 'walk', who: who('THEM'), x: num() ?? 0, wait });
     else if (head === 'SIT') push({ t: 'sit', who: who('THEM') });
     else if (head === 'STAND') push({ t: 'stand', who: who('THEM') });

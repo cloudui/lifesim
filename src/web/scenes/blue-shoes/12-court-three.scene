@@ -16,7 +16,12 @@ FACE JASON right
 JASON: I see you like tennis. [1.2]
 STRANGER: Yeah?
 JASON (smile): Nice. How long have you been playing?
-EMOTE STRANGER dots 3
+PAUSE 1.5
+FACE STRANGER right
+HOLD STRANGER phone
+EMOTE STRANGER dots 4
+PAUSE 3.5
+EMOTE JASON sweat 3
 PAUSE 3.5
 FACE JASON auto
 CALVIN: Get any numbers today, Jason?
@@ -32,8 +37,10 @@ JASON: Eric, you should toss the ball more forward.
 ERIC: I swear you told me to do this yesterday.
 JASON: Hmm. I don't think I did. [0.5]
 HOLD JASON racket
-JASON: Here, hold it like this.
+JASON: Here, hold it like this. [0.6]
 HOLD JASON none
+HOLD ERIC racket
+PAUSE 2
 CALVIN: The last court said ten more minutes.
 ERIC: Okay. Hope you're ready for this forehand, Jason.
 JASON (smile): Ah. That's what I like to hear. [0.6]

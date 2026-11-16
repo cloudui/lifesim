@@ -408,6 +408,17 @@ function tower(st: Stage): void {
   px(cx - 28, ground - 22, 44, 1, 'rgba(35,37,54,0.5)');
   px(cx - 18, ground - 30, 6, 14, 'rgba(120,90,60,0.5)');
   glow(cx - 6, ground - 26, 44, '255,217,138', 0.03);
+  // The name over the door.
+  px(cx - 37, ground - 60, 62, 13, '#14162a');
+  px(cx - 37, ground - 60, 62, 1, '#4a4d66');
+  label('THE VARSITY', cx - 6, ground - 54, '#ffd98a');
+  if (props.includes('people')) {
+    // Everyone else who was at the barbecue, on their way out.
+    folk(cx - 96, ground, 71, { cup: false });
+    folk(cx - 82, ground, 72, { flip: true });
+    folk(cx - 60, ground, 73, {});
+    folk(cx - 132, ground, 74, { flip: true });
+  }
   for (const x of [cx - 52, cx + 30]) { px(x, ground - 8, 12, 8, '#3a3d50'); px(x + 1, ground - 15, 10, 8, '#1f3a2c'); }
   px(0, ground, W, 4, '#55586a');
   px(0, ground + 4, W, H - ground, '#2a2c38');

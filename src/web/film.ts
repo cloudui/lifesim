@@ -49,6 +49,10 @@ interface Actor {
   emote: { glyph: string; t0: number; s: number } | null;
   hold: string;
   slump: boolean;
+  /** Running, not walking. */
+  fast: boolean;
+  /** The way they last turned to look at someone speaking; they stay that way until someone else speaks. */
+  turned: Side | null;
 }
 /** Someone in a scene, from the simulated life or from a film's own cast. */
 interface Person { id: number; name: string; look: Look; born: number; scale: number; voice: number }
@@ -215,11 +219,13 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
     if (!a) return;
     if (s.t === 'enter') {
       a.to = s.to ?? a.home;
+      a.fast = false;
       a.off = now ? a.to : edge(st, s.from);
       a.mode = now ? 'standing' : 'walking';
       a.leaving = false;
     } else if (s.t === 'leave') {
       a.to = edge(st, s.to);
+      a.fast = !!s.run;
       a.leaving = !now;
       a.mode = now ? 'away' : 'walking';
     } else if (s.t === 'walk') {
@@ -229,7 +235,7 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
       a.leaving = false;
     } else if (s.t === 'sit') a.mode = 'sitting';
     else if (s.t === 'stand') a.mode = 'standing';
-    else if (s.t === 'face') a.face = s.dir === 'auto' || s.dir === 'door' ? null : s.dir;
+    else if (s.t === 'face') { a.face = s.dir === 'auto' || s.dir === 'door' ? null : s.dir; if (a.face) a.turned = a.face; }
     else if (s.t === 'emote') { if (!now) { a.emote = { glyph: s.glyph, t0: clock, s: s.s }; if (s.glyph === 'ring') sound.ring(); } }
     else if (s.t === 'drink') { if (!now) a.sip = clock; }
     else if (s.t === 'hold') a.hold = s.item === 'none' ? '' : s.item;
@@ -422,7 +428,7 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
       const home = p.x ?? st.spots[p.who] ?? 0;
       // Someone who walks in with two bottles hands one over; someone already sitting has their own.
       const bottle = bottles && (p.who === 'THEM' || (p.stance !== 'away' && !awayAtStart));
-      return { key: p.who, mode: p.stance, off: home, to: home, home, leaving: false, face: null, bottle, sip: -9, emote: null, hold: '', slump: false };
+      return { key: p.who, mode: p.stance, off: home, to: home, home, leaving: false, face: null, bottle, sip: -9, emote: null, hold: '', slump: false, fast: false, turned: null };
     });
     begin(0);
   }
@@ -450,7 +456,13 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
     const s = step();
     if (s.t === 'end') { t = Math.max(t, withoutTimes.last + 3); return; }
     if (s.t === 'say' && !lineDone()) { t = s.text.length / TYPE_RATE + 0.01; return; }
-    if (moving(s)) return;
+    if (moving(s)) {
+      // Someone is walking: put them where they were going, and carry on.
+      const a = actorOf((s as { who: string }).who)!;
+      a.off = a.to;
+      a.mode = a.leaving ? 'away' : 'standing';
+      a.leaving = false;
+    }
     advance();
   }
 
@@ -476,7 +488,10 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
     if (a.face) return a.face;
     const others = actors.filter((b) => b !== a && b.mode !== 'away');
     const talker = speaking && speaking !== a.key ? others.find((b) => b.key === speaking) : undefined;
-    const target = talker ?? others.sort((p, q) => Math.abs(p.off - a.off) - Math.abs(q.off - a.off))[0];
+    // Turn to whoever is speaking, and stay turned that way afterwards: turning back at once reads as a twitch.
+    if (talker) a.turned = talker.off >= a.off ? 'right' : 'left';
+    if (a.turned) return a.turned;
+    const target = others.sort((p, q) => Math.abs(p.off - a.off) - Math.abs(q.off - a.off))[0];
     if (!target) return a.key === youKey() ? 'left' : 'right';
     return target.off >= a.off ? 'right' : 'left';
   }
@@ -499,7 +514,7 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
       sg.rect(0, 0, 48, 40);
       sg.clip();
       // Slumped: forward and down, head on the desk.
-      drawPerson(sg, 24 + (a.slump ? (left ? -3 : 3) : 0), 47 - breathe + (a.slump ? 5 : 0), lk, { pose: 'stand', frame: 0, outfit: 'casual', grey: greyOf(p), flip: left });
+      drawPerson(sg, 24 + (a.slump ? (left ? -4 : 4) : 0), 47 - breathe + (a.slump ? 6 : 0), lk, { pose: 'stand', frame: 0, outfit: 'casual', grey: greyOf(p), flip: left, shut: a.slump });
       sg.restore();
       if (st.legs > 0) {
         const hang = scene!.set === 'pier' || scene!.set === 'steps';
@@ -549,7 +564,7 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
       held(a, left, 33);
       g.drawImage(scratch, 0, 0, 48, 56, Math.round(x - 24 * s), Math.round(st.seatY - 40 * s), Math.round(48 * s), Math.round(56 * s));
     } else {
-      drawPerson(sg, 24, 40, lk, { pose: a.mode === 'walking' ? 'walk' : 'stand', frame: Math.floor(clock * 6), outfit: 'casual', grey: greyOf(p), flip: left });
+      drawPerson(sg, 24, 40, lk, { pose: a.mode === 'walking' ? 'walk' : 'stand', frame: Math.floor(clock * (a.fast ? 12 : 6)), outfit: 'casual', grey: greyOf(p), flip: left });
       if (a.bottle && a.key === 'THEM') {
         sg.fillStyle = '#4f8a63';
         sg.fillRect(29, 31, 2, 4);
@@ -573,19 +588,18 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
       sg.fillStyle = Math.floor(clock * 2) % 5 ? '#9fd0e6' : '#e6f4fa';
       sg.fillRect(hx + 1, y - 9, 2, 4);
     } else if (a.hold === 'call') {
-      // On a call: the phone at the ear, the arm up, and lines coming off it.
+      // On a call: the forearm up, the phone flat against the ear on the side facing us.
       const lk = person(a.key).look;
-      const ear = 24 - d * 4;
       const hy = y - (a.mode === 'sitting' ? 9 : 5) - (lk.tall ?? 0);
+      const ex = d > 0 ? 20 : 26;
       sg.fillStyle = lk.jacket ?? lk.shirt;
-      sg.fillRect(ear - (d > 0 ? 1 : 0), hy + 2, 2, 5);
+      sg.fillRect(ex, hy + 3, 2, 5);
       sg.fillStyle = lk.skin;
-      sg.fillRect(ear - (d > 0 ? 1 : 0), hy + 1, 2, 2);
+      sg.fillRect(ex, hy + 1, 2, 2);
       sg.fillStyle = '#0c0d12';
-      sg.fillRect(ear - (d > 0 ? 2 : -1), hy - 4, 2, 5);
-      sg.fillStyle = 'rgba(244,241,222,0.8)';
-      const ph = Math.floor(clock * 3) % 3;
-      for (let k = 0; k <= ph; k++) sg.fillRect(ear - d * (4 + k * 2) - (d > 0 ? 1 : 0), hy - 4 + k, 1, 3 - k);
+      sg.fillRect(ex, hy - 4, 2, 5);
+      sg.fillStyle = '#9fd0e6';
+      sg.fillRect(ex + (d > 0 ? 0 : 1), hy - 3, 1, 3);
     } else if (a.hold === 'racket') {
       sg.fillStyle = '#2a2d33';
       sg.fillRect(hx, y - 3, 1, 7);
@@ -705,7 +719,7 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
     for (const a of actors) {
       if (a.mode !== 'walking') continue;
       const dir = a.to >= a.off ? 1 : -1;
-      a.off += dir * dt * speed;
+      a.off += dir * dt * speed * (a.fast ? 2.6 : 1);
       if ((a.to - a.off) * dir <= 0) { a.off = a.to; a.mode = a.leaving ? 'away' : 'standing'; a.leaving = false; }
     }
     if (after === 'fade') {
@@ -811,8 +825,20 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
     toggleSound() { sound.unlock(); sound.setMuted(!sound.isMuted()); showSound(); },
     jump(lines, scenes) {
       if (!on_ || !scene) return;
-      if (scenes) seek(si + scenes, 0);
-      else seek(si, i + lines);
+      if (scenes) { seek(si + scenes, 0); return; }
+      // By line: to the nearest step where something is said or shown. A walk, a pause or a sign over a head
+      // moves on by itself, so stopping on one would only play it again.
+      const stop = (sc: FilmScene, k: number) => { const t = sc.steps[k].t; return t === 'say' || t === 'title' || t === 'card' || t === 'end'; };
+      let k = i + Math.sign(lines);
+      while (k >= 0 && k < scene.steps.length && !stop(scene, k)) k += Math.sign(lines);
+      if (k >= scene.steps.length) return;
+      if (k >= 0) { seek(si, k); return; }
+      if (si === 0) { seek(0, 0); return; }
+      // Before the first line of a scene: the last line of the one before.
+      const prev = list[si - 1];
+      let last = prev.steps.length - 1;
+      while (last > 0 && !stop(prev, last)) last--;
+      seek(si - 1, last);
     },
     resize: () => { if (on_) resize(); },
   };

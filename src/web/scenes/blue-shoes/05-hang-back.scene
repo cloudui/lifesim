@@ -5,12 +5,12 @@ set: tower night
 year: 2023
 cast: JASON -14 standing, MOMO 12 standing, EMILY 52 standing, ERIC 36 standing
 city: -1
-props: breath
+props: breath, people
 music: tender
 status: draft
-notes: Real, as far as I understand it. November 2023, after barbecue at Jason's.
+notes: Real, as far as I understand it. The Varsity is Jason's apartment building in College Park. Others from the barbecue are leaving too.
 
-TITLE Outside Jason's place, November 2023 | Late, and cold
+TITLE Outside the Varsity, November 2023 | Late, and cold, after barbecue at Jason's
 PAUSE 3
 ERIC: Can you guys hang back a second? [1]
 WALK EMILY 108 &
@@ -19,7 +19,7 @@ PAUSE 2
 JASON: Hmm. It's cold.
 MOMO: Bro, let's go.
 JASON: What's he doing?
-MOMO: What do you think he's doing.
+MOMO: What do you think he's doing?
 FACE JASON right
 FACE MOMO right
 PAUSE 4

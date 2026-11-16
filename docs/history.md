@@ -2,6 +2,14 @@
 
 What was added, when, and why, newest first. `AGENTS.md` describes the project as it is now; this file is the record of how it got there. Add an entry whenever a change alters how the simulation behaves or what the page shows. Commit ids are in brackets.
 
+## 2026-11-16: Blue Shoes, after a full watch
+
+- Skipping: space or the right arrow during a walk finishes the walk and moves on. The left arrow goes back to the previous line that is said or shown, never to a pause, a walk or a sign over a head (which only played again), and steps back into the previous scene from a scene's first line.
+- People stay turned towards whoever last spoke; before, they snapped back between lines.
+- `RUN` leaves at a run (the end of the rain scene). `POSE ... slump` now closes the eyes and puts the head lower. The phone-ring sign is redrawn as a phone, and a call is the phone against the ear.
+- Jason's building is named: The Varsity, with other people from the barbecue leaving. The stranger at the courts turns away and looks at his phone. Eric is handed the racket.
+- Words: the card after the lecture hall is one plain sentence; the night before no longer says "it was good" and "I appreciate you having me" twice each; punctuation fixed throughout (commas before "man", question marks, Chipotle, Amazon, Uber).
+
 ## 2026-11-16: Blue Shoes, Jason's life written by hand
 
 - The owner did not want a renamed simulation: the life after the film should be written by hand, and told from Jason, since it is for him. `npm run recast` and its life are gone.

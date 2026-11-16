@@ -16,7 +16,7 @@ JASON: Hmm. It's raining. [1.4]
 ERIC: Yes. It does seem like it is.
 JASON: Sorry guys, I should've checked the weather report. [0.5]
 JASON: Maybe we can just do it next week instead.
-ERIC: If we run on a nice day you'll have forgotten it by Friday.
+ERIC: If we run on a nice day, you'll have forgotten it by Friday.
 EMOTE ERIC idea 2.5
 ERIC: Think about it. [0.6]
 ERIC: When you're forty you'll remember: "oh yeah, remember that time we ran in the pouring rain?"
@@ -27,9 +27,11 @@ ERIC (smile): It's always the receipt.
 JASON: Okay. Yeah. Hmm. [0.6]
 JASON: I guess we can run toward the Xfinity Center?
 ERIC: Loser does forty push-ups.
-LEAVE ERIC right &
-PAUSE 0.5
-LEAVE MOMO right &
-PAUSE 1.2
-LEAVE JASON right
+RUN ERIC right &
+PAUSE 0.4
+RUN MOMO right &
+PAUSE 0.9
+EMOTE JASON sweat 1.5
+PAUSE 0.8
+RUN JASON right
 PAUSE 2

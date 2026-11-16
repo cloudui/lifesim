@@ -82,6 +82,8 @@ export interface SpriteOptions {
   /** Face left instead of right. */
   flip?: boolean;
   alpha?: number;
+  /** Eyes closed. */
+  shut?: boolean;
   /** Mid-change between outfits: the new outfit and progress 0 to 1. */
   melt?: { to: Outfit; t: number };
 }
@@ -97,7 +99,7 @@ function scratch(): [HTMLCanvasElement, CanvasRenderingContext2D] {
 let buffers: ReturnType<typeof scratch>[] | undefined;
 
 /** Paint one person, facing right, feet on the bottom row. */
-function paint(g: CanvasRenderingContext2D, look: Look, outfit: Outfit, pose: Pose, frame: number, grey: number): void {
+function paint(g: CanvasRenderingContext2D, look: Look, outfit: Outfit, pose: Pose, frame: number, grey: number, shut = false): void {
   g.clearRect(0, 0, SW, SH);
   const px = (x: number, y: number, w: number, h: number, c: string) => {
     g.fillStyle = c;
@@ -173,8 +175,9 @@ function paint(g: CanvasRenderingContext2D, look: Look, outfit: Outfit, pose: Po
   // Head and hair.
   px(9, by + 7, 2, 1, look.skin);
   px(7, by + 1, 6, 6, look.skin);
-  px(10, by + 4, 1, 1, '#1a1a1a');
-  px(12, by + 4, 1, 1, '#1a1a1a');
+  const eye = shut ? mix(look.skin, '#3a1f1a', 0.4) : '#1a1a1a';
+  px(10, by + 4, 1, 1, eye);
+  px(12, by + 4, 1, 1, eye);
   const curl = mix(look.hair, '#ffffff', 0.16);
   if (look.hairStyle === 3) px(7, by, 6, 2, hair);
   else if (look.hairStyle === 4) {
@@ -243,7 +246,7 @@ function paint(g: CanvasRenderingContext2D, look: Look, outfit: Outfit, pose: Po
 export function drawPerson(ctx: CanvasRenderingContext2D, x: number, y: number, look: Look, o: SpriteOptions): void {
   buffers ??= [scratch(), scratch(), scratch()];
   const [[c0, g0], [, g1], [c2, g2]] = buffers;
-  paint(g0, look, o.outfit, o.pose, o.frame, o.grey ?? 0);
+  paint(g0, look, o.outfit, o.pose, o.frame, o.grey ?? 0, o.shut);
   let src = c0;
   if (o.melt && o.melt.t > 0 && o.melt.t < 1) {
     // The new outfit pours down from the top through a ragged, sparkling edge.
@@ -292,7 +295,7 @@ export const GLYPHS: Record<string, string[]> = {
   idea: ['01110', '11111', '11111', '01110', '01110', '00100'],
   sweat: ['010', '010', '111', '111', '010'],
   ask: ['0110', '1001', '0010', '0100', '0000', '0100'],
-  ring: ['0110010', '0110001', '0110101', '0110001', '0110010'],
+  ring: ['001111100', '101000101', '001000100', '101000101', '001000100', '101010101', '001111100'],
   puff: ['0110', '1111', '0110'],
 };
 
