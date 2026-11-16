@@ -25,7 +25,7 @@ PAUSE 6
 ERIC: Momo. [1.4]
 MOMO: Bro. [1.2]
 ERIC (open): These aren't my shoes. [2]
-EMOTE MOMO bang 2
+EMOTE MOMO sweat 2.5
 MOMO: Dumbass, it's twenty minutes back the other way.
 ERIC (smile): Oops. Looks like we have to go back.
 EMOTE MOMO dots 4

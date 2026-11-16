@@ -15,7 +15,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "export": "tsx src/cli/export.ts"
+    "export": "tsx src/cli/export.ts",
+    "recast": "tsx src/cli/recast.ts"
   },
   "devDependencies": {
     "@types/node": "^18.19.0",

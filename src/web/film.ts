@@ -230,7 +230,7 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
     } else if (s.t === 'sit') a.mode = 'sitting';
     else if (s.t === 'stand') a.mode = 'standing';
     else if (s.t === 'face') a.face = s.dir === 'auto' || s.dir === 'door' ? null : s.dir;
-    else if (s.t === 'emote') { if (!now) a.emote = { glyph: s.glyph, t0: clock, s: s.s }; }
+    else if (s.t === 'emote') { if (!now) { a.emote = { glyph: s.glyph, t0: clock, s: s.s }; if (s.glyph === 'ring') sound.ring(); } }
     else if (s.t === 'drink') { if (!now) a.sip = clock; }
     else if (s.t === 'hold') a.hold = s.item === 'none' ? '' : s.item;
     else if (s.t === 'pose') a.slump = s.pose === 'slump';
@@ -311,6 +311,7 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
     );
     endText.textContent = text.replace('{seen}', seen.toLocaleString('en-US')).replace('{led}', String(led));
     seeBtn.hidden = false;
+    seeBtn.textContent = 'See the life without them ▶';
   }
   /** Without them, for a film written from scratch: the list is in the script (GONE lines). */
   function endFilm(text: string): void {
@@ -326,7 +327,9 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
       scene!.endLine,
     );
     endText.textContent = text;
-    seeBtn.hidden = true;
+    // With a life to go with the film, the way out leads into it.
+    seeBtn.hidden = !film!.life;
+    seeBtn.textContent = `Explore ${person(youKey()).name}'s life ▶`;
   }
 
   /** A face for the dialogue box: a larger portrait of the same person, at the age they are. */
@@ -562,10 +565,27 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
     const d = left ? -1 : 1;
     const hx = 24 + d * 7;
     if (a.hold === 'phone') {
-      sg.fillStyle = '#15151a';
-      sg.fillRect(hx, y - 2, 2, 4);
-      sg.fillStyle = Math.floor(clock * 2) % 5 ? '#9fd0e6' : '#cfe9f5';
-      sg.fillRect(hx + (d > 0 ? 0 : 1), y - 1, 1, 2);
+      // Held out in front, screen lit, at chest height.
+      sg.fillStyle = a.key && person(a.key).look.skin;
+      sg.fillRect(hx - (d > 0 ? 2 : -1), y - 5, 3, 2);
+      sg.fillStyle = '#0c0d12';
+      sg.fillRect(hx, y - 10, 4, 6);
+      sg.fillStyle = Math.floor(clock * 2) % 5 ? '#9fd0e6' : '#e6f4fa';
+      sg.fillRect(hx + 1, y - 9, 2, 4);
+    } else if (a.hold === 'call') {
+      // On a call: the phone at the ear, the arm up, and lines coming off it.
+      const lk = person(a.key).look;
+      const ear = 24 - d * 4;
+      const hy = y - (a.mode === 'sitting' ? 9 : 5) - (lk.tall ?? 0);
+      sg.fillStyle = lk.jacket ?? lk.shirt;
+      sg.fillRect(ear - (d > 0 ? 1 : 0), hy + 2, 2, 5);
+      sg.fillStyle = lk.skin;
+      sg.fillRect(ear - (d > 0 ? 1 : 0), hy + 1, 2, 2);
+      sg.fillStyle = '#0c0d12';
+      sg.fillRect(ear - (d > 0 ? 2 : -1), hy - 4, 2, 5);
+      sg.fillStyle = 'rgba(244,241,222,0.8)';
+      const ph = Math.floor(clock * 3) % 3;
+      for (let k = 0; k <= ph; k++) sg.fillRect(ear - d * (4 + k * 2) - (d > 0 ? 1 : 0), hy - 4 + k, 1, 3 - k);
     } else if (a.hold === 'racket') {
       sg.fillStyle = '#2a2d33';
       sg.fillRect(hx, y - 3, 1, 7);
@@ -600,17 +620,36 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
       if (a.mode === 'away') continue;
       const x = Math.round(st.cx + a.off);
       const top = headTop(a, st);
-      // A sign over someone's head: it rises a little and fades.
+      // A sign over someone's head, in a small speech bubble so it shows against any background.
       if (a.emote) {
         const age = clock - a.emote.t0;
+        const rows = GLYPHS[a.emote.glyph];
         if (age > a.emote.s) a.emote = null;
-        else if (GLYPHS[a.emote.glyph]) {
-          const rows = GLYPHS[a.emote.glyph];
-          const fade = Math.min(1, age * 4, (a.emote.s - age) * 2);
-          const rise = a.emote.glyph === 'z' ? ((age * 5) % 12) : Math.min(3, age * 6);
-          const c = `rgba(244,241,222,${0.95 * fade})`;
-          drawGlyph(g, a.emote.glyph, x + 4 + (a.emote.glyph === 'z' ? Math.round(rise / 3) : -Math.floor(rows[0].length / 2) - 4), top - rows.length - 3 - Math.round(rise), c);
-          if (a.emote.glyph === 'z' && age > 1.1) drawGlyph(g, 'z', x + 9 + Math.round((((age - 1.1) * 5) % 12) / 3), top - 12 - Math.round(((age - 1.1) * 5) % 12), `rgba(244,241,222,${0.6 * fade})`);
+        else if (rows) {
+          const fade = Math.min(1, age * 5, (a.emote.s - age) * 3);
+          const pop = age < 0.12 ? 1 : 0;
+          const gw = rows[0].length;
+          const gh = rows.length;
+          const bw = gw + 6;
+          const bh = gh + 4;
+          const bx = x - Math.floor(bw / 2) + 5;
+          const by = top - bh - 5 + pop;
+          g.globalAlpha = fade;
+          g.fillStyle = '#04060c';
+          g.fillRect(bx, by - 1, bw, bh + 2);
+          g.fillRect(bx - 1, by, bw + 2, bh);
+          g.fillRect(bx + 2, by + bh + 1, 3, 1);
+          g.fillRect(bx + 2, by + bh + 2, 2, 1);
+          g.fillStyle = '#f7f3ea';
+          g.fillRect(bx, by, bw, bh);
+          g.fillRect(bx + 2, by + bh, 3, 1);
+          g.fillRect(bx + 2, by + bh + 1, 1, 1);
+          // Sleep drifts, a phone shakes, the rest hold still.
+          const wob = a.emote.glyph === 'ring' ? Math.round(Math.sin(age * 40)) : 0;
+          const drift = a.emote.glyph === 'z' ? Math.floor(age * 1.5) % 2 : 0;
+          const ink = a.emote.glyph === 'heart' ? '#d6455a' : a.emote.glyph === 'idea' ? '#e0a100' : a.emote.glyph === 'sweat' ? '#3b7fb0' : '#1b1d2a';
+          drawGlyph(g, a.emote.glyph, bx + 3 + wob, by + 2 - drift, ink);
+          g.globalAlpha = 1;
         }
       }
       // Breath in the cold.
@@ -626,11 +665,18 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
     const sp = speaking ? actorOf(speaking) : undefined;
     if (sp && sp.mode !== 'away') {
       const x = Math.round(st.cx + sp.off);
-      const top = headTop(sp, st) - 5;
-      g.fillStyle = 'rgba(244,241,222,0.85)';
-      g.fillRect(x - 2, top, 5, 1);
-      g.fillRect(x - 1, top + 1, 3, 1);
-      g.fillRect(x, top + 2, 1, 1);
+      const top = headTop(sp, st) - 6;
+      // Light with a dark edge, so it shows on a pale wall as well as a night sky.
+      const bob = Math.sin(clock * 4) > 0 ? 0 : 1;
+      g.fillStyle = '#04060c';
+      g.fillRect(x - 4, top - 2 + bob, 9, 3);
+      g.fillRect(x - 3, top + 1 + bob, 7, 1);
+      g.fillRect(x - 2, top + 2 + bob, 5, 1);
+      g.fillRect(x - 1, top + 3 + bob, 3, 1);
+      g.fillStyle = '#ffd166';
+      g.fillRect(x - 3, top - 1 + bob, 7, 2);
+      g.fillRect(x - 2, top + 1 + bob, 5, 1);
+      g.fillRect(x - 1, top + 2 + bob, 3, 1);
     }
     // Dark at the edges, and in and out of black.
     for (let k = 0; k < 18; k += 2) {
@@ -738,7 +784,10 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
   }
   root.querySelector('.film-skip')!.addEventListener('click', leave);
   root.querySelector('.back')!.addEventListener('click', leave);
-  seeBtn.addEventListener('click', () => { sound.quiet(); on_ = false; root.hidden = true; titleEl.classList.remove('on'); on.without(); });
+  seeBtn.addEventListener('click', () => {
+    if (film) { leave(); return; }
+    sound.quiet(); on_ = false; root.hidden = true; titleEl.classList.remove('on'); on.without();
+  });
   root.querySelector('.again')!.addEventListener('click', () => open(0));
 
   return {

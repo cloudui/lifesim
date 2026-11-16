@@ -281,3 +281,24 @@ export function quiet(): void {
   ambience('none');
   music('none');
 }
+
+/** A phone going off in someone's pocket: two short trills. */
+export function ring(): void {
+  const c = context();
+  if (!c || !master || muted || c.state !== 'running') return;
+  for (let burst = 0; burst < 2; burst++) {
+    for (let k = 0; k < 8; k++) {
+      const at = c.currentTime + burst * 0.9 + k * 0.055;
+      const o = c.createOscillator();
+      o.type = 'sine';
+      o.frequency.value = k % 2 ? 1320 : 1050;
+      const e = c.createGain();
+      e.gain.setValueAtTime(0, at);
+      e.gain.linearRampToValueAtTime(0.05, at + 0.005);
+      e.gain.exponentialRampToValueAtTime(0.0005, at + 0.05);
+      o.connect(e).connect(master);
+      o.start(at);
+      o.stop(at + 0.06);
+    }
+  }
+}

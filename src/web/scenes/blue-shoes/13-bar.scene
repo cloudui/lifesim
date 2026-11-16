@@ -15,6 +15,7 @@ ERIC (smile): Tomoka-chan!
 CALVIN: She's thirty.
 JASON: Thirty's not that old.
 PAUSE 4
+EMOTE JASON idea 2.5
 JASON: I'm going back in.
 ERIC: To say what?
 JASON: I don't know. [0.6]
@@ -25,6 +26,7 @@ ENTER JASON door -10
 PAUSE 1
 CALVIN: Well? [1.2]
 JASON: I asked her for a referral for Apple. [1.6]
+EMOTE ERIC bang 2
 ERIC (open): No shot.
 JASON: It's a good opportunity.
 ERIC: She offered me that referral an hour ago.

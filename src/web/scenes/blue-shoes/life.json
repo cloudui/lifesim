@@ -1,0 +1,18 @@
+{
+  "as": 2002,
+  "startYear": 2020,
+  "from": "College Park",
+  "to": "San Francisco",
+  "hobbies": ["run", "games"],
+  "cities": [
+    { "name": "New York", "pop": 600, "areas": ["Williamsburg", "East Village", "Astoria", "Park Slope", "Chelsea", "Bushwick", "Greenpoint", "Flushing", "Lower East Side", "Long Island City", "Koreatown", "Chinatown"] },
+    { "name": "San Francisco", "pop": 700, "areas": ["Mission", "Castro", "Haight", "SoMa", "Richmond", "Sunset", "Noe Valley", "Marina", "North Beach", "Dolores", "Corona Heights", "Hayes Valley", "Japantown", "Duboce"] },
+    { "name": "College Park", "pop": 800, "areas": ["College Park", "Rockville", "Silver Spring", "Bethesda", "Hyattsville", "Greenbelt", "Laurel", "Takoma Park", "Cumberland", "Ellicott City", "Gaithersburg", "Wheaton", "Berwyn", "Route 1", "Iribe", "Xfinity"] }
+  ],
+  "born": 2002,
+  "ego": "Eric Chen",
+  "partner": "Emily Nguyen",
+  "lead": "Jason Chen",
+  "leadMet": 2022,
+  "friends": ["Calvin Shi", "Momo Shaikh", "Bereketab Tessema", "Daniel Wei", "Jocelyn Choo"]
+}

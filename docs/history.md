@@ -2,6 +2,13 @@
 
 What was added, when, and why, newest first. `AGENTS.md` describes the project as it is now; this file is the record of how it got there. Add an entry whenever a change alters how the simulation behaves or what the page shows. Commit ids are in brackets.
 
+## 2026-11-16: Blue Shoes, a life to explore after the film
+
+- `npm run recast` runs a simulated life and gives some of its people names you know: the protagonist, the partner, a lead and friends, from a cast file (`src/web/scenes/blue-shoes/life.json`). Names are changed before the life is told, so every caption uses them. Named people are given the protagonist's birth year, and a known name never goes to someone who dies in the story. `--scan 1-12` prints lives to choose from.
+- The life for Blue Shoes is seed 11 with Maryland as a city: Eric Chen grows up in College Park and moves to San Francisco in 2022. Only the names are real; everything that happens in it is the simulation's. It is `public/lives/2002.json` and is listed with the other lives.
+- Leaving the film (Leave, Escape, or "Explore Eric's life" at the end) opens that life on the People tab. The people the film drew have the same looks there.
+- The mark over whoever is speaking is gold with a dark edge and bobs. Signs over heads sit in a small speech bubble; a lightbulb and a sweat drop were added. A phone call is drawn with the phone at the ear and lines coming off it, and the phone rings out loud. Calvin's hair is shorter on the small sprite, with bangs.
+
 ## 2026-11-16: Blue Shoes, the owner's music
 
 - Five tracks the owner found are in `public/music/` and named in the scenes: `morning`, `muzak`, `rain`, `cafe`, `bench`. At least one may not be free to publish; they are for the private demo and must not reach `main`.

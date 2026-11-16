@@ -91,6 +91,8 @@ export interface Film {
   /** The key of the person the film is told from. */
   you: string;
   city: number;
+  /** A life to open in the tabs when the film is left: the number of a file in public/lives, or 0. */
+  life: number;
   cast: Map<string, CastMember>;
   scenes: FilmScene[];
 }
@@ -115,7 +117,7 @@ function lookFields(text: string): Partial<Look> & { born?: number; scale?: numb
 }
 
 function parseCast(id: string, src: string): Film {
-  const film: Film = { id, title: id, about: '', you: '', city: 0, cast: new Map(), scenes: [] };
+  const film: Film = { id, title: id, about: '', you: '', city: 0, life: 0, cast: new Map(), scenes: [] };
   for (const raw of src.split('\n')) {
     const text = raw.trim();
     if (!text || text.startsWith('#')) continue;
@@ -137,6 +139,7 @@ function parseCast(id: string, src: string): Film {
     else if (key === 'about') film.about = v;
     else if (key === 'you') film.you = v.toUpperCase();
     else if (key === 'city') film.city = Number(v) || 0;
+    else if (key === 'life') film.life = Number(v) || 0;
   }
   return film;
 }

@@ -49,7 +49,16 @@ export interface Look {
   big?: boolean;
 }
 
+/** Looks chosen by hand for particular people in the life on screen, in place of the ones made from their id. */
+const CHOSEN = new Map<number, Look>();
+export function chooseLooks(looks: Map<number, Look>): void {
+  CHOSEN.clear();
+  for (const [id, look] of looks) CHOSEN.set(id, look);
+}
+
 export function lookFor(id: number): Look {
+  const chosen = CHOSEN.get(id);
+  if (chosen) return chosen;
   return {
     skin: SKIN[hash(id, 1) % SKIN.length],
     hair: HAIR[hash(id, 2) % HAIR.length],
@@ -206,12 +215,12 @@ function paint(g: CanvasRenderingContext2D, look: Look, outfit: Outfit, pose: Po
   } else if (look.hairStyle === 10) {
     // Parted in the middle and wavy down to the shoulders.
     px(7, by, 6, 2, hair);
-    px(5, by + 1, 2, 9, hair);
-    px(4, by + 4, 1, 5, hair);
-    px(13, by + 1, 1, 7, hair);
-    px(7, by + 2, 1, 2, hair);
-    px(10, by + 1, 1, 1, look.skin);
-    for (const [x, y] of [[5, 3], [4, 6], [6, 8], [13, 4], [8, 0]]) px(x, by + y, 1, 1, curl);
+    px(5, by + 1, 2, 6, hair);
+    px(6, by + 7, 1, 1, hair);
+    px(13, by + 1, 1, 3, hair);
+    px(7, by + 2, 3, 1, hair);
+    px(11, by + 2, 2, 1, hair);
+    for (const [x, y] of [[5, 3], [6, 6], [8, 0]]) px(x, by + y, 1, 1, curl);
   } else {
     px(7, by, 6, 3, hair);
     px(6, by + 1, 1, 3, hair);
@@ -280,8 +289,10 @@ export const GLYPHS: Record<string, string[]> = {
   note: ['0011', '0010', '0010', '1110', '1110'],
   dots: ['00000', '00000', '10101', '00000'],
   z: ['1111', '0010', '0100', '1111'],
+  idea: ['01110', '11111', '11111', '01110', '01110', '00100'],
+  sweat: ['010', '010', '111', '111', '010'],
   ask: ['0110', '1001', '0010', '0100', '0000', '0100'],
-  ring: ['01110', '10001', '00100', '01010', '00000', '00100'],
+  ring: ['0110010', '0110001', '0110101', '0110001', '0110010'],
   puff: ['0110', '1111', '0110'],
 };
 

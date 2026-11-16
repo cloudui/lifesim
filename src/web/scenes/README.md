@@ -40,8 +40,8 @@ WALK ERIC 80              walks to a place
 ENTER MOMO right 50 &     "&" at the end of a move: do not wait for it
 SIT ERIC                  also STAND ERIC
 FACE JASON right          left | right | auto (auto: towards whoever is speaking, or the nearest person)
-EMOTE JASON z 8           a sign over their head for some seconds: z dots bang ask note ring heart
-HOLD JASON phone          something in their hand: phone | racket | cup | none
+EMOTE JASON z 8           a sign in a bubble over their head for some seconds: z dots bang ask note ring heart idea sweat (ring also rings)
+HOLD JASON phone          something in their hand: phone (held out) | call (at the ear) | racket | cup | none
 POSE JASON slump          sitting with their head down; POSE JASON up to undo
 SHOW shoes 6              a close-up over the scene for some seconds: shoes | receipt | cake | photo (SHOW photo 6 JASON)
 GIVE                      a simulated life: they hand you a bottle

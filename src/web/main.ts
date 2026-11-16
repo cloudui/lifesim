@@ -9,7 +9,7 @@ import '@fontsource/vt323';
 import { createCircle } from './circle';
 import { createJournal } from './journal';
 import { createPeople } from './people';
-import { portrait } from './pixel';
+import { portrait, chooseLooks, type Look } from './pixel';
 import { createMap } from './map';
 import { createPersonCard } from './person';
 import './style.css';
@@ -613,7 +613,19 @@ const story = createStory($('story'), ctx, {
   beat: (w) => setWeek(w),
 });
 // The film: scenes written by hand for this life, when there are any. Dialogue and silence, no narration.
-const film = createFilm($('film'), ctx, { done: () => showTitle(true), without: () => beginWithout() });
+const film = createFilm($('film'), ctx, { done: () => afterFilm(), without: () => beginWithout() });
+/** The life that goes with the film being played, if it has one. */
+let filmLife = 0;
+/** Leaving a film: into the life that goes with it, or back to the title screen. */
+function afterFilm(): void {
+  const life = filmLife;
+  filmLife = 0;
+  if (!life || !lives.some((l) => l.seed === life)) { showTitle(true); return; }
+  void load(life, false).then(() => {
+    $('title-screen').hidden = true;
+    setTab('people');
+  });
+}
 function beginFilm(from = 0, review = false): void {
   const list = scenesFor(view.data.seed, view.data.people);
   if (!list.length) return;
@@ -621,6 +633,7 @@ function beginFilm(from = 0, review = false): void {
   story.stop();
   $('title-screen').hidden = true;
   $('end-screen').hidden = true;
+  filmLife = 0;
   film.start(list, from, review);
 }
 /** A film written from scratch, with its own cast: nothing in it comes from the life on screen. */
@@ -631,6 +644,7 @@ function beginWritten(id: string, from = 0, review = false): void {
   story.stop();
   $('title-screen').hidden = true;
   $('end-screen').hidden = true;
+  filmLife = f.life;
   film.start(f.scenes, from, review, f);
 }
 function beginStory(beat = 0): void {
@@ -737,6 +751,16 @@ async function load(seed: number, title = false): Promise<void> {
   $('without-bar').hidden = true;
   const data = (await (await fetch(`lives/${seed}.json`)).json()) as LifeExport;
   const people = new Map(data.people.map((p) => [p.id, p]));
+  // A life that goes with a film: the people the film drew look the same here.
+  const looks = new Map<number, Look>();
+  const drawn = films().find((f) => f.life === seed);
+  if (drawn) {
+    for (const m of drawn.cast.values()) {
+      const id = m.key === drawn.you ? data.ego.id : data.people.find((p) => p.name.split(' ')[0] === m.name)?.id;
+      if (id !== undefined) looks.set(id, m.look);
+    }
+  }
+  chooseLooks(looks);
   const order = [...data.people].sort((a, b) => a.met - b.met || a.id - b.id);
   const angle = new Map(order.map((p, i) => [p.id, -Math.PI / 2 + (i / order.length) * Math.PI * 2]));
   const L = data.levels;
@@ -821,7 +845,7 @@ async function main(): Promise<void> {
       else if (ev.code === 'Space' || ev.code === 'ArrowRight' || ev.code === 'Enter') {
         ev.preventDefault();
         film.next();
-      } else if (ev.code === 'Escape') { film.stop(); showTitle(true); }
+      } else if (ev.code === 'Escape') { film.stop(); afterFilm(); }
       else if (ev.code === 'ArrowLeft') film.jump(-1, 0);
       else if (ev.code === 'BracketLeft') film.jump(0, -1);
       else if (ev.code === 'KeyM') film.toggleSound();

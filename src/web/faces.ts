@@ -132,8 +132,8 @@ export function drawFace(g: G, look: Look, st: FaceState): void {
     // Parted in the middle, wavy, in front of the ears.
     px(9, 3, 14, 4, hair); px(10, 2, 12, 1, hair);
     px(8, 6, 3, 12, hair); px(21, 6, 3, 12, hair);
-    px(11, 7, 3, 2, hair); px(18, 7, 3, 2, hair);
-    px(15, 4, 2, 4, skin);
+    px(10, 7, 5, 2, hair); px(17, 7, 5, 2, hair); px(11, 9, 3, 1, hair); px(18, 9, 3, 1, hair);
+    px(15, 5, 2, 4, skin);
     for (const [x, y] of [[8, 9], [22, 11], [9, 14], [21, 16], [12, 3], [19, 4]]) px(x, y, 2, 1, curl);
   } else if (hs === 1) { cap(); px(8, 6, 2, 12, hair); px(22, 6, 2, 12, hair); px(10, 7, 12, 1, hair); }
   else { cap(); px(10, 7, 12, 1, hair); }
