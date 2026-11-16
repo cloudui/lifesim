@@ -13,9 +13,11 @@ TITLE A tennis court, 2031 | Jason has brought someone
 PAUSE 3
 JASON (smile): Guys, this is Mei.
 CALVIN: How did you two meet?
-MEI: He walked up to me and said, "I see you like tennis."
+MEI: He walked up to me and said, [0.4]
+MEI (smile): "I see you like tennis."
 ERIC: Where were you?
-MEI: On a tennis court. Holding a racket.
+MEI: On a tennis court. [0.5]
+MEI: Holding a racket.
 EMOTE ERIC dots 4
 EMOTE CALVIN dots 4
 PAUSE 5
@@ -25,6 +27,7 @@ ERIC (smile): Enjoy your money while you still have it.
 JASON: Hmm. Coming from personal experience?
 EMOTE JASON ring 2.5
 PAUSE 2
+HOLD JASON phone
 JASON: Ah. One sec.
 LEAVE JASON right
 PAUSE 2

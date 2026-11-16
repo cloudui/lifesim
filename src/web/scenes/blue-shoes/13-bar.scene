@@ -17,7 +17,8 @@ JASON: Thirty's not that old.
 PAUSE 4
 JASON: I'm going back in.
 ERIC: To say what?
-JASON: I don't know. I'll think of something.
+JASON: I don't know. [0.6]
+JASON: I'll think of something.
 LEAVE JASON door
 PAUSE 8
 ENTER JASON door -10

@@ -6,45 +6,65 @@ year: 2026
 cast: JASON -12 sitting, ERIC 16 sitting
 city: 1
 props: balloons, plates
+music: quiet
 status: draft
 notes: Real: the party on the 19th, Eric flying out on the 20th, the birthday on the 21st. This is the scene the film is for.
 
 TITLE San Francisco, October 19, 2026 | Late, after the party
 PAUSE 4
-JASON: That was a pretty good time. I appreciate you for coming.
-ERIC: It was. I can't believe David made you a whole cake.
-JASON: Dang. And he bought another one, too. What a nice guy.
+JASON: That was a pretty good time. [0.6]
+JASON: I appreciate you for coming.
+ERIC: It was. [0.5]
+SHOW cake 5
+ERIC: I can't believe David made you a whole cake.
+JASON: Dang. And he bought another one, too. [0.6]
+JASON (smile): What a nice guy.
 PAUSE 4
 JASON: Is your flight tomorrow?
 ERIC: Yeah. I think it's 11pm.
-JASON: No shot man. How is it the end of October already.
+JASON: No shot man. [0.5]
+JASON: How is it the end of October already.
 ERIC (smile): Big twenty-four.
+HOLD JASON phone
 JASON: How old do you think I look in this picture?
-PAUSE 2.5
+SHOW photo 6 JASON
+PAUSE 3
 ERIC: Dang you look way younger here.
-JASON (sad): No, man. Where did all of the time go?
-ERIC: Bro, stop. You literally look exactly the same.
+JASON (sad): No, man. [0.6]
+JASON (sad): Where did all of the time go?
+ERIC: Bro, stop. [0.4]
+ERIC: You literally look exactly the same.
 JASON: There's no way, man.
+HOLD JASON none
 PAUSE 6
-ERIC: How do you feel about the last few weeks? You still going home Wednesday?
+ERIC: How do you feel about the last few weeks? [0.6]
+ERIC: You still going home Wednesday?
 JASON: You know, I'll figure it out tomorrow. [1.4]
-JASON: It was good. I appreciate you guys having me. The hills are crazy man. [1.2]
-JASON: It was a good time. Got to meet some people. Played some tennis.
+JASON: It was good. I appreciate you guys having me. [0.6]
+JASON: The hills are crazy man. [1.2]
+JASON: It was a good time. [0.5]
+JASON: Got to meet some people. Played some tennis.
 ERIC: No date or job yet.
-JASON: There's no way man. I swear the girls here are all taken.
-ERIC (smile): I'm just joking, man. How about that dance?
+JASON: There's no way man. [0.5]
+JASON: I swear the girls here are all taken.
+ERIC (smile): I'm just joking, man. [0.5]
+ERIC (smile): How about that dance?
 PAUSE 4
 ERIC: You know what I'll remember about this year? [1.6]
 ERIC: Not getting laid off. Not the offer. [1.4]
 ERIC: Waiting forty minutes for a court while you talk to a stranger about his racket.
 JASON: He did like tennis.
-ERIC: We won't have time like this forever. We'll be married or in different cities or have kids. [1.4]
+ERIC: We won't have time like this forever. [1]
+ERIC: We'll be married or in different cities or have kids. [1.4]
 ERIC: There honestly isn't much time for you visiting for a month like this to still be possible. [1.6]
 ERIC: We're waiting for the good times now, but we'll look back on this time as the good times. [2]
-JASON: You're so right, Eric. I really do appreciate you guys having me here.
-ERIC: This is the good part, Jason. You can't tell the good times while you're still in them.
+JASON: You're so right, Eric. [0.6]
+JASON: I really do appreciate you guys having me here.
+ERIC: This is the good part, Jason. [1.2]
+ERIC: You can't tell the good times while you're still in them.
 PAUSE 5
-JASON: I see. Is this the rain thing?
+JASON: I see. [0.8]
+JASON: Is this the rain thing?
 ERIC (smile): I told you so.
 JASON: Hmm. [1.8]
 JASON (smile): I did like the rain thing.

@@ -381,8 +381,8 @@ button.big:hover { filter: brightness(1.1); background: var(--accent); }
 .film-box[hidden] { display: none; }
 .film-box.you { flex-direction: row-reverse; }
 .film-box.you .film-words { text-align: right; }
-.film-face { width: 140px; height: 112px; overflow: hidden; flex: none; background: rgb(255 255 255 / 0.05); }
-.film-face canvas { margin-top: -21px; display: block; }
+.film-face { width: 128px; height: 104px; overflow: hidden; flex: none; background: rgb(255 255 255 / 0.06); }
+.film-face canvas { display: block; }
 .film-words { flex: 1; min-width: 0; }
 .film-name { color: var(--accent); text-transform: uppercase; letter-spacing: 0.14em; font-size: 20px; }
 .film-line { font-size: clamp(28px, 2.6vw, 40px); line-height: 1.1; margin-top: 4px; min-height: 2.2em; text-wrap: pretty; }
@@ -422,7 +422,9 @@ button.big:hover { filter: brightness(1.1); background: var(--accent); }
 .without-rows .changed { color: var(--text); }
 .without-rows b { color: #ffd166; font-weight: normal; }
 .without-note { margin-top: 4px; color: var(--text-3); font-size: 15px; }
-.film-sound { position: absolute; top: 10px; right: 120px; background: var(--panel); opacity: 0.55; font-size: 16px; }
+.film-sound { position: absolute; top: 10px; right: 104px; background: var(--panel); opacity: 0.55; display: inline-flex; align-items: center; justify-content: center; }
+.film-skip, .film-sound { height: 32px; box-sizing: border-box; }
+.film-sound { width: 40px; padding: 0; }
 .film-sound:hover { opacity: 1; }
 
 /* A card at the end of a scene: smaller than a title, over the scene as it goes dark. */
@@ -431,3 +433,11 @@ button.big:hover { filter: brightness(1.1); background: var(--accent); }
 /* Something that is not a person in "without them". */
 .film-card.thing { justify-content: flex-end; min-height: 104px; border: 1px dashed rgb(244 241 222 / 0.35); padding: 0 12px 8px; }
 .film .see[hidden] { display: none; }
+
+/* The bar along the bottom of the film: one piece per scene. */
+.film-scrub { position: absolute; left: 16px; right: 16px; bottom: 10px; height: 16px; display: flex; gap: 3px; align-items: center; opacity: 0.5; transition: opacity 0.2s; cursor: pointer; touch-action: none; }
+.film-scrub:hover { opacity: 1; }
+.film-scrub i { display: block; flex: 1 1 0; height: 6px; background: rgb(244 241 222 / 0.22); transition: height 0.15s; }
+.film-scrub:hover i { height: 10px; }
+.film-scrub i.now { background: rgb(244 241 222 / 0.36); }
+.film-scrub b { display: block; height: 100%; width: 0; background: var(--accent); pointer-events: none; }

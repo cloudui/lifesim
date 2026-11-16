@@ -4,7 +4,7 @@ with: JASON
 set: cafe outside
 year: 2026
 cast: MOMO -24 sitting, ERIC 24 sitting
-city: 0
+city: -1
 props: phone, tea
 status: draft
 notes: Assembled from true pieces. Calvin is on speaker from San Francisco.
@@ -13,16 +13,20 @@ TITLE Rockville, Maryland, October 22, 2026 | A tea shop. Calvin on speaker from
 PAUSE 3
 PHONE Calvin: He just left for the airport.
 ERIC: Did you drive him?
-PHONE Calvin: Nah, he took an uber. He told the driver, "I see you drive a Prius."
+PHONE Calvin: Nah, he took an uber. [0.5]
+PHONE Calvin: He told the driver, "I see you drive a Prius."
 ERIC (as JASON): "Ah. I see you drive a Prius."
 MOMO (smile): That's pretty good.
 ERIC: I've had four years.
 MOMO: Did he pick a place for his birthday dinner?
-PHONE Calvin: We had a party at Berek's house. We did eat dinner with Daniel and some guys a few days before.
+PHONE Calvin: We had a party at Berek's house. [0.5]
+PHONE Calvin: We did eat dinner with Daniel and some guys a few days before.
 MOMO: And?
 ERIC: We went back to some pho restaurant we had like a few weeks ago.
-MOMO (open): There's no way. Why does this guy always want pho.
-ERIC: He was very sure about it. I guess the portion sizes or something. [1.4]
+MOMO (open): There's no way. [0.5]
+MOMO: Why does this guy always want pho.
+ERIC: He was very sure about it. [0.5]
+ERIC: I guess the portion sizes or something. [1.4]
 ERIC (smile): At least he didn't randomly get up to take a phone call.
 EMOTE MOMO note 2
 EMOTE ERIC note 2

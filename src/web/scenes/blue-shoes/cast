@@ -1,17 +1,18 @@
 # The cast of a film written from scratch. Nothing here comes from the simulation.
-# KEY | name | born, looks and voice. style: short long bun cropped swoop spiky mop mullet.
+# KEY | name | born, looks and voice. style: short long bun cropped swoop spiky mop mullet fringe flat wavy.
+# glasses is the frame colour (heavy=yes for a thick frame). big=yes is a very large build.
 # tall is extra pixels of height (one is about three inches). voice is the pitch of their blip, in Hz.
 title: Blue Shoes
 about: A film about Eric and Jason
 you: ERIC
 city: 1
 
-ERIC     | Eric   | born=2002 tall=0 skin=#e8bd94 hair=#17161c style=swoop shirt=#3d5a80 pants=#2d3142 voice=196
-JASON    | Jason  | born=2002 tall=1 skin=#e8bd94 hair=#17161c style=spiky shirt=#f2f2f2 jacket=#27407a pants=#22252b shorts=yes voice=165
-MOMO     | Momo   | born=2002 tall=0 skin=#c99a6b hair=#1f1a17 style=mop shirt=#c44536 pants=#4f5d75 voice=233
-CALVIN   | Calvin | born=2002 tall=1 skin=#e8bd94 hair=#17161c style=mullet shirt=#8b8f98 pants=#1f2933 voice=147
+ERIC     | Eric   | born=2002 tall=0 skin=#e6b98e hair=#16151a style=fringe glasses=#c9a86a shirt=#22252b jacket=#f2f0e8 pants=#2d3142 voice=196
+JASON    | Jason  | born=2002 tall=1 skin=#e2b086 hair=#131217 style=flat shirt=#2f3440 jacket=#27407a pants=#22252b shorts=yes voice=165
+MOMO     | Momo   | born=2002 tall=0 skin=#c7996c hair=#17130f style=mop glasses=#101014 heavy=yes shirt=#3a3b40 pants=#1c1d21 voice=233
+CALVIN   | Calvin | born=2002 tall=1 skin=#e0ae84 hair=#1d1712 style=wavy shirt=#1c1d21 pants=#2d3142 voice=147
 EMILY    | Emily  | born=2002 tall=0 skin=#efc7a0 hair=#1f1a17 style=long shirt=#f2f2f2 pants=#5b4636 voice=330
 MEI      | Mei    | born=2004 tall=0 skin=#efc7a0 hair=#17161c style=bun shirt=#eda100 pants=#2d3142 voice=311
 STRANGER | Stranger | born=1995 tall=0 skin=#d39a6a hair=#4a2f1b style=short shirt=#5c946e pants=#2d3142 voice=208
-BIG1     | A very large man | born=1994 scale=1.3 skin=#d39a6a hair=#2b2118 style=cropped shirt=#22252b pants=#22252b shorts=yes voice=120
-BIG2     | Another one | born=1994 scale=1.25 skin=#eab98f hair=#4a2f1b style=cropped shirt=#c44536 pants=#2d3142 shorts=yes voice=120
+BIG1     | A very large man | born=1994 big=yes skin=#d39a6a hair=#2b2118 style=cropped shirt=#22252b pants=#22252b shorts=yes voice=120
+BIG2     | Another one | born=1994 big=yes tall=1 skin=#eab98f hair=#4a2f1b style=cropped shirt=#c44536 pants=#2d3142 shorts=yes voice=120

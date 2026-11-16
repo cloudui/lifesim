@@ -27,7 +27,8 @@ const PANTS = ['#2d3142', '#4f5d75', '#5b4636', '#1f2933'];
 export interface Look {
   skin: string;
   hair: string;
-  /** 0 short, 1 long, 2 bun, 3 cropped, 4 middle part with a swoop, 5 short and spiky, 6 a mop of curls, 7 permed mullet. */
+  /** 0 short, 1 long, 2 bun, 3 cropped, 4 middle part with a swoop, 5 short and spiky, 6 a mop of curls, 7 permed mullet,
+   * 8 a messy fringe, 9 short with a flat top, 10 wavy to the shoulders. */
   hairStyle: number;
   shirt: string;
   pants: string;
@@ -41,6 +42,11 @@ export interface Look {
   jacket?: string;
   /** Shoe colour, when it matters. */
   shoes?: string;
+  /** Glasses: the colour of the frame, and whether it is a heavy one. */
+  glasses?: string;
+  heavyGlasses?: boolean;
+  /** A very large build: wide shoulders, thick arms and legs. */
+  big?: boolean;
 }
 
 export function lookFor(id: number): Look {
@@ -116,6 +122,16 @@ function paint(g: CanvasRenderingContext2D, look: Look, outfit: Outfit, pose: Po
     px(8, legsTop, 4, 24 - legsTop, pants);
     if (bare) px(8, legsTop + 3, 4, 21 - legsTop, look.skin);
     px(8, 24, 5, 1, shoe);
+    if (look.big) {
+      // Two thick legs with a gap between them.
+      g.clearRect(6, legsTop + 2, 9, 24);
+      for (const x of [6, 11]) {
+        px(x, legsTop + 2, 3, 22 - legsTop, pants);
+        if (bare) px(x, legsTop + 4, 3, 20 - legsTop, look.skin);
+        px(x, 24, 4, 1, shoe);
+      }
+      px(6, legsTop, 8, 2, pants);
+    }
   }
 
   // Back arm, torso, front arm.
@@ -124,6 +140,14 @@ function paint(g: CanvasRenderingContext2D, look: Look, outfit: Outfit, pose: Po
   px(6 - swing, by + 14, 1, 1, look.skin);
   px(7, by + 8, 6, 7, shirt);
   if (jacket) { px(7, by + 8, 2, 7, jacket); px(11, by + 8, 2, 7, jacket); }
+  if (look.big) {
+    // A vest over a very wide chest, and bare arms as thick as legs.
+    px(5, by + 8, 10, 8, shirt);
+    px(8, by + 8, 4, 2, look.skin);
+    px(3 - swing, by + 8, 3, 7, look.skin);
+    px(14 + swing, by + 8, 3, 7, look.skin);
+    px(4, by + 7, 12, 1, look.skin);
+  }
   if (outfit === 'suit') {
     px(9, by + 8, 2, 4, '#f4f4f4');
     px(9, by + 8, 2, 1, '#c0392b');
@@ -168,9 +192,39 @@ function paint(g: CanvasRenderingContext2D, look: Look, outfit: Outfit, pose: Po
     px(5, by + 3, 2, 6, hair);
     px(4, by + 6, 1, 3, hair);
     for (const [x, y] of [[7, -1], [10, 0], [12, -1], [5, 4], [6, 7], [4, 7]]) px(x, by + y, 1, 1, curl);
+  } else if (look.hairStyle === 8) {
+    // A messy fringe down to the brows, with bits standing up.
+    px(7, by, 6, 2, hair);
+    px(6, by + 1, 1, 4, hair);
+    px(8, by + 2, 5, 1, hair);
+    px(9, by + 3, 1, 1, hair);
+    px(12, by + 3, 1, 1, hair);
+    for (const [x, y] of [[8, -1], [10, -2], [11, -1], [12, -1], [13, 0], [6, 0]]) px(x, by + y, 1, 1, hair);
+  } else if (look.hairStyle === 9) {
+    // Short and dense, flat on top, close at the sides.
+    px(7, by - 1, 6, 3, hair);
+    px(6, by, 1, 2, hair);
+    px(13, by, 1, 1, hair);
+    px(9, by + 2, 4, 1, hair);
+  } else if (look.hairStyle === 10) {
+    // Parted in the middle and wavy down to the shoulders.
+    px(7, by, 6, 2, hair);
+    px(5, by + 1, 2, 9, hair);
+    px(4, by + 4, 1, 5, hair);
+    px(13, by + 1, 1, 7, hair);
+    px(7, by + 2, 1, 2, hair);
+    px(10, by + 1, 1, 1, look.skin);
+    for (const [x, y] of [[5, 3], [4, 6], [6, 8], [13, 4], [8, 0]]) px(x, by + y, 1, 1, curl);
   } else {
     px(7, by, 6, 3, hair);
     px(6, by + 1, 1, 3, hair);
+  }
+  if (look.hairStyle === 6) { px(7, by - 3, 6, 1, hair); px(8, by + 2, 4, 1, hair); px(9, by - 3, 1, 1, curl); }
+  if (look.glasses) {
+    // A frame round both eyes, and an arm back to the ear.
+    for (const x of [9, 11, 13]) px(x, by + 4, 1, 1, look.glasses);
+    px(7, by + 4, 2, 1, look.glasses);
+    if (look.heavyGlasses) { px(9, by + 3, 5, 1, look.glasses); px(9, by + 5, 5, 1, look.glasses); }
   }
   if (look.hairStyle === 1) px(5, by + 1, 2, 8, hair);
   if (look.hairStyle === 2) px(5, by - 1, 3, 3, hair);

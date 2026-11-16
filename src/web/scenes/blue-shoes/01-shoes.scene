@@ -4,7 +4,7 @@ with: JASON
 set: car morning
 year: 2022
 cast: MOMO 13 sitting, ERIC -13 sitting
-city: 0
+city: -1
 wear: ERIC shoes=#2f8fff
 status: draft
 notes: Real. Fall 2022, the morning after the VSA camping trip. Momo is driving.
@@ -13,11 +13,14 @@ TITLE Maryland, fall 2022 | A Krispy Kreme car park, the morning after camping
 PAUSE 3
 MOMO: Somebody in the chat lost their shoes. [1.2]
 ERIC: At a campsite. How do you lose shoes at a campsite.
-MOMO: "Blue ones. I left them outside the orange tent." He sent a damn amazon link of the shoes.
-ERIC (smile): What a chump. Couldn't be me. I slept in the car.
+MOMO: "Blue ones. I left them outside the orange tent." [0.6]
+MOMO: He sent a damn amazon link of the shoes.
+ERIC (smile): What a chump. Couldn't be me. [0.5]
+ERIC (smile): I slept in the car.
 PAUSE 2
 EMOTE ERIC dots 4
-PAUSE 5
+SHOW shoes 6
+PAUSE 6
 ERIC: Momo. [1.4]
 MOMO: Bro. [1.2]
 ERIC (open): These aren't my shoes. [2]

@@ -38,6 +38,12 @@ export type Step = { line: number; flag?: string } & (
   | { t: 'face'; who: string; dir: Side | 'door' | 'auto' }
   /** A small sign over someone's head for a few seconds: z, dots, bang, ask, note, ring, heart. */
   | { t: 'emote'; who: string; glyph: string; s: number }
+  /** Something in their hand: phone, racket, cup, or none to put it away. */
+  | { t: 'hold'; who: string; item: string }
+  /** Sitting up, or slumped forward with their head down. */
+  | { t: 'pose'; who: string; pose: string }
+  /** A close-up over the scene for a few seconds: shoes, receipt, photo, cake. */
+  | { t: 'show'; name: string; s: number; who?: string }
   | { t: 'give' }
   | { t: 'drink'; who: string }
   /** The last words of the film, alone on the screen. {seen} and {led} are filled in for a simulated life. */
@@ -67,6 +73,8 @@ export interface FilmScene {
   props: string[];
   /** What people are wearing in this scene, where it differs from their usual: key -> look fields. */
   wear: Record<string, Partial<Look>>;
+  /** Music under the scene: warm, quiet, late, none, or the name of a file in public/music. */
+  music: string;
   status: string;
   notes: string;
   steps: Step[];
@@ -87,7 +95,7 @@ export interface Film {
   scenes: FilmScene[];
 }
 
-const STYLES: Record<string, number> = { short: 0, long: 1, bun: 2, cropped: 3, swoop: 4, spiky: 5, mop: 6, mullet: 7 };
+const STYLES: Record<string, number> = { short: 0, long: 1, bun: 2, cropped: 3, swoop: 4, spiky: 5, mop: 6, mullet: 7, fringe: 8, flat: 9, wavy: 10 };
 
 /** "shirt=#fff shorts=yes tall=1" -> look fields. */
 function lookFields(text: string): Partial<Look> & { born?: number; scale?: number; voice?: number } {
@@ -99,6 +107,8 @@ function lookFields(text: string): Partial<Look> & { born?: number; scale?: numb
     else if (k === 'shorts') out.shorts = v === 'yes';
     else if (k === 'tall' || k === 'born' || k === 'scale' || k === 'voice') out[k] = Number(v);
     else if (k === 'jacket' && v === 'none') out.jacket = undefined;
+    else if (k === 'glasses' && v === 'none') out.glasses = undefined;
+    else if (k === 'heavy' || k === 'big') out[k === 'heavy' ? 'heavyGlasses' : 'big'] = v === 'yes';
     else out[k] = v;
   }
   return out;
@@ -134,7 +144,7 @@ function parseCast(id: string, src: string): Film {
 function parse(file: string, src: string): FilmScene {
   const sc: FilmScene = {
     file, name: file, seed: -1, other: -1, otherName: '', film: '', set: 'pier', time: 'night', week: 0, year: 0, city: null,
-    places: [], props: [], wear: {}, status: 'draft', notes: '', steps: [], endLine: '', gone: [],
+    places: [], props: [], wear: {}, music: '', status: 'draft', notes: '', steps: [], endLine: '', gone: [],
   };
   let body = false;
   let flag: string | undefined;
@@ -178,6 +188,7 @@ function parse(file: string, src: string): FilmScene {
       else if (hk === 'props') sc.props = v.split(',').map((x) => x.trim()).filter(Boolean);
       else if (hk === 'wearing') sc.wear.THEM = { shirt: v };
       else if (hk === 'wear') for (const part of v.split(',')) { const [who, ...rest] = part.trim().split(/\s+/); sc.wear[who.toUpperCase()] = lookFields(rest.join(' ')); }
+      else if (hk === 'music') sc.music = v;
       else if (hk === 'status') sc.status = v;
       else if (hk === 'notes') sc.notes = v;
       return;
@@ -207,6 +218,9 @@ function parse(file: string, src: string): FilmScene {
     else if (head === 'STAND') push({ t: 'stand', who: who('THEM') });
     else if (head === 'FACE') push({ t: 'face', who: who('THEM'), dir: words.includes('auto') ? 'auto' : side('left') });
     else if (head === 'EMOTE') push({ t: 'emote', who: who('THEM'), glyph: words[2] ?? 'dots', s: Number(words[3]) || 2.5 });
+    else if (head === 'HOLD') push({ t: 'hold', who: who('THEM'), item: words[2] ?? 'none' });
+    else if (head === 'POSE') push({ t: 'pose', who: who('THEM'), pose: words[2] ?? 'up' });
+    else if (head === 'SHOW') push({ t: 'show', name: words[1] ?? '', s: Number(words[2]) || 5, who: words[3]?.toUpperCase() });
     else if (head === 'GIVE') push({ t: 'give' });
     else if (head === 'DRINK') push({ t: 'drink', who: who('THEM') });
     else if (head === 'WITHOUT') sc.endLine = rest;

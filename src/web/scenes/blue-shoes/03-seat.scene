@@ -4,7 +4,7 @@ with: JASON
 set: hall day
 year: 2023
 cast: JASON -14 sitting, ERIC 62 standing
-city: 0
+city: -1
 props: laptop
 status: draft
 notes: Real. The big lecture hall in Iribe, algorithms. Which semester is a guess.
@@ -12,9 +12,11 @@ notes: Real. The big lecture hall in Iribe, algorithms. Which semester is a gues
 TITLE College Park, 2023 | Algorithms, a few weeks into the semester
 PAUSE 2.5
 ERIC: Is this taken? [1.2]
-JASON: Ah. It's you. The shoe guy.
+JASON: Ah. It's you. [0.5]
+JASON (smile): The shoe guy.
 ERIC: I was hoping you'd forgotten.
-JASON: No, no. They were comfortable. I still think about it sometimes.
+JASON: No, no. They were comfortable. [0.6]
+JASON: I still think about it sometimes.
 WALK ERIC 10
 SIT ERIC
 PAUSE 1.5
@@ -27,6 +29,8 @@ ERIC: I've kind of been playing chess the whole class.
 JASON: Ah, I see. I'm kind of lost.
 ERIC: It's ok we can figure it out on the homework.
 PAUSE 2
+POSE JASON slump
+PAUSE 1
 EMOTE JASON z 9
 PAUSE 7
 CARD The rest of the semester, next to each other. Not always the same seats.

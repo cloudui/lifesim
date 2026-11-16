@@ -4,8 +4,8 @@ with: JASON
 set: sofa night
 year: 2024
 cast: ERIC 44 standing, CALVIN away, JASON away
-city: 0
-props: balloons, plates
+city: -1
+props: balloons, plates, crowd
 status: draft
 notes: Real. Eric's birthday, May 2024. Jason brings Calvin.
 
@@ -14,9 +14,11 @@ PAUSE 2
 ENTER CALVIN left -30 &
 PAUSE 0.8
 ENTER JASON left 2
-JASON (smile): Happy birthday, Eric. Looking big.
+JASON (smile): Happy birthday, Eric. [0.5]
+JASON (smile): Looking big.
 ERIC: No shot, I lost like fifteen pounds this semester.
-JASON: Ah. Looking lean, then. Oh yeah, this is Calvin. We play volleyball together.
+JASON: Ah. Looking lean, then. [0.8]
+JASON: Oh yeah, this is Calvin. We play volleyball together.
 CALVIN: I was told there'd be some drinks.
 ERIC (smile): "There are drinks" is probably underselling it a bit.
 JASON (smile): That's what I like to hear.

@@ -4,7 +4,7 @@ with: JASON
 set: steps morning
 year: 2027
 cast: JASON -12 standing, ERIC 22 standing
-city: 0
+city: -1
 props: car
 status: draft
 notes: Invented. Jason takes a job and moves out of Cumberland.
@@ -12,13 +12,18 @@ notes: Invented. Jason takes a job and moves out of Cumberland.
 TITLE Cumberland, Maryland, 2027 | A car packed to the roof
 PAUSE 3
 JASON: Ah. You came all the way out here.
-ERIC: You drove two and a half hours for dinner for two years. I'm still behind.
-JASON: Mom packed food for the drive. It's a four-hour drive. There's enough for a week.
+ERIC: You drove two and a half hours for dinner for two years. [0.6]
+ERIC (smile): I'm still behind.
+JASON: Mom packed food for the drive. It's a four-hour drive. [0.6]
+JASON: There's enough for a week.
 PAUSE 4
-JASON: I almost didn't take it. I had three tabs open for a month.
-ERIC: I know. I was on the phone for most of that month.
+JASON: I almost didn't take it. [0.6]
+JASON: I had three tabs open for a month.
+ERIC: I know. [0.4]
+ERIC: I was on the phone for most of that month.
 JASON: Hmm. Yeah. [1.6]
-JASON (sad): I can't believe I'm twenty-five. I'm so old, man.
+JASON: I can't believe I'm twenty-five. [0.6]
+JASON (sad): I'm so old, man.
 ERIC: You said that like five years ago.
 JASON: I know. It's crazy.
 PAUSE 2

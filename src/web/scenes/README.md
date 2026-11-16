@@ -22,6 +22,7 @@ city: 1                   which skyline: 0 New York, 1 San Francisco, 2 Chicago
 props: bottles            things the set draws; see the list below
 wearing: #8b8f98          a simulated life: the other person's shirt colour
 wear: ERIC shoes=#2f8fff shorts=yes, JASON jacket=none    what differs from the cast file in this scene
+music: quiet              warm | quiet | late | none, or the name of an .mp3 in public/music (default: warm)
 status: draft             draft | reviewed
 notes: anything for the review list
 
@@ -40,6 +41,9 @@ ENTER MOMO right 50 &     "&" at the end of a move: do not wait for it
 SIT ERIC                  also STAND ERIC
 FACE JASON right          left | right | auto (auto: towards whoever is speaking, or the nearest person)
 EMOTE JASON z 8           a sign over their head for some seconds: z dots bang ask note ring heart
+HOLD JASON phone          something in their hand: phone | racket | cup | none
+POSE JASON slump          sitting with their head down; POSE JASON up to undo
+SHOW shoes 6              a close-up over the scene for some seconds: shoes | receipt | cake | photo (SHOW photo 6 JASON)
 GIVE                      a simulated life: they hand you a bottle
 DRINK them                or: DRINK you
 CARD A line over the scene as it goes dark, to close it.
@@ -51,6 +55,8 @@ END Last words.           for a simulated life, {seen} and {led} are filled in a
 
 In a simulated-life scene the short forms still work: `ENTER`, `SIT` and `THEM:` mean the other person, `LEAVE you`.
 
-Sets: `pier` (night | dusk), `steps` (dusk | morning | night; props ball, boxes, car, breath), `sofa` (props balloons, plates, chair, blanket), `car` (a car park, seen through the windscreen), `camp`, `hall` (a lecture hall; prop laptop), `checkout`, `campus` (rain | awning), `street` (outside the gym), `hill`, `courts` (day | dusk; props bench2, rackets, players), `bar`, `cafe` (inside | outside; props laptops, cups, phone, tea). They are drawn in `../sets.ts`.
+`city: -1` is a town with no skyline: apartment blocks in a window, hills behind a house.
+
+Sets: `pier` (night | dusk), `steps` (dusk | morning | night; props ball, boxes, car, breath), `tower` (the foot of a high-rise at night; prop breath), `sofa` (props balloons, plates, chair, blanket, crowd), `car` (a car park, seen through the windscreen), `camp`, `hall` (a lecture hall; prop laptop), `checkout` (prop people), `campus` (rain | awning), `street` (outside the gym; prop people), `hill`, `courts` (day | dusk; props bench2, rackets, players), `bar`, `cafe` (inside | outside; props laptops, cups, phone, tea, people). They are drawn in `../sets.ts`.
 
 Review: open `?seed=7&scene&review`, or `?film=blue-shoes&review` (add `&scene=3` to start at the third). The file and line being played are shown top left; `[` and `]` jump between scenes, left and right arrows between lines.

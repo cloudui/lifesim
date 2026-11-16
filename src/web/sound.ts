@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 // Sound for the film, made in the browser: there are no audio files.
 //
 //   ambience  a bed of filtered noise per set: water at the pier, a room, a street
@@ -41,6 +42,7 @@ export function setMuted(m: boolean): void {
   muted = m;
   try { localStorage.setItem('film-muted', m ? '1' : '0'); } catch { /* private window */ }
   if (ac && master) master.gain.setTargetAtTime(m ? 0 : 1, ac.currentTime, 0.05);
+  if (tune) tune.muted = m;
 }
 
 /** Four seconds of noise, looped: brown-ish for water and rooms, white for rain. */
@@ -130,7 +132,79 @@ export function blip(pitch: number, letter: string, soft = false): void {
   o.stop(now + 0.08);
 }
 
-/** Leaving the film: let the bed fade out. */
+// ------------------------------------------------------------------ music
+//
+// Either a tune made here (a slow arpeggio over four chords, with a bass note under each), or a
+// file: `music: name` in a scene plays public/music/name.mp3 if `name` is not one of the tunes below.
+
+interface Tune { bpm: number; chords: number[][]; wave: OscillatorType; gain: number; pattern: number[] }
+const TUNES: Record<string, Tune> = {
+  // C, G, A minor, F: the daytime one.
+  warm: { bpm: 84, chords: [[60, 64, 67], [55, 62, 67], [57, 60, 64], [53, 60, 65]], wave: 'triangle', gain: 0.03, pattern: [0, 1, 2, 1, 0, 2, 1, 2] },
+  // A minor, F, C, G, slower and softer: late at night.
+  quiet: { bpm: 60, chords: [[57, 60, 64], [53, 57, 60], [48, 55, 64], [55, 59, 62]], wave: 'sine', gain: 0.035, pattern: [0, -1, 1, -1, 2, -1, 1, -1] },
+  // The daytime one again, much slower: forty years on.
+  late: { bpm: 52, chords: [[60, 64, 67], [55, 62, 67], [57, 60, 64], [53, 60, 65]], wave: 'sine', gain: 0.035, pattern: [0, -1, 2, -1, 1, -1, 2, -1] },
+};
+let tuneKind = 'none';
+let tuneTimer: number | undefined;
+let tuneGain: GainNode | null = null;
+let tune: HTMLAudioElement | null = null;
+
+/** Change the music under the film: one of the tunes above, a file name, or 'none'. */
+export function music(kind: string): void {
+  if (kind === tuneKind) return;
+  tuneKind = kind;
+  window.clearInterval(tuneTimer);
+  if (tuneGain && ac) { const old = tuneGain; old.gain.setTargetAtTime(0, ac.currentTime, 0.5); window.setTimeout(() => old.disconnect(), 3000); tuneGain = null; }
+  if (tune) { tune.pause(); tune = null; }
+  if (kind === 'none') return;
+  const def = TUNES[kind];
+  if (!def) {
+    tune = new Audio(`${import.meta.env.BASE_URL}music/${kind}.mp3`);
+    tune.loop = true;
+    tune.volume = 0.35;
+    tune.muted = muted;
+    void tune.play().catch(() => { /* no such file, or not allowed yet */ });
+    return;
+  }
+  const c = context();
+  if (!c || !master) return;
+  const out = c.createGain();
+  out.gain.value = 0;
+  out.gain.setTargetAtTime(1, c.currentTime, 2);
+  out.connect(master);
+  tuneGain = out;
+  const half = 30 / def.bpm;
+  let n = 0;
+  let next = c.currentTime + 0.3;
+  const note = (midi: number, at: number, len: number, vol: number, wave: OscillatorType) => {
+    const o = c.createOscillator();
+    o.type = wave;
+    o.frequency.value = 440 * 2 ** ((midi - 69) / 12);
+    const e = c.createGain();
+    e.gain.setValueAtTime(0, at);
+    e.gain.linearRampToValueAtTime(vol, at + 0.03);
+    e.gain.exponentialRampToValueAtTime(0.0005, at + len);
+    o.connect(e).connect(out);
+    o.start(at);
+    o.stop(at + len + 0.05);
+  };
+  tuneTimer = window.setInterval(() => {
+    // Schedule a little ahead of the clock, so the timer's jitter is not heard.
+    while (next < c.currentTime + 0.6) {
+      const chord = def.chords[Math.floor(n / 8) % def.chords.length];
+      const k = def.pattern[n % 8];
+      if (k >= 0) note(chord[k] + (n % 16 === 12 ? 12 : 0), next, half * 3, def.gain, def.wave);
+      if (n % 8 === 0) note(chord[0] - 24, next, half * 8, def.gain * 1.3, 'sine');
+      next += half;
+      n++;
+    }
+  }, 200);
+}
+
+/** Leaving the film: let the bed and the music fade out. */
 export function quiet(): void {
   ambience('none');
+  music('none');
 }

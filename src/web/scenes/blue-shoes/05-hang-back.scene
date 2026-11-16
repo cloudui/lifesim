@@ -1,10 +1,10 @@
 name: Hang back
 film: blue-shoes
 with: JASON
-set: steps night
+set: tower night
 year: 2023
 cast: JASON -14 standing, MOMO 12 standing, EMILY 52 standing, ERIC 36 standing
-city: 0
+city: -1
 props: breath
 status: draft
 notes: Real, as far as I understand it. November 2023, after barbecue at Jason's.
@@ -23,9 +23,11 @@ FACE JASON right
 FACE MOMO right
 PAUSE 4
 JASON: Ah. [1.6]
-JASON: I see. I kind of forgot he was doing that today.
+JASON: I see. [0.6]
+JASON: I kind of forgot he was doing that today.
 PAUSE 6
-JASON: At my place, though. That's kind of nice.
+JASON: At my place, though. [0.6]
+JASON (smile): That's kind of nice.
 MOMO: Ok.
 PAUSE 2
 EMOTE EMILY heart 4

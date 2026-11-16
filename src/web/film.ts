@@ -6,7 +6,9 @@
 // Between scenes the years pass as a single card. Scripts are written by hand per life
 // (scenes.ts and the files in scenes/).
 
-import { drawGlyph, drawPerson, GLYPHS, lookFor, mix, portrait, portraitOf, type Look } from './pixel';
+import { drawFace, FACE_H, FACE_W } from './faces';
+import { drawInsert, INSERT_W } from './inserts';
+import { drawGlyph, drawPerson, GLYPHS, lookFor, portrait, portraitOf, type Look } from './pixel';
 import type { Film, FilmScene, Mood, Side, Stance, Step } from './scenes';
 import { drawBack, drawFront, soundOf, stageOf, standInFront, type Stage } from './sets';
 import * as sound from './sound';
@@ -30,8 +32,6 @@ export interface FilmPlayer {
 
 /** Characters of dialogue typed per second. Slower than reading speed on purpose. */
 const TYPE_RATE = 24;
-/** The face in the dialogue box is drawn this many rows down, so tall hair fits. */
-const FY = 2;
 
 type G = CanvasRenderingContext2D;
 interface Actor {
@@ -47,6 +47,8 @@ interface Actor {
   bottle: boolean;
   sip: number;
   emote: { glyph: string; t0: number; s: number } | null;
+  hold: string;
+  slump: boolean;
 }
 /** Someone in a scene, from the simulated life or from a film's own cast. */
 interface Person { id: number; name: string; look: Look; born: number; scale: number; voice: number }
@@ -57,6 +59,7 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
     <div class="film-title"><div class="film-title-text"></div><div class="film-title-sub"></div></div>
     <button class="film-skip" type="button" title="Leave the film">Leave ▸▸</button>
     <button class="film-sound" type="button" title="Sound on or off (M)"></button>
+    <div class="film-scrub" title="Jump to a scene"></div>
     <div class="film-hint">it plays by itself · space or click to go sooner</div>
     <div class="film-review" hidden></div>
     <div class="film-box" hidden>
@@ -94,7 +97,14 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
   let faceMood: Mood = 'flat';
   let faceWho = '';
   const soundBtn = root.querySelector<HTMLElement>('.film-sound')!;
-  const showSound = () => { soundBtn.textContent = sound.isMuted() ? 'Sound: off' : 'Sound: on'; };
+  const ICON = '<svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M2 6h3l4-3v10l-4-3H2z"/>';
+  const showSound = () => {
+    soundBtn.innerHTML = sound.isMuted()
+      ? `${ICON}<path d="M11 6l4 4m0-4l-4 4" stroke="currentColor" stroke-width="1.6" fill="none"/></svg>`
+      : `${ICON}<path d="M11 5.5c1.2 1.4 1.2 3.6 0 5M12.8 3.8c2.2 2.4 2.2 6 0 8.4" stroke="currentColor" stroke-width="1.4" fill="none"/></svg>`;
+    soundBtn.setAttribute('aria-label', sound.isMuted() ? 'Sound is off' : 'Sound is on');
+  };
+  const scrubEl = root.querySelector<HTMLElement>('.film-scrub')!;
   showSound();
   soundBtn.addEventListener('click', () => { sound.unlock(); sound.setMuted(!sound.isMuted()); showSound(); });
   const scratch = document.createElement('canvas');
@@ -124,6 +134,10 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
   /** After the last step of a scene: fading out, then the card for the years between scenes. */
   let after: 'none' | 'fade' | 'between' = 'none';
   let afterT = 0;
+  /** 0 to 1: the picture coming up out of black, which waits until the title card has gone. */
+  let shown = 0;
+  /** A close-up over the scene. */
+  let insert: { name: string; t0: number; s: number; who?: string } | null = null;
 
   const view = () => ctx.view();
   /** The person the film is told from, and the one it is about. */
@@ -191,7 +205,8 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
   /** What a step does to the people in the scene. `now` skips the walking, for jumping about in review. */
   function act(s: Step, st: Stage, now: boolean): void {
     if (s.t === 'give') { const y = actorOf(youKey()); if (y) y.bottle = true; return; }
-    if (s.t !== 'enter' && s.t !== 'leave' && s.t !== 'walk' && s.t !== 'sit' && s.t !== 'stand' && s.t !== 'face' && s.t !== 'emote' && s.t !== 'drink') return;
+    if (s.t === 'show') { if (!now) insert = { name: s.name, t0: clock, s: s.s, who: s.who }; return; }
+    if (s.t !== 'enter' && s.t !== 'leave' && s.t !== 'walk' && s.t !== 'sit' && s.t !== 'stand' && s.t !== 'face' && s.t !== 'emote' && s.t !== 'drink' && s.t !== 'hold' && s.t !== 'pose') return;
     const a = actorOf(s.who);
     if (!a) return;
     if (s.t === 'enter') {
@@ -213,6 +228,8 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
     else if (s.t === 'face') a.face = s.dir === 'auto' || s.dir === 'door' ? null : s.dir;
     else if (s.t === 'emote') { if (!now) a.emote = { glyph: s.glyph, t0: clock, s: s.s }; }
     else if (s.t === 'drink') { if (!now) a.sip = clock; }
+    else if (s.t === 'hold') a.hold = s.item === 'none' ? '' : s.item;
+    else if (s.t === 'pose') a.slump = s.pose === 'slump';
   }
 
   function begin(k: number): void {
@@ -249,6 +266,7 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
       endEl.hidden = false;
     } else act(s, st, false);
     showReview();
+    showScrub();
   }
 
   function card(el: HTMLCanvasElement | null, name: string, note: string, main: boolean): HTMLElement {
@@ -307,47 +325,69 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
     seeBtn.hidden = true;
   }
 
-  /** A face for the dialogue box: the same sprite, in what they are wearing, at the age they are. */
+  /** A face for the dialogue box: a larger portrait of the same person, at the age they are. */
   function faceFor(): HTMLCanvasElement {
     const c = document.createElement('canvas');
-    c.width = 20;
-    c.height = 26;
-    c.style.width = '140px';
-    c.style.height = '182px';
+    c.width = FACE_W;
+    c.height = FACE_H;
+    c.style.width = `${FACE_W * 4}px`;
+    c.style.height = `${FACE_H * 4}px`;
     c.style.imageRendering = 'pixelated';
     return c;
   }
-  /** Redraw the face with its mood: a mouth, brows when sad, and a blink now and then. */
+  /** Redraw the face: its expression, a blink now and then, and the mouth moving while the line is typed. */
   function paintFace(): void {
     if (!faceCanvas || !faceWho) return;
-    const fg = faceCanvas.getContext('2d')!;
     const p = person(faceWho);
-    const lk = { ...p.look, tall: 0 };
-    fg.clearRect(0, 0, 20, 26);
-    drawPerson(fg, 10, 25 + FY, lk, { pose: 'stand', frame: 0, outfit: 'casual', grey: greyOf(p) });
-    const dark = mix(lk.skin, '#3a1f1a', 0.6);
-    // The sprite's eyes are at (10, 7) and (12, 7), and its chin is row 9, before the shift down.
-    const ey = 7 + FY;
-    const blink = (clock + p.id * 0.37) % 4.2 < 0.14;
-    if (blink || faceMood === 'shut') {
-      fg.fillStyle = lk.skin;
-      fg.fillRect(10, ey, 1, 1);
-      fg.fillRect(12, ey, 1, 1);
-      fg.fillStyle = dark;
-      if (faceMood === 'shut') { fg.fillRect(10, ey, 1, 1); fg.fillRect(12, ey, 1, 1); }
-    }
-    fg.fillStyle = dark;
-    if (faceMood === 'smile') {
-      fg.fillRect(10, ey + 2, 3, 1);
-      fg.fillRect(12, ey + 1, 1, 1);
-    } else if (faceMood === 'sad') {
-      fg.fillRect(11, ey + 2, 1, 1);
-      fg.fillStyle = mix(lk.skin, '#3a1f1a', 0.35);
-      fg.fillRect(9, ey - 1, 1, 1);
-      fg.fillRect(12, ey - 2, 1, 1);
-    } else if (faceMood === 'open') fg.fillRect(11, ey + 1, 2, 2);
-    else fg.fillRect(11, ey + 2, 2, 1);
+    const s = scene!.steps[i];
+    const typing = s.t === 'say' && t * TYPE_RATE < s.text.length;
+    drawFace(faceCanvas.getContext('2d')!, p.look, {
+      mood: faceMood,
+      blink: (clock + p.id * 0.37) % 4.2 < 0.14,
+      talking: typing && Math.floor(clock * 7) % 2 === 0,
+      grey: greyOf(p),
+    });
   }
+
+  /** The bar along the bottom: one piece per scene, filled as far as the film has got. */
+  function buildScrub(): void {
+    scrubEl.replaceChildren(...list.map((sc, k) => {
+      const seg = document.createElement('i');
+      seg.style.flexGrow = String(Math.max(4, sc.steps.length));
+      seg.title = `${k + 1}. ${sc.name}`;
+      seg.append(document.createElement('b'));
+      return seg;
+    }));
+  }
+  function showScrub(): void {
+    [...scrubEl.children].forEach((seg, k) => {
+      const fill = seg.firstElementChild as HTMLElement;
+      fill.style.width = `${k < si ? 100 : k > si ? 0 : (100 * (i + 1)) / scene!.steps.length}%`;
+      seg.classList.toggle('now', k === si);
+    });
+  }
+  /** Go to a step of a scene, with everyone where the script would have them by then. */
+  function seek(k: number, to: number): void {
+    titleEl.classList.remove('on');
+    open(Math.min(list.length - 1, Math.max(0, k)));
+    const target = Math.min(scene!.steps.length - 1, Math.max(0, to));
+    if (target === 0) return;
+    clock = 3;
+    shown = 1;
+    const st = stage();
+    for (let n = 0; n < target; n++) act(scene!.steps[n], st, true);
+    begin(target);
+  }
+  function scrubTo(ev: PointerEvent): void {
+    const segs = [...scrubEl.children] as HTMLElement[];
+    const k = segs.findIndex((seg) => { const r = seg.getBoundingClientRect(); return ev.clientX >= r.left && ev.clientX <= r.right; });
+    if (k < 0) return;
+    const r = segs[k].getBoundingClientRect();
+    const to = Math.floor(((ev.clientX - r.left) / r.width) * list[k].steps.length);
+    if (k !== si || to !== i) seek(k, to);
+  }
+  scrubEl.addEventListener('pointerdown', (ev) => { sound.unlock(); scrubEl.setPointerCapture(ev.pointerId); scrubTo(ev); });
+  scrubEl.addEventListener('pointermove', (ev) => { if (ev.buttons & 1) scrubTo(ev); });
 
   function open(k: number): void {
     si = k;
@@ -355,9 +395,12 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
     const st = (() => { resize(); return stage(); })();
     clock = 0;
     veil = 0;
+    shown = 0;
+    insert = null;
     after = 'none';
     faceKey = '';
     sound.ambience(soundOf(scene.set, scene.time));
+    sound.music(scene.music || (film ? 'warm' : 'none'));
     endEl.hidden = true;
     titleEl.classList.remove('card');
     const bottles = scene.props.includes('bottles');
@@ -366,7 +409,7 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
       const home = p.x ?? st.spots[p.who] ?? 0;
       // Someone who walks in with two bottles hands one over; someone already sitting has their own.
       const bottle = bottles && (p.who === 'THEM' || (p.stance !== 'away' && !awayAtStart));
-      return { key: p.who, mode: p.stance, off: home, to: home, home, leaving: false, face: null, bottle, sip: -9, emote: null };
+      return { key: p.who, mode: p.stance, off: home, to: home, home, leaving: false, face: null, bottle, sip: -9, emote: null, hold: '', slump: false };
     });
     begin(0);
   }
@@ -442,21 +485,40 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
       sg.beginPath();
       sg.rect(0, 0, 48, 40);
       sg.clip();
-      drawPerson(sg, 24, 47 - breathe, lk, { pose: 'stand', frame: 0, outfit: 'casual', grey: greyOf(p), flip: left });
+      // Slumped: forward and down, head on the desk.
+      drawPerson(sg, 24 + (a.slump ? (left ? -3 : 3) : 0), 47 - breathe + (a.slump ? 5 : 0), lk, { pose: 'stand', frame: 0, outfit: 'casual', grey: greyOf(p), flip: left });
       sg.restore();
       if (st.legs > 0) {
         const hang = scene!.set === 'pier' || scene!.set === 'steps';
-        const swing = hang && Math.sin(clock * 1.3 + k * 1.7) > 0.7 ? 1 : 0;
         const len = Math.round(st.legs / s);
-        const leg = (lx: number, n: number) => {
+        if (hang) {
+          // On an edge, facing out: legs straight down, one of them swinging.
+          const swing = Math.sin(clock * 1.3 + k * 1.7) > 0.7 ? 1 : 0;
+          const leg = (lx: number, n: number) => {
+            sg.fillStyle = lk.pants;
+            sg.fillRect(lx, 40, 2, n);
+            if (lk.shorts) { sg.fillStyle = lk.skin; sg.fillRect(lx, 42, 2, n - 2); }
+            sg.fillStyle = lk.shoes ?? '#15151a';
+            sg.fillRect(lx, 40 + n, 3, 1);
+          };
+          leg(21, len);
+          leg(25 + (k ? swing : 0), len - (k ? 0 : swing));
+        } else {
+          // On a seat, from the side: thighs forward, knees bent, feet on the floor.
+          const d = left ? -1 : 1;
+          const knee = d > 0 ? 29 : 17;
+          const shinOf = (kx: number, dim: boolean) => {
+            sg.fillStyle = lk.shorts ? lk.skin : lk.pants;
+            sg.fillRect(kx, 40, 2, len);
+            sg.fillStyle = lk.shoes ?? '#15151a';
+            sg.fillRect(d > 0 ? kx : kx - 1, 40 + len, 3, 1);
+            if (dim) { sg.fillStyle = 'rgba(0,0,0,0.3)'; sg.fillRect(kx - 1, 40, 4, len + 1); }
+          };
+          shinOf(knee - d * 3, true);
           sg.fillStyle = lk.pants;
-          sg.fillRect(lx, 40, 2, n);
-          if (lk.shorts) { sg.fillStyle = lk.skin; sg.fillRect(lx, 42, 2, n - 2); }
-          sg.fillStyle = lk.shoes ?? '#15151a';
-          sg.fillRect(lx, 40 + n, 3, 1);
-        };
-        leg(21, len);
-        leg(25 + (k ? swing : 0), len - (k ? 0 : swing));
+          sg.fillRect(d > 0 ? 23 : 17, 37, 8, 3);
+          shinOf(knee, false);
+        }
       }
       if (a.bottle) {
         const up = clock - a.sip >= 0 && clock - a.sip < 1.6;
@@ -471,6 +533,7 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
           sg.fillRect(bx, 33, 1, 2);
         }
       }
+      held(a, left, 33);
       g.drawImage(scratch, 0, 0, 48, 56, Math.round(x - 24 * s), Math.round(st.seatY - 40 * s), Math.round(48 * s), Math.round(56 * s));
     } else {
       drawPerson(sg, 24, 40, lk, { pose: a.mode === 'walking' ? 'walk' : 'stand', frame: Math.floor(clock * 6), outfit: 'casual', grey: greyOf(p), flip: left });
@@ -479,14 +542,38 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
         sg.fillRect(29, 31, 2, 4);
         sg.fillRect(32, 31, 2, 4);
       }
+      held(a, left, 27);
       g.drawImage(scratch, 0, 0, 48, 56, Math.round(x - 24 * s), Math.round(st.standY - 40 * s), Math.round(48 * s), Math.round(56 * s));
+    }
+  }
+  /** Something in the front hand, drawn on the scratch canvas at hand height `y`. */
+  function held(a: Actor, left: boolean, y: number): void {
+    if (!a.hold) return;
+    const d = left ? -1 : 1;
+    const hx = 24 + d * 7;
+    if (a.hold === 'phone') {
+      sg.fillStyle = '#15151a';
+      sg.fillRect(hx, y - 2, 2, 4);
+      sg.fillStyle = Math.floor(clock * 2) % 5 ? '#9fd0e6' : '#cfe9f5';
+      sg.fillRect(hx + (d > 0 ? 0 : 1), y - 1, 1, 2);
+    } else if (a.hold === 'racket') {
+      sg.fillStyle = '#2a2d33';
+      sg.fillRect(hx, y - 3, 1, 7);
+      sg.fillStyle = '#c44536';
+      sg.fillRect(hx - 2, y - 11, 5, 8);
+      sg.fillStyle = '#e9e2d2';
+      sg.fillRect(hx - 1, y - 10, 3, 6);
+    } else if (a.hold === 'cup') {
+      sg.fillStyle = '#c44536';
+      sg.fillRect(hx, y, 2, 3);
     }
   }
   /** The top of someone's head on the canvas. */
   function headTop(a: Actor, st: Stage): number {
     const p = person(a.key);
     const s = sizeOf(p);
-    const hair = p.look.hairStyle === 6 ? 2 : p.look.hairStyle === 5 || p.look.hairStyle === 7 ? 1 : 0;
+    const hs = p.look.hairStyle;
+    const hair = hs === 6 ? 3 : hs === 8 ? 2 : hs === 5 || hs === 7 || hs === 9 ? 1 : 0;
     return Math.round((a.mode === 'sitting' ? st.seatY - 15 * s : st.standY - 22 * s) - (p.look.tall ?? 0) - hair);
   }
 
@@ -541,7 +628,12 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
       g.fillRect(k, 0, 2, H);
       g.fillRect(W - k - 2, 0, 2, H);
     }
-    const v = Math.max(clock < 2.5 ? 1 - clock / 2.5 : 0, veil);
+    if (insert) {
+      const age = clock - insert.t0;
+      if (age > insert.s) insert = null;
+      else drawInsert(g, insert.name, Math.round(W / 2 - INSERT_W / 2), 12, clock, Math.min(1, age * 3, (insert.s - age) * 2), insert.who ? { ...person(insert.who).look, glasses: undefined } : undefined);
+    }
+    const v = Math.max(1 - shown, veil);
     if (v > 0) {
       g.fillStyle = `rgba(4,6,12,${v})`;
       g.fillRect(0, 0, W, H);
@@ -584,13 +676,15 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
       }
     } else {
       const s = step();
+      // The picture stays black behind a title card, and comes up once it has gone.
+      shown = s.t === 'title' ? 0 : Math.min(1, shown + dt / 2);
       if (s.t === 'card') veil = Math.min(0.86, veil + dt * 0.7);
       else if (s.t !== 'end' && veil > 0) veil = Math.max(0, veil - dt * 0.8);
       if (s.t === 'title' || s.t === 'card') { if (t >= s.hold) advance(); }
       else if (s.t === 'pause') { if (t >= s.s) advance(); }
       else if (s.t === 'enter' || s.t === 'leave' || s.t === 'walk') { if (!moving(s)) advance(); }
       else if (s.t === 'sit' || s.t === 'stand' || s.t === 'give') { if (t >= (film ? 0.7 : 1.2)) advance(); }
-      else if (s.t === 'drink' || s.t === 'face' || s.t === 'emote') advance();
+      else if (s.t === 'drink' || s.t === 'face' || s.t === 'emote' || s.t === 'hold' || s.t === 'pose' || s.t === 'show') advance();
       else if (s.t === 'say') {
         const n = Math.min(s.text.length, Math.floor(t * TYPE_RATE));
         if (n !== typed) {
@@ -622,7 +716,7 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
 
   root.addEventListener('click', (ev) => {
     sound.unlock();
-    if ((ev.target as HTMLElement).closest('button')) return;
+    if ((ev.target as HTMLElement).closest('button, .film-scrub')) return;
     next();
   });
   function leave(): void {
@@ -649,6 +743,7 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
       on_ = true;
       root.hidden = false;
       titleEl.classList.remove('on');
+      buildScrub();
       open(Math.min(scenes.length - 1, Math.max(0, from)));
     },
     stop() { sound.quiet(); on_ = false; root.hidden = true; },
@@ -657,17 +752,8 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
     toggleSound() { sound.unlock(); sound.setMuted(!sound.isMuted()); showSound(); },
     jump(lines, scenes) {
       if (!on_ || !scene) return;
-      titleEl.classList.remove('on');
-      if (scenes) open(Math.min(list.length - 1, Math.max(0, si + scenes)));
-      else {
-        // Going to a line: put everyone where the script would have them by then.
-        const target = Math.min(scene.steps.length - 1, Math.max(0, i + lines));
-        open(si);
-        clock = 3;
-        const st = stage();
-        for (let k = 0; k < target; k++) act(scene.steps[k], st, true);
-        begin(target);
-      }
+      if (scenes) seek(si + scenes, 0);
+      else seek(si, i + lines);
     },
     resize: () => { if (on_) resize(); },
   };

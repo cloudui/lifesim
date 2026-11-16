@@ -2,6 +2,19 @@
 
 What was added, when, and why, newest first. `AGENTS.md` describes the project as it is now; this file is the record of how it got there. Add an entry whenever a change alters how the simulation behaves or what the page shows. Commit ids are in brackets.
 
+## 2026-11-16: Blue Shoes, after the owner's first watch
+
+The owner watched it and sent a list, with photos of the four friends.
+
+- The cast was redrawn from the photos: glasses (new), a messy fringe, a flat top, wavy hair to the shoulders, a taller mop, and Momo only in black and grey. The very large men are a wide build drawn at native size, where before they were a stretched sprite that smeared.
+- The dialogue box has a proper portrait (32 by 26) in place of the body sprite blown up, because the mouths looked wrong. It talks while the line types.
+- Title cards hold on black and the picture comes up after. The sound button is an icon the size of Leave. A scrubber along the bottom jumps between scenes.
+- People sitting on a seat are drawn from the side with bent knees, and the sofa's cushions are behind them.
+- Sets: Mission Dolores has a row of courts, the park and low houses, and no bridge. Jason's place is the foot of a high-rise among apartment blocks. Maryland scenes no longer show a city skyline. Background people at the party, the café (with a counter and other tables), the checkout and on Castro Street.
+- Close-ups (`SHOW`), things in hands (`HOLD`) and a head on the desk (`POSE`).
+- Long lines were split into consecutive boxes where there was a beat.
+- Music: three synthesized tunes, or an .mp3 from `public/music/`. Not listened to.
+
 ## 2026-11-16: Blue Shoes, a film about real people
 
 - The owner approved the script in `drafts/jason-film.md` and asked for it to be built. It is nineteen scene files and a cast file in `src/web/scenes/blue-shoes/`, opened from the title screen ("Films about real people") or with `?film=blue-shoes`. The words are the owner's draft; two typos were fixed ("made", "visiting"). The last line of the film (END) is not from the draft and is flagged.

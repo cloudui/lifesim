@@ -6,7 +6,7 @@
 // add it to SETS with its stage, and name it in a scene's `set:` line.
 
 import { drawSkyline } from './backdrop';
-import { hash, mix } from './pixel';
+import { drawPerson, hash, lookFor, mix } from './pixel';
 import type { Ambience } from './sound';
 
 type G = CanvasRenderingContext2D;
@@ -72,6 +72,26 @@ function tree(x: number, ground: number, h: number, c: string): void {
   px(x - h * 0.3, ground - h, h * 0.6, h * 0.62, c);
   px(x - h * 0.2, ground - h - 3, h * 0.4, 4, c);
   px(x - h * 0.3 + 2, ground - h + 3, 3, 2, mix(c, '#ffffff', 0.12));
+}
+/** Someone in the background: an invented person, standing about, sometimes with a cup. */
+function folk(x: number, y: number, seed: number, o: { flip?: boolean; cup?: boolean; walk?: boolean; alpha?: number } = {}): void {
+  const bob = !o.walk && Math.sin(clock * 0.8 + seed * 1.7) > 0.93 ? 1 : 0;
+  drawPerson(g, x, y - bob, lookFor(seed * 31 + 5), { pose: o.walk ? 'walk' : 'stand', frame: Math.floor(clock * 5 + seed), outfit: 'casual', flip: o.flip, alpha: o.alpha ?? 1 });
+  if (o.cup) {
+    const sip = (clock * 0.25 + seed * 0.37) % 1 < 0.08;
+    px(x + (o.flip ? -7 : 6), y - (sip ? 16 : 11) - bob, 2, 3, seed % 2 ? '#c44536' : '#8a5a2a');
+  }
+}
+/** Apartment blocks with some windows lit, for a town that is not a city. */
+function blocks(x0: number, x1: number, ground: number, night: boolean): void {
+  for (let k = 0, x = x0; x < x1; k++) {
+    const w = 26 + (hash(k, 11) % 22);
+    const h = 26 + (hash(k, 12) % 34);
+    const c = night ? ['#141a30', '#18203a', '#10162a'][k % 3] : ['#a8b4c4', '#c9b8a8', '#b8c4d0'][k % 3];
+    px(x, ground - h, w, h, c);
+    for (let r = 4; r < h - 4; r += 7) for (let q = 3; q < w - 4; q += 6) px(x + q, ground - h + r, 3, 4, night ? (hash(k * 97 + r, q) % 3 ? '#0c1020' : '#ffd98a') : '#6f8296');
+    x += w + 2;
+  }
 }
 const DAY = ['#4f9fe0', '#6ab0e8', '#88c2ef', '#a9d4f5', '#cfe7fa'];
 const DUSK = ['#2b2d5b', '#5b4a7a', '#b5657a', '#f0a07a', '#ffd9a0'];
@@ -146,7 +166,12 @@ function steps(st: Stage): void {
   const cx = st.cx;
   sky(morning ? ['#3f8fd8', '#5aa6e6', '#7fbdf0', '#a8d4f6', '#d4ebfb'] : night ? NIGHT : DUSK, ground);
   if (!morning) stars(Math.round(ground * 0.3), night ? 1 : 0.5);
-  drawSkyline(g, city, morning ? '#8fb0cf' : night ? '#0c1228' : '#4a3a5e', morning ? 0 : night ? 0.7 : 0.35, 300, W, ground - 6);
+  if (city >= 0) drawSkyline(g, city, morning ? '#8fb0cf' : night ? '#0c1228' : '#4a3a5e', morning ? 0 : night ? 0.7 : 0.35, 300, W, ground - 6);
+  else {
+    // A small town: hills and trees behind the house.
+    for (let x = 0; x < W; x++) px(x, ground - 50 - Math.sin(x / 37) * 10 - Math.sin(x / 13) * 3, 1, 60, morning ? '#7fa58a' : '#2a2a48');
+    for (let k = 0; k < W / 30 + 1; k++) tree(k * 30 + (hash(k, 8) % 12), ground, 34 + (hash(k, 9) % 16), morning ? (k % 2 ? '#4f8a55' : '#437a4c') : '#20243e');
+  }
   const tint = (c: string) => (morning ? c : night ? mix(c, '#141428', 0.62) : mix(c, '#3a2a4a', 0.42));
   // The house.
   const hx = cx - 92;
@@ -234,7 +259,8 @@ function sofa(st: Stage): void {
   g.beginPath(); g.rect(wx, wy, ww, wh); g.clip();
   px(wx, wy, ww, wh, '#0a1024');
   stars(wy + wh * 0.5);
-  drawSkyline(g, city, '#0c1228', 0.95, 40, W, wy + wh + 14);
+  if (city >= 0) drawSkyline(g, city, '#0c1228', 0.95, 40, W, wy + wh + 14);
+  else blocks(wx - 6, wx + ww, wy + wh, true);
   g.restore();
   for (const [x, y, w, h] of [[wx - 2, wy - 2, ww + 4, 2], [wx - 2, wy + wh, ww + 4, 3], [wx - 2, wy, 2, wh], [wx + ww, wy, 2, wh], [wx + ww / 2, wy, 2, wh]] as const) px(x, y, w, h, '#4a3d52');
   // A floor lamp and its pool of light.
@@ -252,6 +278,12 @@ function sofa(st: Stage): void {
       px(bx - 2, by + 1, 2, 2, mix(c, '#ffffff', 0.4));
     }
   }
+  if (props.includes('crowd')) {
+    // A party: people standing about behind the sofa and by the window, talking over drinks.
+    const spots = [-96, -80, -28, -12, 10, 28, 74, 90, 112, 128, 150];
+    spots.forEach((dx, k) => { if (cx + dx > 6 && cx + dx < W - 6) folk(cx + dx, floor - 5 + (k % 3), k + 3, { flip: k % 2 === 1, cup: k % 3 !== 2 }); });
+    px(0, floor - 4, W, 4, 'rgba(25,21,29,0.35)');
+  }
   // A rug, and the sofa's back and arms. The seat goes on after the people.
   px(cx - 50, floor + 5, 104, 8, '#3d2f3f');
   px(cx - 50, floor + 5, 104, 1, '#55415a');
@@ -266,6 +298,7 @@ function sofa(st: Stage): void {
     px(cx + 52, st.seatY - 8, 6, 17, '#435b4d');
     px(cx + 80, st.seatY - 8, 6, 17, '#435b4d');
   }
+  sofaSeat(st);
   if (props.includes('plates')) {
     // A low table with what is left of a party.
     px(cx - 20, floor + 1, 44, 3, '#6a4f3a');
@@ -276,7 +309,8 @@ function sofa(st: Stage): void {
     px(cx - 3, floor - 3, 3, 2, '#eda100');
   }
 }
-function sofaFront(st: Stage): void {
+/** The seat cushions: behind the people, so that their legs lie over them. */
+function sofaSeat(st: Stage): void {
   const cx = st.cx;
   px(cx - 36, st.seatY, 74, 5, '#6b567c');
   px(cx - 36, st.seatY, 74, 1, '#8a72a0');
@@ -286,6 +320,9 @@ function sofaFront(st: Stage): void {
     px(cx + 58, st.seatY, 22, 1, '#74977f');
     px(cx + 58, st.seatY + 5, 22, 3, '#3a4f43');
   }
+}
+function sofaFront(st: Stage): void {
+  const cx = st.cx;
   if (props.includes('blanket')) {
     px(cx - 30, st.seatY - 5, 34, 11, '#7fa3b8');
     px(cx - 30, st.seatY - 5, 34, 1, '#a3c2d3');
@@ -295,6 +332,59 @@ function sofaFront(st: Stage): void {
 }
 
 // ------------------------------------------------------------------ new places
+
+/** The foot of a high-rise apartment building in a college town, at night, with other blocks around it. */
+function tower(st: Stage): void {
+  const ground = st.standY;
+  const cx = st.cx;
+  sky(NIGHT, ground);
+  stars(Math.round(ground * 0.5));
+  blocks(-10, W + 10, ground, true);
+  for (let k = 0; k < 4; k++) tree(cx - 150 + k * 96 + (hash(k, 4) % 20), ground, 30 + (hash(k, 5) % 12), '#141c2e');
+  // The tower: it goes up out of the picture, a balcony to every floor.
+  const tx = cx - 78;
+  const tw = 132;
+  px(tx, 0, tw, ground, '#2a2c3c');
+  px(tx, 0, 3, ground, '#34374a');
+  px(tx + tw - 3, 0, 3, ground, '#1f2130');
+  for (let y = ground - 52; y > -8; y -= 12) {
+    px(tx + 3, y, tw - 6, 2, '#3d4056');
+    for (let k = 0; k < 7; k++) {
+      const lit = hash(k, y + 400) % 5 < 2;
+      px(tx + 8 + k * 18, y - 8, 10, 7, lit ? '#ffd98a' : '#14162a');
+      if (lit && hash(k, y) % 3 === 0) px(tx + 11 + k * 18, y - 6, 3, 5, '#c9a45a');
+    }
+  }
+  // The entrance: a canopy, glass doors, light on the path.
+  px(tx + 3, ground - 44, tw - 6, 44, '#232536');
+  px(cx - 40, ground - 46, 68, 4, '#4a4d66');
+  px(cx - 38, ground - 42, 1, 42, '#4a4d66');
+  px(cx + 25, ground - 42, 1, 42, '#4a4d66');
+  px(cx - 28, ground - 36, 44, 36, '#ffdf9e');
+  px(cx - 28, ground - 36, 44, 36, 'rgba(60,70,100,0.25)');
+  px(cx - 7, ground - 36, 2, 36, '#232536');
+  px(cx - 28, ground - 22, 44, 1, 'rgba(35,37,54,0.5)');
+  px(cx - 18, ground - 30, 6, 14, 'rgba(120,90,60,0.5)');
+  glow(cx - 6, ground - 26, 44, '255,217,138', 0.03);
+  for (const x of [cx - 52, cx + 30]) { px(x, ground - 8, 12, 8, '#3a3d50'); px(x + 1, ground - 15, 10, 8, '#1f3a2c'); }
+  px(0, ground, W, 4, '#55586a');
+  px(0, ground + 4, W, H - ground, '#2a2c38');
+  px(cx - 32, ground, 56, 4, 'rgba(255,217,138,0.16)');
+  for (let x = 0; x < W; x += 30) px(x, ground + 22, 14, 1, '#4a4c58');
+  // A lamp down the path, and bikes locked to a rack.
+  const lx = cx + 118;
+  px(lx, ground - 52, 2, 52, '#15171f');
+  px(lx - 4, ground - 54, 8, 2, '#15171f');
+  px(lx - 3, ground - 52, 5, 2, '#ffd9a0');
+  glow(lx, ground - 48, 30, '255,196,110', 0.035);
+  px(lx - 24, ground, 50, 4, 'rgba(255,196,110,0.10)');
+  for (const x of [cx - 120, cx - 104]) {
+    px(x, ground - 7, 6, 6, '#15171f'); px(x + 1, ground - 6, 4, 4, '#2a2c3c');
+    px(x + 9, ground - 7, 6, 6, '#15171f'); px(x + 10, ground - 6, 4, 4, '#2a2c3c');
+    px(x + 3, ground - 10, 9, 1, x % 2 ? '#c44536' : '#3d7ab8');
+    px(x + 3, ground - 12, 1, 3, '#8a8f98');
+  }
+}
 
 /** A car seen from the front, in a doughnut shop's car park. The people are behind the windscreen. */
 function car(st: Stage): void {
@@ -476,6 +566,11 @@ function checkout(st: Stage): void {
     px(x + 1, ground - 3, 4, 3, '#22252b');
     px(x + 22, ground - 3, 4, 3, '#22252b');
   }
+  if (props.includes('people')) {
+    folk(cx + 100, ground - 3, 41, { flip: true });
+    folk(cx - 146, ground, 42, { cup: false });
+    px(cx - 141, ground - 12, 7, 6, '#c8102e');
+  }
   // The counter, the belt and the till.
   px(cx + 26, ground - 22, 84, 22, '#6b6f78');
   px(cx + 26, ground - 24, 60, 3, '#22252b');
@@ -596,6 +691,13 @@ function street(st: Stage): void {
   px(0, ground, W, 5, '#8f8c88');
   px(0, ground, W, 1, '#a9a6a0');
   px(0, ground + 5, W, H - ground, '#3f4149');
+  if (props.includes('people')) {
+    // People going by on the pavement.
+    const span = W + 60;
+    folk(((clock * 13) % span) - 30, ground - 1, 51, { walk: true, alpha: 0.9 });
+    folk(span - 30 - ((clock * 10 + 140) % span), ground - 1, 52, { walk: true, flip: true, alpha: 0.9 });
+    folk(((clock * 9 + 260) % span) - 30, ground - 1, 53, { walk: true, alpha: 0.9 });
+  }
   ['#e4572e', '#eda100', '#f6e05e', '#1baf7a', '#2a78d6', '#9b5de5'].forEach((c, k) => px(cx - 150 + k * 7, ground + 7, 6, H, mix(c, '#3f4149', 0.35)));
 }
 
@@ -651,32 +753,47 @@ function courts(st: Stage): void {
   const tint = (c: string) => (dusk ? mix(c, '#4a2f4a', 0.38) : c);
   sky(dusk ? DUSK : DAY, ground);
   if (dusk) stars(Math.round(ground * 0.2), 0.4);
-  drawSkyline(g, city, dusk ? '#4a3a5e' : '#9db8d4', dusk ? 0.5 : 0, 120, W, ground - 44);
-  for (let k = 0; k < W / 40 + 1; k++) tree(k * 40 + (hash(k, 2) % 14), ground - 44, 26 + (hash(k, 3) % 12), tint(k % 2 ? '#4f8a55' : '#437a4c'));
+  // The park rising behind, and the low painted houses of the Mission along its edge.
+  for (let x = 0; x < W; x++) px(x, ground - 84 - Math.sin((x + 30) / 70) * 12 - Math.sin(x / 23) * 2, 1, 60, tint('#7fb06a'));
+  for (let k = 0, x = -6; x < W; k++) {
+    const w = 22 + (hash(k, 21) % 10);
+    const h = 18 + (hash(k, 22) % 10);
+    const c = tint(['#e6c9a8', '#c9d8e6', '#e6b8b0', '#d8e0b8', '#d0c0e0'][k % 5]);
+    px(x, ground - 46 - h, w, h, c);
+    px(x - 1, ground - 48 - h, w + 2, 3, tint('#8a6a5a'));
+    for (let q = 3; q < w - 4; q += 7) px(x + q, ground - 42 - h + 4, 4, 5, dusk && hash(k, q) % 2 ? '#ffd98a' : tint('#5a6f86'));
+    x += w + 1;
+  }
+  for (let k = 0; k < W / 46 + 1; k++) tree(k * 46 + (hash(k, 2) % 14), ground - 44, 22 + (hash(k, 3) % 10), tint(k % 2 ? '#4f8a55' : '#437a4c'));
   // Two palms.
-  for (const x of [cx - 128, cx + 140]) {
+  for (const x of [cx - 150, cx + 152]) {
     px(x, ground - 96, 2, 56, tint('#6a5238'));
     for (const [dx, dy, w] of [[-9, 0, 10], [1, 0, 10], [-7, -3, 8], [1, -3, 8], [-4, 2, 4], [2, 2, 4]] as const) px(x + dx, ground - 98 + dy, w, 2, tint('#3f7a48'));
   }
-  // The court.
+  // The courts: a row of them, side by side.
   const top = ground - 46;
   px(0, top, W, 40, tint('#3f8a63'));
-  px(cx - 132, top + 6, 264, 28, tint('#3b7fb0'));
-  for (const [x, y, w, h] of [[cx - 132, top + 6, 264, 1], [cx - 132, top + 33, 264, 1], [cx - 132, top + 6, 1, 28], [cx + 131, top + 6, 1, 28], [cx - 66, top + 12, 132, 1], [cx - 66, top + 27, 132, 1], [cx - 66, top + 12, 1, 16], [cx + 65, top + 12, 1, 16], [cx - 66, top + 19, 132, 1]] as const) px(x, y, w, h, tint('#f4f4f4'));
-  px(cx - 1, top + 2, 2, 34, tint('#e8e8e8'));
-  for (let y = top + 4; y < top + 34; y += 2) px(cx - 1, y, 2, 1, 'rgba(0,0,0,0.25)');
-  px(cx - 2, top, 4, 3, tint('#55504a'));
+  for (let c0 = cx - 134 - 140 * 2; c0 < W; c0 += 140) {
+    const mid = c0 + 64;
+    px(c0, top + 6, 128, 28, tint('#3b7fb0'));
+    for (const [x, y, w, h] of [[c0, top + 6, 128, 1], [c0, top + 33, 128, 1], [c0, top + 6, 1, 28], [c0 + 127, top + 6, 1, 28], [c0 + 30, top + 12, 68, 1], [c0 + 30, top + 27, 68, 1], [c0 + 30, top + 12, 1, 16], [c0 + 97, top + 12, 1, 16], [c0 + 30, top + 19, 68, 1]] as const) px(x, y, w, h, tint('#f4f4f4'));
+    px(mid - 1, top + 2, 2, 34, tint('#e8e8e8'));
+    for (let y = top + 4; y < top + 34; y += 2) px(mid - 1, y, 2, 1, 'rgba(0,0,0,0.25)');
+    px(mid - 2, top, 4, 3, tint('#55504a'));
+  }
   if (props.includes('players')) {
-    // Whoever has the court.
-    const sw = Math.sin(clock * 2.2);
-    for (const [x, c] of [[cx - 86 + sw * 10, '#f2f2f2'], [cx + 78 - sw * 8, '#eda100']] as const) {
-      px(x, top + 10, 4, 4, tint('#d39a6a'));
-      px(x - 1, top + 14, 6, 7, tint(c));
-      px(x, top + 21, 4, 5, tint('#2d3142'));
-      px(x + (x < cx ? 5 : -3), top + 12, 2, 4, tint('#c44536'));
+    // Whoever has the courts.
+    for (const [c0, seed] of [[cx - 134, 0], [cx + 6, 1.7]] as const) {
+      const sw = Math.sin(clock * 2.2 + seed);
+      for (const [x, c] of [[c0 + 22 + sw * 8, '#f2f2f2'], [c0 + 104 - sw * 7, seed ? '#9b5de5' : '#eda100']] as const) {
+        px(x, top + 10, 4, 4, tint('#d39a6a'));
+        px(x - 1, top + 14, 6, 7, tint(c));
+        px(x, top + 21, 4, 5, tint('#2d3142'));
+        px(x + (x < c0 + 64 ? 5 : -3), top + 12, 2, 4, tint('#c44536'));
+      }
+      const bt = (clock * 0.55 + seed) % 1;
+      px(c0 + 26 + (bt < 0.5 ? bt * 2 : 2 - bt * 2) * 76, top + 14 - Math.sin(bt * Math.PI * 2) ** 2 * 9, 2, 2, '#e6f24a');
     }
-    const bt = (clock * 0.55) % 1;
-    px(cx - 80 + (bt < 0.5 ? bt * 2 : 2 - bt * 2) * 156, top + 14 - Math.sin(bt * Math.PI * 2) ** 2 * 9, 2, 2, '#e6f24a');
   }
   // The fence, and the path in front of it.
   px(0, ground - 6, W, 6, tint('#b9b6b0'));
@@ -806,6 +923,30 @@ function cafe(st: Stage): void {
     px(0, ground, W, H - ground, '#2a211d');
     for (let x = 6; x < W; x += 24) px(x, ground, 1, H - ground, '#33291f');
     px(0, ground, W, 2, '#4a3a30');
+    if (props.includes('people')) {
+      // The counter where you order, someone behind it, and a menu on the wall.
+      const bx = cx - 158;
+      px(bx - 2, ground - 76, 40, 22, '#1c1612');
+      for (let r = 0; r < 4; r++) px(bx + 2, ground - 72 + r * 4, 12 + ((r * 5) % 14), 1, '#e9c98a');
+      folk(bx + 14, ground - 4, 61, {});
+      px(bx - 10, ground - 26, 58, 26, '#5b4028');
+      px(bx - 12, ground - 28, 62, 3, '#c9a06a');
+      px(bx + 30, ground - 40, 12, 12, '#9aa0aa');
+      px(bx + 33, ground - 37, 6, 4, '#22252b');
+      px(bx - 6, ground - 36, 12, 8, '#bfe3f2');
+      for (let k = 0; k < 3; k++) px(bx - 4 + k * 4, ground - 33, 2, 3, ['#e9c98a', '#f2a7c0', '#7a4a2a'][k]);
+      folk(bx + 62, ground, 62, { flip: true, cup: true });
+      // Other tables, other laptops.
+      for (const [dx, seed] of [[84, 63], [128, 64]] as const) {
+        const tx = cx + dx;
+        if (tx > W - 10) continue;
+        folk(tx - 8, ground - 1, seed, {});
+        px(tx - 12, st.seatY - 5, 22, 3, '#c9a06a');
+        px(tx - 2, st.seatY - 2, 3, ground - st.seatY + 2, '#6a4f3a');
+        px(tx - 1, st.seatY - 11, 7, 6, '#c9ccd4');
+        px(tx - 11, st.seatY + 1, 8, ground - st.seatY - 1, '#2a211d');
+      }
+    }
   }
   // Two chairs.
   for (const s of [-1, 1]) {
@@ -863,6 +1004,7 @@ const SETS: Record<string, SetDef> = {
   },
   steps: { stage: (W, H) => at(W, H, 0.5, 0.74, 18, 7, { spots: { YOU: 9, THEM: -11 } }), back: steps, sound: () => 'street' },
   sofa: { stage: (W, H) => at(W, H, 0.4, 0.72, 9, 8, { spots: { YOU: 11, THEM: -10 } }), back: sofa, front: sofaFront, standInFront: true, sound: () => 'room' },
+  tower: { stage: (W, H) => at(W, H, 0.5, 0.74, 9, 8), back: tower, sound: () => 'street' },
   car: { stage: (W, H) => at(W, H, 0.5, 0.74, 23, 0), back: car, front: carFront, sound: () => 'street' },
   camp: { stage: (W, H) => at(W, H, 0.5, 0.74, 9, 8), back: camp, sound: () => 'street' },
   hall: { stage: (W, H) => { const seatY = Math.round(H * 0.6); return { cx: Math.round(W * 0.46), seatY, standY: seatY + 3, legs: 0, door: 0, spots: {} }; }, back: hall, front: hallFront, sound: () => 'room' },

@@ -7,6 +7,7 @@ cast: JASON -12 sitting, ERIC 12 sitting
 city: 1
 props: rackets
 wear: ERIC shoes=#2f8fff
+music: late
 status: draft
 notes: Invented. Both are sixty-four. The last line of the film and the END line are mine and want checking.
 
@@ -16,14 +17,17 @@ JASON (smile): Looking big, Eric.
 ERIC: I'm sixty-three.
 JASON: Ah. Still.
 PAUSE 6
-JASON: I used to think that was my worst year. The couch. The laptop. Nobody writing back. [1.6]
+JASON: I used to think that was my worst year. [1]
+JASON: The couch. The laptop. Nobody writing back. [1.6]
 ERIC: And?
 JASON (sad): I'd give a lot for one Tuesday of it.
 PAUSE 5
-JASON: We were so young, man. And I went around telling everybody I was old.
+JASON: We were so young, man. [1]
+JASON: And I went around telling everybody I was old.
 ERIC: Every day.
 JASON: Hmm. Somebody should have told me.
-ERIC: I told you. At H Mart. And in the rain. And the night before I flew out.
+ERIC: I told you. [0.6]
+ERIC: At H Mart. And in the rain. And the night before I flew out.
 JASON: Ah. The rain thing.
 ERIC (as JASON): "Hmm. I see."
 JASON: I still don't sound like that.
@@ -31,14 +35,17 @@ PAUSE 2
 EMOTE JASON ring 2.5
 PAUSE 1.5
 STAND JASON
+HOLD JASON phone
 JASON: Ah. One sec.
 LEAVE JASON right
 PAUSE 12
+HOLD JASON none
 ENTER JASON right -12
 SIT JASON
 PAUSE 3
 EMOTE JASON dots 3
-PAUSE 3
+SHOW shoes 6
+PAUSE 4
 JASON: Are those my shoes? [1.6]
 ERIC (smile): They've been mine since 2022.
 JASON: I see. [2]
