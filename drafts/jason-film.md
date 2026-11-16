@@ -304,67 +304,65 @@ JASON: No no. I already asked Bereketab. We can play some doubles.
 
 ## 8. Castro Street
 
-**Castro Street, outside the gym. October 2025. Early evening.** Eric is walking home from work with a backpack. Jason comes out of the gym door with a towel round his neck. *(real: the gym, Berek's free trial, Eric using it too, the lines. The meeting on the street is assembled.)*
+**Castro Street, outside the gym. October 2025. Early evening.** Eric is walking home from work with a backpack. Jason comes out of the Fitness SF (we can show logo) gym door with a towel round his neck. *(real: the gym, Berek's free trial, Eric using it too, the lines. The meeting on the street is assembled.)*
 
 JASON: Oh. Eric.
 
-ERIC: Jason? What are you doing here?
+ERIC: Oh bro. Why are you here? 
 
 JASON: Berek got me a free trial. It's like two months.
 
-ERIC: You don't live here.
+ERIC: You don't live here. Isn't it like a thousand dollars? 
 
-JASON: Yeah. It's a pretty good deal, though.
+JASON: The prices here are crazy, man. 
+
+ERIC: At least you're getting the gains in. 
 
 *(Quiet.)*
 
 JASON: Looking big, Eric.
 
-ERIC: I've been sitting at a desk all day. You're the one who just lifted. You're twice my size.
+ERIC: I haven't even gone to the gym in a week. Your arms are literally twice my size.
 
-JASON: What do you mean? I'm small, man.
+JASON: What do you mean? I'm small, man. Have you seen your back? 
 
 *(Two very large men come out of the door behind him. Jason watches them all the way down the street.)*
 
-JASON: Everyone in there is huge.
+JASON: I can't believe how huge some of these guys are. 
 
 ERIC: You're huge.
 
-JASON: No. Look at that guy. That guy's arm is my leg.
+JASON: No. Look at that guy. That guy's arm is the size of my leg.
 
-ERIC: You could go and ask him what he eats.
+ERIC: You could go ask him for his squat routine. 
 
-JASON: Hmm. No. I'm good.
+JASON: Hmm. Nah. I think I'm good.
 
-ERIC: You talk to every stranger in this city.
+ERIC: You talk to every stranger in this city. I'm sure he'd love to talk to you. 
 
-JASON: Yeah, but not that one.
+JASON: You know, I think I'll pass. 
 
 *(Quiet.)*
 
-JASON: You should come tomorrow. I can bring a guest.
+JASON: You should use this membership when I go back. 
 
-ERIC: On Berek's free trial.
+ERIC: You think we look the same. 
 
-JASON: Yeah.
-
-ERIC: So I'd be the guest of a guest.
-
-JASON: Hmm. I think that's fine.
+JASON: You'll be repping the Chen family name. 
 
 **A block later.** The bottom of the hill up 15th Street towards Corona Heights.
 
-JASON: How far is it?
+JASON: How much further?
 
 ERIC: Ten minutes.
 
-JASON: Hmm. Uphill?
+JASON: Ten minutes? Uphill? 
 
-ERIC: I live on a hill. Everything is uphill.
+ERIC: We live on a hill. Everything is uphill.
 
-JASON: We could get a car.
+JASON: I can't believe these hills man. And, there are tweakers here? 
 
-ERIC: You just lifted for two hours. You played tennis for three.
+ERIC: You just lifted for two hours. You played tennis for another.
 
 JASON: That's different. That's sports.
 
@@ -374,7 +372,7 @@ JASON: I see.
 
 *(Quiet.)*
 
-JASON: Is there a Chipotle on the way?
+JASON: You want some pho? 
 
 ## 9. Court three
 
