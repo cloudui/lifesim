@@ -15,7 +15,7 @@ A draft to read and correct before anything is built. Fifteen short scenes, abou
 
 Jason says he is old. He has said it since he was 22. The last scene is the two of you at 64, when he finally knows what young was. The thread that carries it is Eric's: "if we run in the rain you'll remember it." He says it about a run in 2024, and it turns out to be about the whole stretch Jason thinks he is wasting.
 
-Threads that come back: the blue shoes, "the rain thing", "I'm so old", "I see you like tennis", the phone call he walks off to take, the two-and-a-half-hour drive.
+Threads that come back: the blue shoes, "the rain thing", "I'm so old", "I see you like tennis", the phone call he walks off to take, Chipotle, the two-and-a-half-hour drive.
 
 ## Still to check
 
@@ -112,7 +112,11 @@ JASON: Yeah. It felt right in the store.
 
 *(Quiet. Sizzling.)*
 
-JASON: This is really good, though.
+JASON: That was a lot of money, though.
+
+ERIC: You chose it. All of it.
+
+JASON: Yeah. Hmm. It's really good.
 
 ERIC: It's incredible. I'm furious.
 
@@ -161,6 +165,16 @@ JASON: That was actually really fun.
 ERIC: Memorable.
 
 JASON: Yeah. Memorable.
+
+JASON: Pho 75?
+
+MOMO: No.
+
+JASON: It's right there, though.
+
+MOMO: We went on Tuesday.
+
+JASON: Ah. But it's raining. It's pho weather.
 
 *(Quiet.)*
 
@@ -263,6 +277,30 @@ JASON: Hmm. No. I'm good.
 ERIC: You talk to every stranger in this city.
 
 JASON: Yeah, but not that one.
+
+**Outside, after.** The hill up 15th Street towards Corona Heights.
+
+JASON: How far is it?
+
+ERIC: Ten minutes.
+
+JASON: Hmm. Uphill?
+
+ERIC: I live on a hill. Everything is uphill.
+
+JASON: We could get a car.
+
+ERIC: You just lifted for two hours. You played tennis for three.
+
+JASON: That's different. That's sports.
+
+ERIC: Walking is how you get to the sports.
+
+JASON: I see.
+
+*(Quiet.)*
+
+JASON: Is there a Chipotle on the way?
 
 ## 8. Court three
 
@@ -392,9 +430,17 @@ JASON: Hmm.
 
 ERIC: Send it. Then pick lunch. You have ninety seconds or I pick.
 
-JASON: That's not enough time.
+JASON: Chipotle.
 
-ERIC: Eighty.
+ERIC: We had Chipotle yesterday. And on Tuesday.
+
+JASON: Ah. It's good, though.
+
+ERIC: Anything else. Seventy seconds.
+
+*(A long quiet.)*
+
+JASON: Chipotle.
 
 > *Card: Eric got an offer that week. Jason was sitting across the table.*
 
@@ -468,7 +514,15 @@ CALVIN: To the man in the Prius.
 
 MOMO: Did he pick a place for his birthday dinner?
 
-CALVIN: It took an hour. Then he wouldn't change it when it was closed.
+CALVIN: It took an hour.
+
+MOMO: And?
+
+CALVIN: Chipotle.
+
+ERIC: For his birthday.
+
+CALVIN: He was very sure about it. Then he said it was expensive.
 
 ERIC: Did he take a call?
 
@@ -523,6 +577,10 @@ JASON: I know. It's crazy.
 ERIC: Are there courts near the new place?
 
 JASON: Two blocks.
+
+ERIC: And a Chipotle?
+
+JASON: Hmm. One block.
 
 ERIC: Then you're fine.
 
@@ -608,7 +666,7 @@ JASON: They look comfortable.
 
 ## Who is in it and how they talk
 
-- **Jason:** warm, earnest, never sarcastic. States the obvious as a way of being friendly ("I see you like tennis"). "Ah", "I see", "Hmm". Compliments first ("Looking big"). Cannot choose, then will not change his mind. Takes calls standing up and walks away with them. Shy only when it is a girl. Says the hard thing plainly when he gets to it.
+- **Jason:** warm, earnest, never sarcastic. States the obvious as a way of being friendly ("I see you like tennis"). "Ah", "I see", "Hmm". Compliments first ("Looking big"). Cannot choose, then will not change his mind. Takes calls standing up and walks away with them. Shy only when it is a girl. Loves any sport (tennis above all) and will not walk anywhere. Spends freely and then says it was a lot. Would eat Chipotle or Pho 75 every day. Says the hard thing plainly when he gets to it.
 - **Eric:** the dry one. Good at getting things done and at making other people do them. Short lines. Says the one sincere thing in the film, twice.
 - **Momo:** tells the other two what is going on.
 - **Calvin:** deadpan, reports facts.
