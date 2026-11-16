@@ -756,7 +756,8 @@ async function load(seed: number, title = false): Promise<void> {
   const drawn = films().find((f) => f.life === seed);
   if (drawn) {
     for (const m of drawn.cast.values()) {
-      const id = m.key === drawn.you ? data.ego.id : data.people.find((p) => p.name.split(' ')[0] === m.name)?.id;
+      // By first name: the life may be told from someone other than the person the film is told from.
+      const id = data.ego.name.split(' ')[0] === m.name ? data.ego.id : data.people.find((p) => p.name.split(' ')[0] === m.name)?.id;
       if (id !== undefined) looks.set(id, m.look);
     }
   }

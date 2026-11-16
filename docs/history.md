@@ -2,6 +2,14 @@
 
 What was added, when, and why, newest first. `AGENTS.md` describes the project as it is now; this file is the record of how it got there. Add an entry whenever a change alters how the simulation behaves or what the page shows. Commit ids are in brackets.
 
+## 2026-11-16: Blue Shoes, Jason's life written by hand
+
+- The owner did not want a renamed simulation: the life after the film should be written by hand, and told from Jason, since it is for him. `npm run recast` and its life are gone.
+- `src/web/scenes/blue-shoes/life.json` is Jason's life: 22 people (his parents, his brothers James and Jeffrey, Eric, Momo, Calvin, Berek, Emily, Daniel, Jocelyn in New York, David, Tomoka, and a few invented ones marked as such), each with a closeness curve and a few lines, plus 27 moments and a 12-beat caption story. It follows what the owner said up to late 2026; everything after is invented and matches the film's invented scenes (New York in 2027, Mei in 2031).
+- `npm run handlife` turns it into `public/lives/2002.json`: quarterly snapshots from the curves, how often people saw each other from closeness and city, counts for the Journal, and anonymous dots for the Map. Nothing is simulated.
+- Leaving the film opens it. Looks are matched by first name, so Jason is "you" here though the film is told from Eric.
+- Music: `late-night` on the couch and the night before; `club`, muffled, under the party and outside the bar.
+
 ## 2026-11-16: Blue Shoes, a life to explore after the film
 
 - `npm run recast` runs a simulated life and gives some of its people names you know: the protagonist, the partner, a lead and friends, from a cast file (`src/web/scenes/blue-shoes/life.json`). Names are changed before the life is told, so every caption uses them. Named people are given the protagonist's birth year, and a known name never goes to someone who dies in the story. `--scan 1-12` prints lives to choose from.

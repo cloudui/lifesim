@@ -6,7 +6,8 @@ title: Blue Shoes
 about: A film about Eric and Jason
 you: ERIC
 city: 1
-# The life opened in the tabs when the film is left: public/lives/2002.json, made by `npm run recast`.
+# The life opened in the tabs when the film is left: public/lives/2002.json. It is Jason's, written by hand
+# in life.json and built by `npm run handlife`.
 life: 2002
 
 ERIC     | Eric   | born=2002 tall=0 skin=#e6b98e hair=#16151a style=fringe glasses=#c9a86a shirt=#f2f0e8 pants=#2d3142 voice=196

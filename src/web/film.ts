@@ -329,7 +329,7 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
     endText.textContent = text;
     // With a life to go with the film, the way out leads into it.
     seeBtn.hidden = !film!.life;
-    seeBtn.textContent = `Explore ${person(youKey()).name}'s life ▶`;
+    seeBtn.textContent = `Explore ${person(themKey()).name}'s life ▶`;
   }
 
   /** A face for the dialogue box: a larger portrait of the same person, at the age they are. */

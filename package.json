@@ -16,7 +16,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "export": "tsx src/cli/export.ts",
-    "recast": "tsx src/cli/recast.ts"
+    "handlife": "tsx src/cli/handlife.ts"
   },
   "devDependencies": {
     "@types/node": "^18.19.0",

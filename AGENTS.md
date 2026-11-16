@@ -30,7 +30,7 @@ npm run whatif -- --seed 7 --n 2      # leave out the meetings that mattered mos
 npm run harness -- --n 16             # many lives in parallel, aggregate sanity numbers
 npm run harness -- --n 8 --years 15 --set hlMin=30 --set invitePow=2   # try parameter changes without editing code
 npm run export -- --seeds 1,3,5,7     # simulate lives and write public/lives/<seed>.json for the page
-npm run recast -- --seed 11           # a simulated life with names you know (cast file: src/web/scenes/blue-shoes/life.json); --scan 1-12 lists candidates
+npm run handlife                      # a life written by hand (src/web/scenes/blue-shoes/life.json) -> public/lives/2002.json; nothing simulated
 npm run dev                           # open the page (Vite); add ?seed=5&tab=walk&week=1100 to jump to a moment
                                       # ?play&advance=2.5 fast-forwards the animation, for screenshots
                                       # ?seed=7&scene plays the film written for seed 7; ?scene=3 starts at scene 3; &review shows file and line
@@ -105,7 +105,7 @@ src/cli/whatif.ts      console what-if: the same life with one meeting left out
 src/cli/harness.ts     many lives in parallel, aggregate numbers
 src/sim/export.ts      LifeResult -> LifeExport, the plain JSON the page reads
 src/cli/export.ts      writes public/lives/<seed>.json and index.json
-src/cli/recast.ts      a simulated life with some people renamed from a cast file, for a film's "explore" life
+src/cli/handlife.ts    a life written by hand (people, closeness curves, moments) turned into the file the tabs read
 index.html, src/web/   the page (vanilla TypeScript, SVG and canvas):
   main.ts              game shell: playhead, HUD, dialogue box, timeline scrubber, tabs, title and end screens
   story.ts             the opening story: one pixel scene and a caption per beat
@@ -206,7 +206,7 @@ The owner's verdict on the opening story: better, but narration will not make an
 - **More to look at.** `SHOW` puts a close-up over the scene (`inserts.ts`: the shoes, the receipt, a photo on a phone, a cake); `HOLD` puts a phone, racket or cup in a hand; `POSE ... slump` puts a head on a desk. Sets can draw background people (`crowd`, `people`). People on a seat are drawn from the side with bent knees.
 - **Scrubber.** A bar along the bottom has one piece per scene; click or drag to jump.
 - **Music** is a slow arpeggio made in the browser (`warm`, `quiet`, `late`), or a file: `music: name` plays `public/music/name.mp3`, with `muffled` and a volume as options (`public/music/README.md`). The files there were added by the owner for the private demo and may not be free to publish: keep them off `main`. A scene with the `crowd` prop gets a synthesized party sound. None of it has been listened to by an agent.
-- **A life to go with a film.** A cast file can name a life (`life: 2002`); leaving the film opens it on the People tab, and the people the film drew keep their looks there (`chooseLooks` in `pixel.ts`). For Blue Shoes it is a simulated life with real names put on it by `npm run recast`: only the names are real. Re-running `export` does not touch it; re-running `recast` after a rule change gives a different life under the same names.
+- **A life to go with a film.** A cast file can name a life (`life: 2002`); leaving the film opens it on the People tab, and the people the film drew keep their looks there (matched by first name; `chooseLooks` in `pixel.ts`). For Blue Shoes it is Jason's life, written by hand in `scenes/blue-shoes/life.json` and built by `npm run handlife`: people with a closeness curve and a few lines each, moments, and a short caption story. Nothing in it is simulated, `npm run export` does not touch it, and it is not a test of the engine. Like the film, it is to be removed later.
 - **A film written from scratch** (`scenes/<name>/`) has a `cast` file in place of a simulated life: each person's name, birth year, voice pitch and looks (skin, hair colour and style, clothes, height in pixels), and `wear:` in a scene changes clothes for that scene. Its scenes carry a `year`, there is no card between scenes, and the ending is written in the script: a `WITHOUT` line and `GONE` lines for what goes when the person is taken away. `pixel.ts` has four more hair styles for it (a middle part, short spikes, a mop of curls, a permed mullet), shorts, an open jacket and shoe colour.
 - **Threads through the five scenes:** Zambovia (a country Kofi made up in a flag quiz), the father who sets a place for Kofi, the grey hoodie, "same time tomorrow?".
 - **Where this is going:** the film, then "without them" (take the person and everyone who reached you through them out of the life), then changing the starting conditions. A rerun shows another way a life could have gone, not what one meeting caused, and must be labelled so.
