@@ -1,0 +1,32 @@
+name: The seat
+film: blue-shoes
+with: JASON
+set: hall day
+year: 2023
+cast: JASON -14 sitting, ERIC 62 standing
+city: 0
+props: laptop
+status: draft
+notes: Real. The big lecture hall in Iribe, algorithms. Which semester is a guess.
+
+TITLE College Park, 2023 | Algorithms, a few weeks into the semester
+PAUSE 2.5
+ERIC: Is this taken? [1.2]
+JASON: Ah. It's you. The shoe guy.
+ERIC: I was hoping you'd forgotten.
+JASON: No, no. They were comfortable. I still think about it sometimes.
+WALK ERIC 10
+SIT ERIC
+PAUSE 1.5
+JASON: I see you're also in this class.
+ERIC: I've kind of been randomly sitting around the lecture hall.
+JASON (smile): Yeah. Hmm. Glad you're joining me here.
+PAUSE 4
+JASON: Do you get any of this?
+ERIC: I've kind of been playing chess the whole class.
+JASON: Ah, I see. I'm kind of lost.
+ERIC: It's ok we can figure it out on the homework.
+PAUSE 2
+EMOTE JASON z 9
+PAUSE 7
+CARD The rest of the semester, next to each other. Not always the same seats.

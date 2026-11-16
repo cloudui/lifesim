@@ -1,0 +1,45 @@
+name: Castro Street
+film: blue-shoes
+with: JASON
+set: street dusk
+year: 2025
+cast: JASON 18 standing, BIG1 away, BIG2 away, ERIC away
+city: 1
+status: draft
+notes: Real: the gym, Berek's free trial, Eric using the membership after. The meeting on the street is assembled.
+
+TITLE Castro Street, October 2025 | Early evening
+PAUSE 2
+ENTER ERIC left -14
+JASON: Oh. Eric.
+ERIC (open): Oh bro. Why are you here?
+JASON: Berek got me a free trial. It's like two months.
+ERIC: You don't live here. Isn't it like a thousand dollars?
+JASON: The prices here are crazy, man.
+ERIC: At least you're getting the gains in.
+PAUSE 3
+JASON (smile): Looking big, Eric.
+ERIC: I haven't even gone to the gym in a week. Your arms are literally twice my size.
+JASON: What do you mean? I'm small, man. Have you seen your back?
+ENTER BIG1 door 34 &
+PAUSE 1
+ENTER BIG2 door 14 &
+FACE JASON right
+PAUSE 1.5
+LEAVE BIG1 right &
+PAUSE 0.8
+LEAVE BIG2 right
+PAUSE 1
+FACE JASON auto
+JASON (open): I can't believe how huge some of these guys are.
+ERIC: You're huge.
+JASON: No. Look at that guy. That guy's arm is the size of my leg.
+ERIC: You could go ask him for his squat routine.
+JASON: Hmm. Nah. I think I'm good.
+ERIC (smile): You talk to every stranger in this city. I'm sure he'd love to talk to you.
+JASON: You know, I think I'll pass.
+PAUSE 4
+JASON: You should use this membership when I go back.
+ERIC: You think we look the same.
+JASON (smile): You'll be repping the Chen family name.
+PAUSE 3

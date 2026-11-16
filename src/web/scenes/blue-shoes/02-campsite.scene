@@ -1,0 +1,23 @@
+name: The campsite
+film: blue-shoes
+with: JASON
+set: camp morning
+year: 2022
+cast: JASON -30 standing, MOMO away, ERIC away
+city: 0
+wear: ERIC shoes=#2f8fff, JASON shoes=#2f8fff
+status: draft
+notes: Real. Jason is wearing Eric's blue shoes; Eric is wearing Jason's.
+
+TITLE The campsite | Half an hour later
+PAUSE 2
+ENTER MOMO right 50 &
+ENTER ERIC right 6
+PAUSE 1.5
+JASON: Ah. Seems like you took my shoes. [1.4]
+ERIC: Looks like I had a drink too many. In my defense, they kind of look the same. My bad, dude.
+PAUSE 3
+JASON (smile): No worries, yours are pretty comfortable. I'm Jason.
+ERIC: I'm Eric. Sorry about your whole morning.
+JASON (smile): Honestly, no worries, I'd have done the same. I'll catch you later.
+PAUSE 4

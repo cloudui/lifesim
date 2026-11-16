@@ -7,7 +7,7 @@
 // Browsers only allow sound after a click or a key press, so nothing plays until then.
 // The choice to mute is remembered.
 
-export type Ambience = 'water' | 'room' | 'street' | 'none';
+export type Ambience = 'water' | 'room' | 'street' | 'rain' | 'none';
 
 let ac: AudioContext | null = null;
 let master: GainNode | null = null;
@@ -43,12 +43,13 @@ export function setMuted(m: boolean): void {
   if (ac && master) master.gain.setTargetAtTime(m ? 0 : 1, ac.currentTime, 0.05);
 }
 
-/** Four seconds of brown-ish noise, looped. */
-function noise(c: AudioContext): AudioBuffer {
+/** Four seconds of noise, looped: brown-ish for water and rooms, white for rain. */
+function noise(c: AudioContext, white = false): AudioBuffer {
   const buf = c.createBuffer(1, c.sampleRate * 4, c.sampleRate);
   const d = buf.getChannelData(0);
   let last = 0;
   for (let i = 0; i < d.length; i++) {
+    if (white) { d[i] = Math.random() * 2 - 1; continue; }
     last = (last + 0.02 * (Math.random() * 2 - 1)) / 1.02;
     d[i] = last * 3.5;
   }
@@ -69,7 +70,7 @@ export function ambience(kind: Ambience): void {
   }
   if (kind === 'none') return;
   const src = c.createBufferSource();
-  src.buffer = noise(c);
+  src.buffer = noise(c, kind === 'rain');
   src.loop = true;
   const filter = c.createBiquadFilter();
   const gain = c.createGain();
@@ -86,6 +87,11 @@ export function ambience(kind: Ambience): void {
     lfo.connect(depth).connect(gain.gain);
     lfo.start();
     gain.gain.setTargetAtTime(0.11, now, 1.5);
+  } else if (kind === 'rain') {
+    filter.type = 'bandpass';
+    filter.frequency.value = 2600;
+    filter.Q.value = 0.5;
+    gain.gain.setTargetAtTime(0.035, now, 1.5);
   } else if (kind === 'room') {
     filter.type = 'lowpass';
     filter.frequency.value = 180;
@@ -101,8 +107,8 @@ export function ambience(kind: Ambience): void {
   bed = { src, gain, lfo };
 }
 
-/** One letter of a line. `voice` picks the pitch: 0 and 1 are the two people, 2 is someone off screen. */
-export function blip(voice: number, letter: string): void {
+/** One letter of a line, at the speaker's pitch in Hz. `soft` is someone off screen or on a phone. */
+export function blip(pitch: number, letter: string, soft = false): void {
   const c = context();
   if (!c || !master || muted || c.state !== 'running') return;
   if (!/[a-z0-9]/i.test(letter)) return;
@@ -110,14 +116,14 @@ export function blip(voice: number, letter: string): void {
   // Not every letter: a blip every 60ms or so reads as a voice, more is a buzz.
   if (now - lastBlip < 0.06) return;
   lastBlip = now;
-  const base = [196, 262, 147][voice] ?? 220;
+  const base = pitch || 220;
   const o = c.createOscillator();
   o.type = 'triangle';
   // A little movement from letter to letter, so it is not a single tone.
   o.frequency.value = base * (1 + ((letter.toLowerCase().charCodeAt(0) % 7) - 3) * 0.018);
   const g = c.createGain();
   g.gain.setValueAtTime(0, now);
-  g.gain.linearRampToValueAtTime(voice === 2 ? 0.03 : 0.055, now + 0.008);
+  g.gain.linearRampToValueAtTime(soft ? 0.03 : 0.055, now + 0.008);
   g.gain.exponentialRampToValueAtTime(0.0008, now + 0.07);
   o.connect(g).connect(master);
   o.start(now);

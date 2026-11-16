@@ -1,0 +1,29 @@
+name: The receipt
+film: blue-shoes
+with: JASON
+set: checkout day
+year: 2023
+cast: JASON -38 standing, MOMO 10 standing, ERIC -14 standing
+city: 0
+status: draft
+notes: Real. H Mart before a barbecue night. The total and the number of guests are guesses.
+
+TITLE H Mart, 2023 | The checkout, before barbecue at Jason's
+PAUSE 3
+ERIC: Yo, what was the total?
+MOMO: It's like three hundred and twelve dollars. [1.5]
+EMOTE JASON dots 5
+PAUSE 5
+JASON: Hmm. [1.5]
+ERIC: You okay there?
+JASON (open): Dang. That's a lot of money. That's like thirty chipotle bowls.
+ERIC: I mean, you didn't have to buy five short ribs.
+JASON: Yeah. I know. I just didn't think it would add up like that.
+PAUSE 4
+ERIC: How about we put it this way. We're not buying food, we're buying the memories. [1.8]
+JASON: Ah. [1.4]
+JASON (smile): I see. That's a nice way to think about it.
+MOMO: It's ok, Eric and I can split it.
+JASON: No no. You know, memories are important. We can split it.
+PAUSE 3
+CARD Ten people came. One of them was Daniel.

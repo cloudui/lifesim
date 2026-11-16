@@ -1,0 +1,28 @@
+name: The shoes
+film: blue-shoes
+with: JASON
+set: car morning
+year: 2022
+cast: MOMO 13 sitting, ERIC -13 sitting
+city: 0
+wear: ERIC shoes=#2f8fff
+status: draft
+notes: Real. Fall 2022, the morning after the VSA camping trip. Momo is driving.
+
+TITLE Maryland, fall 2022 | A Krispy Kreme car park, the morning after camping
+PAUSE 3
+MOMO: Somebody in the chat lost their shoes. [1.2]
+ERIC: At a campsite. How do you lose shoes at a campsite.
+MOMO: "Blue ones. I left them outside the orange tent." He sent a damn amazon link of the shoes.
+ERIC (smile): What a chump. Couldn't be me. I slept in the car.
+PAUSE 2
+EMOTE ERIC dots 4
+PAUSE 5
+ERIC: Momo. [1.4]
+MOMO: Bro. [1.2]
+ERIC (open): These aren't my shoes. [2]
+EMOTE MOMO bang 2
+MOMO: Dumbass, it's twenty minutes back the other way.
+ERIC (smile): Oops. Looks like we have to go back.
+EMOTE MOMO dots 4
+PAUSE 5

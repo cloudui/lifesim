@@ -424,3 +424,10 @@ button.big:hover { filter: brightness(1.1); background: var(--accent); }
 .without-note { margin-top: 4px; color: var(--text-3); font-size: 15px; }
 .film-sound { position: absolute; top: 10px; right: 120px; background: var(--panel); opacity: 0.55; font-size: 16px; }
 .film-sound:hover { opacity: 1; }
+
+/* A card at the end of a scene: smaller than a title, over the scene as it goes dark. */
+.film-title.card .film-title-text { font-size: clamp(26px, 2.8vw, 42px); letter-spacing: 0.02em; text-transform: none; max-width: 30ch; line-height: 1.15; text-wrap: pretty; }
+.film-title-text { padding: 0 5vw; }
+/* Something that is not a person in "without them". */
+.film-card.thing { justify-content: flex-end; min-height: 104px; border: 1px dashed rgb(244 241 222 / 0.35); padding: 0 12px 8px; }
+.film .see[hidden] { display: none; }

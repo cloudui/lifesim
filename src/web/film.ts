@@ -6,17 +6,19 @@
 // Between scenes the years pass as a single card. Scripts are written by hand per life
 // (scenes.ts and the files in scenes/).
 
-import { drawSkyline } from './backdrop';
-import { drawPerson, hash, lookFor, mix, portrait, type Look } from './pixel';
-import type { Mood } from './scenes';
-import type { FilmScene, Stance, Step, Who } from './scenes';
+import { drawGlyph, drawPerson, GLYPHS, lookFor, mix, portrait, portraitOf, type Look } from './pixel';
+import type { Film, FilmScene, Mood, Side, Stance, Step } from './scenes';
+import { drawBack, drawFront, soundOf, stageOf, standInFront, type Stage } from './sets';
 import * as sound from './sound';
 import type { Ctx } from './types';
 
 export interface FilmPlayer {
   active(): boolean;
-  /** Play these scenes in order, starting at `from`. `review` shows the file and line being played. */
-  start(scenes: FilmScene[], from?: number, review?: boolean): void;
+  /**
+   * Play these scenes in order, starting at `from`. `review` shows the file and line being played.
+   * `film` is the cast of a film written from scratch; without it the scenes are about the life on screen.
+   */
+  start(scenes: FilmScene[], from?: number, review?: boolean, film?: Film): void;
   stop(): void;
   frame(dt: number): void;
   next(): void;
@@ -28,11 +30,26 @@ export interface FilmPlayer {
 
 /** Characters of dialogue typed per second. Slower than reading speed on purpose. */
 const TYPE_RATE = 24;
+/** The face in the dialogue box is drawn this many rows down, so tall hair fits. */
+const FY = 2;
 
 type G = CanvasRenderingContext2D;
-interface Actor { mode: Stance | 'walking' | 'leaving'; x: number; bottle: boolean; sip: number }
-/** Where a set puts people: the edge they sit on, the ground they walk on, and how far legs hang. */
-interface Stage { seatY: number; standY: number; legs: number; you: number; them: number }
+interface Actor {
+  key: string;
+  mode: Stance | 'walking';
+  /** Where they are and where they are going, in pixels from the middle of the set. */
+  off: number;
+  to: number;
+  home: number;
+  /** Walking off: they are gone when they arrive. */
+  leaving: boolean;
+  face: Side | null;
+  bottle: boolean;
+  sip: number;
+  emote: { glyph: string; t0: number; s: number } | null;
+}
+/** Someone in a scene, from the simulated life or from a film's own cast. */
+interface Person { id: number; name: string; look: Look; born: number; scale: number; voice: number }
 
 export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; without(): void }): FilmPlayer {
   root.innerHTML = `
@@ -69,12 +86,13 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
   const withoutLine = root.querySelector<HTMLElement>('.film-without-line')!;
   const endText = root.querySelector<HTMLElement>('.film-end-text')!;
   const endActions = root.querySelector<HTMLElement>('.film-actions')!;
+  const seeBtn = root.querySelector<HTMLElement>('.see')!;
   /** "Without them": when each card appears and goes, in seconds from the start of the ending. */
   let without: { el: HTMLElement; on: number; off: number }[] = [];
   let withoutTimes = { take: 0, last: 0 };
   let faceCanvas: HTMLCanvasElement | null = null;
   let faceMood: Mood = 'flat';
-  let faceId = -1;
+  let faceWho = '';
   const soundBtn = root.querySelector<HTMLElement>('.film-sound')!;
   const showSound = () => { soundBtn.textContent = sound.isMuted() ? 'Sound: off' : 'Sound: on'; };
   showSound();
@@ -87,6 +105,8 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
   let W = 320;
   let H = 180;
   let list: FilmScene[] = [];
+  /** The cast of a film written from scratch, or null when the scenes are about the life on screen. */
+  let film: Film | null = null;
   let si = 0;
   let scene: FilmScene | null = null;
   let on_ = false;
@@ -97,9 +117,8 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
   let clock = 0;
   let typed = -1;
   let faceKey = '';
-  let you: Actor = { mode: 'sitting', x: 0, bottle: false, sip: -9 };
-  let them: Actor = { mode: 'away', x: 0, bottle: false, sip: -9 };
-  let speaking: Who | null = null;
+  let actors: Actor[] = [];
+  let speaking: string | null = null;
   /** 0 to 1: the scene going to black, at the end of a scene or under the last words. */
   let veil = 0;
   /** After the last step of a scene: fading out, then the card for the years between scenes. */
@@ -107,15 +126,28 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
   let afterT = 0;
 
   const view = () => ctx.view();
-  const egoId = () => view().data.ego.id;
-  const idOf = (w: Who) => (w === 'you' ? egoId() : scene!.other);
-  const nameOf = (w: Who) => (w === 'you' ? view().data.ego.name : view().people.get(scene!.other)?.name ?? scene!.otherName).split(' ')[0];
-  const bornOf = (id: number) => (id === egoId() ? view().data.ego.born : view().people.get(id)?.born ?? 2000);
-  const ageOf = (id: number) => ctx.yearOf(scene!.week) - bornOf(id);
-  const greyOf = (id: number) => Math.min(1, Math.max(0, (ageOf(id) - 45) / 22));
+  /** The person the film is told from, and the one it is about. */
+  const youKey = () => (film ? film.you : 'YOU');
+  const themKey = () => (film ? scene!.otherName.toUpperCase() : 'THEM');
+  const yearNow = () => (film ? scene!.year : ctx.yearOf(scene!.week));
+  const cityNow = () => (film ? scene!.city ?? film.city : ctx.cityAt(view().data.ego.cities, Math.max(0, scene!.week)));
+  function person(key: string): Person {
+    const wear = scene?.wear[key] ?? {};
+    if (film) {
+      const m = film.cast.get(key);
+      if (m) return { id: [...film.cast.keys()].indexOf(key) + 1, name: m.name, look: { ...m.look, ...wear }, born: m.born, scale: m.scale, voice: m.voice };
+      return { id: 99, name: key, look: { ...lookFor(7), ...wear }, born: 2000, scale: 1, voice: 220 };
+    }
+    const d = view().data;
+    if (key === 'YOU') return { id: d.ego.id, name: d.ego.name.split(' ')[0], look: { ...lookFor(d.ego.id), ...wear }, born: d.ego.born, scale: 1, voice: 196 };
+    const p = view().people.get(scene!.other);
+    return { id: scene!.other, name: (p?.name ?? scene!.otherName).split(' ')[0], look: { ...lookFor(scene!.other), ...wear }, born: p?.born ?? 2000, scale: 1, voice: 262 };
+  }
+  const ageOf = (p: Person) => yearNow() - p.born;
+  const greyOf = (p: Person) => Math.min(1, Math.max(0, (ageOf(p) - 45) / 22));
   /** Children are the same sprites, smaller. */
-  const sizeOf = (id: number) => (ageOf(id) < 13 ? 0.72 : ageOf(id) < 16 ? 0.86 : 1);
-  const look = (id: number): Look => (scene && id === scene.other && scene.wearing ? { ...lookFor(id), shirt: scene.wearing } : lookFor(id));
+  const sizeOf = (p: Person) => (ageOf(p) < 13 ? 0.72 : ageOf(p) < 16 ? 0.86 : 1) * p.scale;
+  const actorOf = (key: string): Actor | undefined => actors.find((a) => a.key === key);
 
   function resize(): void {
     const cw = root.clientWidth || window.innerWidth;
@@ -130,21 +162,8 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
     g.imageSmoothingEnabled = false;
   }
 
-  function stage(): Stage {
-    if (scene!.set === 'steps') {
-      const ground = Math.round(H * 0.74);
-      const cx = Math.round(W * 0.5);
-      return { seatY: ground - 18, standY: ground, legs: 7, you: cx + 9, them: cx - 11 };
-    }
-    if (scene!.set === 'sofa') {
-      const floor = Math.round(H * 0.72);
-      const cx = Math.round(W * 0.4);
-      return { seatY: floor - 9, standY: floor, legs: 8, you: cx + 11, them: cx - 10 };
-    }
-    const deck = Math.round(H * 0.66);
-    const x = Math.round(W * 0.54);
-    return { seatY: deck, standY: deck - 4, legs: 8, you: x, them: x - 19 };
-  }
+  const stage = (): Stage => stageOf(scene!.set, W, H);
+  const edge = (st: Stage, side: Side | 'door'): number => (side === 'left' ? -(st.cx + 14) : side === 'right' ? W - st.cx + 16 : st.door);
 
   // ------------------------------------------------------------------ the script
 
@@ -169,76 +188,127 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
     reviewEl.append(keys);
   }
 
+  /** What a step does to the people in the scene. `now` skips the walking, for jumping about in review. */
+  function act(s: Step, st: Stage, now: boolean): void {
+    if (s.t === 'give') { const y = actorOf(youKey()); if (y) y.bottle = true; return; }
+    if (s.t !== 'enter' && s.t !== 'leave' && s.t !== 'walk' && s.t !== 'sit' && s.t !== 'stand' && s.t !== 'face' && s.t !== 'emote' && s.t !== 'drink') return;
+    const a = actorOf(s.who);
+    if (!a) return;
+    if (s.t === 'enter') {
+      a.to = s.to ?? a.home;
+      a.off = now ? a.to : edge(st, s.from);
+      a.mode = now ? 'standing' : 'walking';
+      a.leaving = false;
+    } else if (s.t === 'leave') {
+      a.to = edge(st, s.to);
+      a.leaving = !now;
+      a.mode = now ? 'away' : 'walking';
+    } else if (s.t === 'walk') {
+      a.to = s.x;
+      a.home = s.x;
+      if (now) a.off = s.x; else a.mode = 'walking';
+      a.leaving = false;
+    } else if (s.t === 'sit') a.mode = 'sitting';
+    else if (s.t === 'stand') a.mode = 'standing';
+    else if (s.t === 'face') a.face = s.dir === 'auto' || s.dir === 'door' ? null : s.dir;
+    else if (s.t === 'emote') { if (!now) a.emote = { glyph: s.glyph, t0: clock, s: s.s }; }
+    else if (s.t === 'drink') { if (!now) a.sip = clock; }
+  }
+
   function begin(k: number): void {
     i = k;
     t = 0;
     typed = -1;
     const s = scene!.steps[i];
     const st = stage();
-    speaking = s.t === 'say' && s.who !== 'voice' ? s.who : null;
+    speaking = s.t === 'say' && !s.off ? s.who : null;
     box.hidden = s.t !== 'say';
-    titleEl.classList.toggle('on', s.t === 'title');
-    if (s.t === 'title') {
+    titleEl.classList.toggle('on', s.t === 'title' || s.t === 'card');
+    titleEl.classList.toggle('card', s.t === 'card');
+    if (s.t === 'title' || s.t === 'card') {
       titleEl.querySelector('.film-title-text')!.textContent = s.text;
-      titleEl.querySelector('.film-title-sub')!.textContent = s.sub ?? '';
+      titleEl.querySelector('.film-title-sub')!.textContent = s.t === 'title' ? s.sub ?? '' : '';
     } else if (s.t === 'say') {
-      const key = s.who === 'voice' ? `voice` : `${s.who}${si}`;
+      const key = s.off ? 'off' : `${s.who}${si}`;
       faceMood = s.mood ?? 'flat';
       if (faceKey !== key) {
         faceKey = key;
-        faceCanvas = s.who === 'voice' ? null : faceFor(idOf(s.who));
-        faceId = s.who === 'voice' ? -1 : idOf(s.who);
+        faceCanvas = s.off ? null : faceFor();
+        faceWho = s.off ? '' : s.who;
         face.replaceChildren(...(faceCanvas ? [faceCanvas] : []));
       }
       paintFace();
-      box.classList.toggle('you', s.who === 'you');
-      box.classList.toggle('voice', s.who === 'voice');
-      nameEl.textContent = s.who === 'voice' ? `${s.voice} · from inside` : nameOf(s.who);
+      box.classList.toggle('you', s.who === youKey() && !s.off);
+      box.classList.toggle('voice', !!s.off);
+      nameEl.textContent = s.off === 'phone' ? `${s.who} · on the phone` : s.off ? `${s.who} · from inside` : person(s.who).name;
       lineEl.textContent = '';
-    } else if (s.t === 'enter') {
-      them.mode = 'walking';
-      them.x = -14;
-    } else if (s.t === 'sit') { them.mode = 'sitting'; them.x = st.them; }
-    else if (s.t === 'give') you.bottle = true;
-    else if (s.t === 'drink') (s.who === 'you' ? you : them).sip = clock;
-    else if (s.t === 'leave') { const a = s.who === 'you' ? you : them; a.mode = 'leaving'; }
-    else if (s.t === 'end') {
-      // Without them: the one person and everyone who reached you through them, and then not.
-      const d = view().data;
-      const name = nameOf('them');
-      const ids = d.story.beats.find((x) => x.scene === 'without')?.stage ?? [scene!.other];
-      const seen = d.arcs.people.find((p) => p.id === scene!.other)?.seen ?? 0;
-      const friends = d.people.filter((p) => !p.kin && p.peak >= d.levels[1]).length;
-      const led = Math.max(0, ids.length - 1);
-      without = ids.map((id, k) => {
-        const el = document.createElement('div');
-        el.className = `film-card${k === 0 ? ' main' : ''}`;
-        const arc = d.arcs.people.find((p) => p.id === id);
-        const label = document.createElement('span');
-        label.innerHTML = `<b></b><small></small>`;
-        label.querySelector('b')!.textContent = (view().people.get(id)?.name ?? '').split(' ')[0];
-        label.querySelector('small')!.textContent = k === 0 ? `seen ${seen.toLocaleString('en-US')} times` : `${arc?.tag ?? ''} · seen ${arc?.seen ?? 0}`;
-        el.append(portrait(id, k === 0 ? 5 : 4), label);
-        return { el, on: 2.2 + k * 0.5, off: 0 };
-      });
-      const take = 2.2 + ids.length * 0.5 + 4.5;
-      without.forEach((c, k) => { c.off = take + 1.2 + k * 1.3; });
-      withoutTimes = { take, last: take + 1.2 + ids.length * 1.3 + 1.5 };
-      withoutEl.replaceChildren(...without.map((c) => c.el));
-      withoutLine.textContent = led > 0
-        ? `${friends} people were your friend at some point. ${led === 1 ? 'One' : led} of them reached you through ${name}.`
-        : `${friends} people were your friend at some point. ${name} was one.`;
-      withoutLine.className = 'film-without-line';
-      endText.textContent = s.text.replace('{seen}', seen.toLocaleString('en-US')).replace('{led}', String(led));
+    } else if (s.t === 'end') {
+      if (film) endFilm(s.text); else endLife(s.text);
       endText.classList.remove('on');
       endActions.classList.remove('on');
       endEl.hidden = false;
-    }
+    } else act(s, st, false);
     showReview();
   }
 
+  function card(el: HTMLCanvasElement | null, name: string, note: string, main: boolean): HTMLElement {
+    const c = document.createElement('div');
+    c.className = `film-card${main ? ' main' : ''}${el ? '' : ' thing'}`;
+    const label = document.createElement('span');
+    label.innerHTML = `<b></b><small></small>`;
+    label.querySelector('b')!.textContent = name;
+    label.querySelector('small')!.textContent = note;
+    c.append(...(el ? [el] : []), label);
+    return c;
+  }
+  function schedule(cards: HTMLElement[], line: string): void {
+    without = cards.map((el, k) => ({ el, on: 2.2 + k * 0.5, off: 0 }));
+    const take = 2.2 + cards.length * 0.5 + 4.5;
+    without.forEach((c, k) => { c.off = take + 1.2 + k * 1.3; });
+    withoutTimes = { take, last: take + 1.2 + cards.length * 1.3 + 1.5 };
+    withoutEl.replaceChildren(...cards);
+    withoutLine.textContent = line;
+    withoutLine.className = 'film-without-line';
+  }
+  /** Without them, for a simulated life: the one person and everyone who reached you through them, and then not. */
+  function endLife(text: string): void {
+    const d = view().data;
+    const name = person('THEM').name;
+    const ids = d.story.beats.find((x) => x.scene === 'without')?.stage ?? [scene!.other];
+    const seen = d.arcs.people.find((p) => p.id === scene!.other)?.seen ?? 0;
+    const friends = d.people.filter((p) => !p.kin && p.peak >= d.levels[1]).length;
+    const led = Math.max(0, ids.length - 1);
+    schedule(
+      ids.map((id, k) => {
+        const arc = d.arcs.people.find((p) => p.id === id);
+        return card(portrait(id, k === 0 ? 5 : 4), (view().people.get(id)?.name ?? '').split(' ')[0], k === 0 ? `seen ${seen.toLocaleString('en-US')} times` : `${arc?.tag ?? ''} · seen ${arc?.seen ?? 0}`, k === 0);
+      }),
+      led > 0
+        ? `${friends} people were your friend at some point. ${led === 1 ? 'One' : led} of them reached you through ${name}.`
+        : `${friends} people were your friend at some point. ${name} was one.`,
+    );
+    endText.textContent = text.replace('{seen}', seen.toLocaleString('en-US')).replace('{led}', String(led));
+    seeBtn.hidden = false;
+  }
+  /** Without them, for a film written from scratch: the list is in the script (GONE lines). */
+  function endFilm(text: string): void {
+    const them = person(themKey());
+    schedule(
+      [
+        card(portraitOf(them.look, 5, greyOf(them)), them.name, '', true),
+        ...scene!.gone.map((x) => {
+          const m = film!.cast.get(x.name.toUpperCase());
+          return card(m ? portraitOf(m.look, 4) : null, x.name, x.note, false);
+        }),
+      ],
+      scene!.endLine,
+    );
+    endText.textContent = text;
+    seeBtn.hidden = true;
+  }
+
   /** A face for the dialogue box: the same sprite, in what they are wearing, at the age they are. */
-  function faceFor(id: number): HTMLCanvasElement {
+  function faceFor(): HTMLCanvasElement {
     const c = document.createElement('canvas');
     c.width = 20;
     c.height = 26;
@@ -249,32 +319,34 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
   }
   /** Redraw the face with its mood: a mouth, brows when sad, and a blink now and then. */
   function paintFace(): void {
-    if (!faceCanvas || faceId < 0) return;
+    if (!faceCanvas || !faceWho) return;
     const fg = faceCanvas.getContext('2d')!;
-    const lk = look(faceId);
+    const p = person(faceWho);
+    const lk = { ...p.look, tall: 0 };
     fg.clearRect(0, 0, 20, 26);
-    drawPerson(fg, 10, 25, lk, { pose: 'stand', frame: 0, outfit: 'casual', grey: greyOf(faceId) });
+    drawPerson(fg, 10, 25 + FY, lk, { pose: 'stand', frame: 0, outfit: 'casual', grey: greyOf(p) });
     const dark = mix(lk.skin, '#3a1f1a', 0.6);
-    // The sprite's eyes are at (10, 7) and (12, 7); the chin is row 9.
-    const blink = (clock + faceId * 0.37) % 4.2 < 0.14;
+    // The sprite's eyes are at (10, 7) and (12, 7), and its chin is row 9, before the shift down.
+    const ey = 7 + FY;
+    const blink = (clock + p.id * 0.37) % 4.2 < 0.14;
     if (blink || faceMood === 'shut') {
       fg.fillStyle = lk.skin;
-      fg.fillRect(10, 7, 1, 1);
-      fg.fillRect(12, 7, 1, 1);
+      fg.fillRect(10, ey, 1, 1);
+      fg.fillRect(12, ey, 1, 1);
       fg.fillStyle = dark;
-      if (faceMood === 'shut') { fg.fillRect(10, 7, 1, 1); fg.fillRect(12, 7, 1, 1); }
+      if (faceMood === 'shut') { fg.fillRect(10, ey, 1, 1); fg.fillRect(12, ey, 1, 1); }
     }
     fg.fillStyle = dark;
     if (faceMood === 'smile') {
-      fg.fillRect(10, 9, 3, 1);
-      fg.fillRect(12, 8, 1, 1);
+      fg.fillRect(10, ey + 2, 3, 1);
+      fg.fillRect(12, ey + 1, 1, 1);
     } else if (faceMood === 'sad') {
-      fg.fillRect(11, 9, 1, 1);
+      fg.fillRect(11, ey + 2, 1, 1);
       fg.fillStyle = mix(lk.skin, '#3a1f1a', 0.35);
-      fg.fillRect(9, 6, 1, 1);
-      fg.fillRect(12, 5, 1, 1);
-    } else if (faceMood === 'open') fg.fillRect(11, 8, 2, 2);
-    else fg.fillRect(11, 9, 2, 1);
+      fg.fillRect(9, ey - 1, 1, 1);
+      fg.fillRect(12, ey - 2, 1, 1);
+    } else if (faceMood === 'open') fg.fillRect(11, ey + 1, 2, 2);
+    else fg.fillRect(11, ey + 2, 2, 1);
   }
 
   function open(k: number): void {
@@ -285,14 +357,17 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
     veil = 0;
     after = 'none';
     faceKey = '';
-    sound.ambience(scene.set === 'pier' ? 'water' : scene.set === 'sofa' ? 'room' : 'street');
+    sound.ambience(soundOf(scene.set, scene.time));
     endEl.hidden = true;
+    titleEl.classList.remove('card');
     const bottles = scene.props.includes('bottles');
-    const put = (w: Who, seat: number): Actor => ({ mode: scene!.start[w], x: seat, bottle: bottles && scene!.start[w] !== 'away' || (bottles && w === 'them'), sip: -9 });
-    you = put('you', st.you);
-    them = put('them', st.them);
-    // Someone who walks in with two bottles hands one over; someone already sitting has their own.
-    if (bottles && scene.start.them === 'away') you.bottle = false;
+    const awayAtStart = scene.places.find((p) => p.who === 'THEM')?.stance === 'away';
+    actors = scene.places.map((p) => {
+      const home = p.x ?? st.spots[p.who] ?? 0;
+      // Someone who walks in with two bottles hands one over; someone already sitting has their own.
+      const bottle = bottles && (p.who === 'THEM' || (p.stance !== 'away' && !awayAtStart));
+      return { key: p.who, mode: p.stance, off: home, to: home, home, leaving: false, face: null, bottle, sip: -9, emote: null };
+    });
     begin(0);
   }
 
@@ -301,6 +376,7 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
     const s = step();
     return s.t !== 'say' || t * TYPE_RATE >= s.text.length;
   };
+  const moving = (s: Step): boolean => (s.t === 'enter' || s.t === 'leave' || s.t === 'walk') && s.wait && actorOf(s.who)?.mode === 'walking';
   function advance(): void {
     if (i < scene!.steps.length - 1) begin(i + 1);
     else if (step().t !== 'end' && after === 'none') {
@@ -318,11 +394,11 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
     const s = step();
     if (s.t === 'end') { t = Math.max(t, withoutTimes.last + 3); return; }
     if (s.t === 'say' && !lineDone()) { t = s.text.length / TYPE_RATE + 0.01; return; }
-    if (s.t === 'enter' || s.t === 'leave') return;
+    if (moving(s)) return;
     advance();
   }
 
-  /** The card between two scenes: how long passed, and how often the two saw each other in it. */
+  /** The card between two scenes of a simulated life: how long passed, and how often the two saw each other in it. */
   function between(): { text: string; sub: string } {
     const a = list[si];
     const b = list[si + 1];
@@ -332,40 +408,56 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
     const weeks = view().data.arcs.people.find((p) => p.id === a.other)?.seenAt;
     if (!weeks || a.week < 0) return { text, sub: '' };
     const c = weeks.filter((w) => w > a.week && w < b.week).length;
-    const name = nameOf('them');
+    const name = person('THEM').name;
     return { text, sub: c === 0 ? `You and ${name} do not see each other once.` : `You and ${name} see each other ${c === 1 ? 'once' : `${c} times`}.` };
   }
 
   // ------------------------------------------------------------------ people
 
-  /** Draw one of the two at their place: sitting on the set's edge, or on their feet. */
-  function actor(w: Who, a: Actor, st: Stage): void {
+  /** Which way someone looks: where they are walking, where they were told to, at whoever is speaking, or at the nearest person. */
+  function facing(a: Actor): Side {
+    if (a.mode === 'walking') return a.to >= a.off ? 'right' : 'left';
+    if (a.face) return a.face;
+    const others = actors.filter((b) => b !== a && b.mode !== 'away');
+    const talker = speaking && speaking !== a.key ? others.find((b) => b.key === speaking) : undefined;
+    const target = talker ?? others.sort((p, q) => Math.abs(p.off - a.off) - Math.abs(q.off - a.off))[0];
+    if (!target) return a.key === youKey() ? 'left' : 'right';
+    return target.off >= a.off ? 'right' : 'left';
+  }
+
+  /** Draw one person at their place: sitting on the set's edge, or on their feet. */
+  function actor(a: Actor, st: Stage): void {
     if (a.mode === 'away') return;
-    // Anyone not walking is at their place on the set, wherever the window's size now puts it.
-    if (a.mode === 'sitting' || a.mode === 'standing') a.x = st[w];
-    const id = idOf(w);
-    const lk = look(id);
-    const s = sizeOf(id);
-    const k = w === 'you' ? 0 : 1;
+    const p = person(a.key);
+    const lk = p.look;
+    const s = sizeOf(p);
+    const x = st.cx + a.off;
+    const left = facing(a) === 'left';
+    const k = left ? 0 : 1;
     sg.clearRect(0, 0, 48, 56);
     // In the scratch canvas the hip of someone sitting, or the feet of someone standing, is at (24, 40).
     if (a.mode === 'sitting') {
-      const breathe = Math.sin(clock * 0.9 + k * 2) > 0.96 ? 1 : 0;
+      const breathe = Math.sin(clock * 0.9 + p.id * 2) > 0.96 ? 1 : 0;
       sg.save();
       sg.beginPath();
       sg.rect(0, 0, 48, 40);
       sg.clip();
-      drawPerson(sg, 24, 47 - breathe, lk, { pose: 'stand', frame: 0, outfit: 'casual', grey: greyOf(id), flip: k === 0 });
+      drawPerson(sg, 24, 47 - breathe, lk, { pose: 'stand', frame: 0, outfit: 'casual', grey: greyOf(p), flip: left });
       sg.restore();
-      const hang = scene!.set !== 'sofa';
-      const swing = hang && Math.sin(clock * 1.3 + k * 1.7) > 0.7 ? 1 : 0;
-      const len = Math.round(st.legs / s);
-      sg.fillStyle = lk.pants;
-      sg.fillRect(21, 40, 2, len);
-      sg.fillRect(25 + (k ? swing : 0), 40, 2, len - (k ? 0 : swing));
-      sg.fillStyle = '#15151a';
-      sg.fillRect(21, 40 + len, 3, 1);
-      sg.fillRect(25 + (k ? swing : 0), 40 + len - (k ? 0 : swing), 3, 1);
+      if (st.legs > 0) {
+        const hang = scene!.set === 'pier' || scene!.set === 'steps';
+        const swing = hang && Math.sin(clock * 1.3 + k * 1.7) > 0.7 ? 1 : 0;
+        const len = Math.round(st.legs / s);
+        const leg = (lx: number, n: number) => {
+          sg.fillStyle = lk.pants;
+          sg.fillRect(lx, 40, 2, n);
+          if (lk.shorts) { sg.fillStyle = lk.skin; sg.fillRect(lx, 42, 2, n - 2); }
+          sg.fillStyle = lk.shoes ?? '#15151a';
+          sg.fillRect(lx, 40 + n, 3, 1);
+        };
+        leg(21, len);
+        leg(25 + (k ? swing : 0), len - (k ? 0 : swing));
+      }
       if (a.bottle) {
         const up = clock - a.sip >= 0 && clock - a.sip < 1.6;
         sg.fillStyle = '#4f8a63';
@@ -379,214 +471,69 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
           sg.fillRect(bx, 33, 1, 2);
         }
       }
-      g.drawImage(scratch, 0, 0, 48, 56, Math.round(a.x - 24 * s), Math.round(st.seatY - 40 * s), Math.round(48 * s), Math.round(56 * s));
+      g.drawImage(scratch, 0, 0, 48, 56, Math.round(x - 24 * s), Math.round(st.seatY - 40 * s), Math.round(48 * s), Math.round(56 * s));
     } else {
-      const moving = a.mode === 'walking' || a.mode === 'leaving';
-      drawPerson(sg, 24, 40, lk, { pose: moving ? 'walk' : 'stand', frame: Math.floor(clock * 6), outfit: 'casual', grey: greyOf(id), flip: a.mode === 'leaving' ? false : k === 0 });
-      if (a.bottle && w === 'them' && scene!.start.them === 'away') {
+      drawPerson(sg, 24, 40, lk, { pose: a.mode === 'walking' ? 'walk' : 'stand', frame: Math.floor(clock * 6), outfit: 'casual', grey: greyOf(p), flip: left });
+      if (a.bottle && a.key === 'THEM') {
         sg.fillStyle = '#4f8a63';
         sg.fillRect(29, 31, 2, 4);
         sg.fillRect(32, 31, 2, 4);
       }
-      g.drawImage(scratch, 0, 0, 48, 56, Math.round(a.x - 24 * s), Math.round(st.standY - 40 * s), Math.round(48 * s), Math.round(56 * s));
+      g.drawImage(scratch, 0, 0, 48, 56, Math.round(x - 24 * s), Math.round(st.standY - 40 * s), Math.round(48 * s), Math.round(56 * s));
     }
   }
-
-  // ------------------------------------------------------------------ sets
-
-  function sky(bands: string[], to: number): void {
-    const bh = Math.ceil(to / bands.length);
-    bands.forEach((c, k) => { g.fillStyle = c; g.fillRect(0, k * bh, W, bh + 1); });
-  }
-  function stars(to: number, alpha = 1): void {
-    for (let k = 0; k < W / 4; k++) {
-      const tw = (hash(k, 3) + Math.floor(clock * 1.5)) % 9 === 0;
-      g.fillStyle = `rgba(255,255,255,${(tw ? 0.25 : 0.7) * alpha})`;
-      g.fillRect(hash(k, 1) % W, hash(k, 2) % Math.max(1, to), 1, 1);
-    }
-  }
-  const px = (x: number, y: number, w: number, h: number, c: string) => { g.fillStyle = c; g.fillRect(Math.round(x), Math.round(y), w, h); };
-
-  function pier(st: Stage, city: number): void {
-    const dusk = scene!.time === 'dusk';
-    const dy = st.seatY;
-    const horizon = Math.round(H * 0.44);
-    sky(dusk ? ['#2b2d5b', '#4f4576', '#8f5a7a', '#d98a7a', '#f5b56a'] : ['#060916', '#0a1024', '#101a36', '#182447', '#232c55'], horizon);
-    stars(horizon - 26, dusk ? 0.35 : 1);
-    const mx = Math.round(W * 0.8);
-    const my = Math.round(horizon * (dusk ? 0.78 : 0.3));
-    const glow = dusk ? '255,214,150' : '244,241,222';
-    g.fillStyle = `rgba(${glow},0.10)`;
-    g.beginPath(); g.arc(mx, my, 13, 0, Math.PI * 2); g.fill();
-    g.fillStyle = dusk ? '#ffd9a0' : '#f4f1de';
-    g.beginPath(); g.arc(mx, my, 6, 0, Math.PI * 2); g.fill();
-    drawSkyline(g, city, dusk ? '#2a2646' : '#0c1228', dusk ? 0.45 : 0.9, 90, W, horizon + 14);
-    // Water, with the lights of the far shore and the moon or the low sun lying on it.
-    px(0, horizon, W, H - horizon, dusk ? '#2a2a4c' : '#0a1226');
-    for (let x = 0; x < W; x += 3) {
-      if (hash(x, 41) % 4) continue;
-      const len = 8 + (hash(x, 42) % 26);
-      for (let y = 2; y < len; y += 2) {
-        const wob = Math.round(Math.sin(clock * 1.6 + y * 0.7 + x) * 1.2);
-        g.fillStyle = `rgba(255,214,120,${(dusk ? 0.16 : 0.28) * (1 - y / len)})`;
-        g.fillRect(x + wob, horizon + y, 1, 1);
-      }
-    }
-    for (let y = 3; y < H - horizon; y += 3) {
-      const wob = Math.round(Math.sin(clock * 1.2 + y * 0.5) * (1 + y * 0.08));
-      const w = Math.max(1, 5 - Math.floor(y / 14)) + (hash(y, 7) % 3);
-      g.fillStyle = `rgba(${glow},${0.5 * Math.max(0.15, 1 - y / (H - horizon))})`;
-      g.fillRect(mx - Math.floor(w / 2) + wob, horizon + y, w, 1);
-    }
-    g.fillStyle = dusk ? 'rgba(255,200,170,0.10)' : 'rgba(120,150,210,0.10)';
-    for (let y = horizon + 5; y < H; y += 6) {
-      for (let k = 0; k < 6; k++) {
-        const x = (hash(y, k) + Math.floor(clock * (4 + (y % 5)))) % (W + 20) - 10;
-        g.fillRect(x, y, 5 + (hash(y, k + 9) % 6), 1);
-      }
-    }
-    // The pier.
-    const end = Math.round(W * 0.7);
-    for (let x = 14; x < end; x += 38) {
-      px(x, dy + 5, 4, H - dy, '#1c1611');
-      for (let y = dy + 18; y < H; y += 3) px(x + Math.round(Math.sin(clock * 1.4 + y)), y, 4, 1, dusk ? 'rgba(42,42,76,0.55)' : 'rgba(10,18,38,0.55)');
-    }
-    px(0, dy - 4, end, 4, dusk ? '#6a4f3a' : '#4a3828');
-    px(0, dy - 4, end, 1, dusk ? '#8a6848' : '#5c4631');
-    for (let x = 6; x < end; x += 9) px(x, dy - 4, 1, 4, '#3a2b1f');
-    px(0, dy, end, 5, '#2c2118');
-    px(0, dy + 4, end, 1, '#211811');
-    // A lamp, and the pool of light under it.
-    const lx = Math.round(W * 0.2);
-    px(lx, dy - 44, 2, 40, '#15171f');
-    px(lx - 3, dy - 46, 8, 2, '#15171f');
-    const flick = 0.9 + Math.sin(clock * 7) * 0.03;
-    for (let r = 26; r > 2; r -= 4) {
-      g.fillStyle = `rgba(255,196,110,${(dusk ? 0.02 : 0.035) * flick})`;
-      g.beginPath(); g.arc(lx + 1, dy - 42, r, 0, Math.PI * 2); g.fill();
-    }
-    px(lx - 1, dy - 44, 4, 2, '#ffd9a0');
-    px(lx - 22, dy - 4, 46, 4, 'rgba(255,196,110,0.10)');
-  }
-
-  /** The front of the house you grew up in: a garage door, three steps and a lit doorway. */
-  function steps(st: Stage, city: number): void {
-    const morning = scene!.time === 'morning';
-    const ground = st.standY;
-    const cx = Math.round(W * 0.5);
-    sky(morning ? ['#3f8fd8', '#5aa6e6', '#7fbdf0', '#a8d4f6', '#d4ebfb'] : ['#2b2d5b', '#5b4a7a', '#b5657a', '#f0a07a', '#ffd9a0'], ground);
-    if (!morning) stars(Math.round(ground * 0.3), 0.5);
-    drawSkyline(g, city, morning ? '#8fb0cf' : '#4a3a5e', morning ? 0 : 0.35, 300, W, ground - 6);
-    const tint = (c: string) => (morning ? c : mix(c, '#3a2a4a', 0.42));
-    // The house.
-    const hx = cx - 92;
-    const hw = 150;
-    const top = ground - 86;
-    px(hx, top, hw, 86, tint('#d9c7a8'));
-    px(hx - 4, top - 6, hw + 8, 7, tint('#7a4a3a'));
-    for (let y = top + 9; y < ground - 2; y += 6) px(hx, y, hw, 1, tint('#cdb999'));
-    // Garage door, with years of football on it.
-    px(hx + 8, ground - 46, 62, 46, tint('#b9b0a0'));
-    for (let y = ground - 46; y < ground; y += 9) px(hx + 8, y, 62, 1, tint('#9c9484'));
-    for (let k = 0; k < 9; k++) px(hx + 12 + (hash(k, 71) % 54), ground - 40 + (hash(k, 72) % 34), 2, 2, tint('#8a8274'));
-    // A window, and the door at the top of the steps, lit from inside in the evening.
-    const lit = morning ? '#bfe3f2' : '#ffd98a';
-    px(hx + 82, top + 12, 20, 16, tint('#6b4a3a'));
-    px(hx + 84, top + 14, 16, 12, lit);
-    px(cx - 6, st.seatY - 34, 20, 34, tint('#5b4028'));
-    px(cx - 3, st.seatY - 31, 14, 12, lit);
-    if (!morning) {
-      g.fillStyle = 'rgba(255,217,138,0.10)';
-      g.fillRect(cx - 22, st.seatY - 4, 52, 6);
-    }
-    // Three steps.
-    for (let k = 0; k < 3; k++) {
-      const w = 56 + k * 8;
-      px(cx + 4 - w / 2, st.seatY + k * 6, w, 6, tint(k % 2 ? '#a89c8c' : '#b8ad9c'));
-      px(cx + 4 - w / 2, st.seatY + k * 6, w, 1, tint('#d0c6b6'));
-    }
-    // The pavement and the road.
-    px(0, ground, W, 4, tint('#b9b6b0'));
-    px(0, ground + 4, W, H - ground, tint('#6c6f72'));
-    for (let x = -((Math.floor(clock * 0)) % 30); x < W; x += 30) px(x, ground + 22, 14, 1, tint('#c9c6b8'));
-    if (scene!.props.includes('ball')) {
-      px(st.them - 16, st.seatY - 5, 5, 5, '#f4f4f4');
-      px(st.them - 15, st.seatY - 4, 2, 2, '#2a2a2a');
-    }
-    if (scene!.props.includes('boxes')) {
-      const bx = cx + 52;
-      for (const [dx, dy2, w, h] of [[0, 0, 16, 12], [18, 0, 14, 10], [4, 12, 14, 10], [-46 - 52, 0, 15, 11]] as const) {
-        px(bx + dx, ground - dy2 - h, w, h, tint('#b58a55'));
-        px(bx + dx, ground - dy2 - h, w, 1, tint('#d0a870'));
-        px(bx + dx + w / 2 - 1, ground - dy2 - h, 2, h, tint('#9a7040'));
-      }
-    }
-  }
-
-  /** A small flat at night: the city in the window, one lamp, and a sofa that was free. */
-  function sofa(st: Stage, city: number): void {
-    const floor = st.standY;
-    const cx = Math.round(W * 0.4);
-    px(0, 0, W, floor, '#272231');
-    for (let x = 0; x < W; x += 16) px(x, 0, 1, floor, '#2c2637');
-    px(0, floor, W, H - floor, '#19151d');
-    for (let x = 4; x < W; x += 20) px(x, floor, 1, H - floor, '#211c26');
-    px(0, floor, W, 2, '#3a3145');
-    // The window.
-    const wx = Math.round(W * 0.56);
-    const wy = Math.round(H * 0.1);
-    const ww = Math.round(W * 0.32);
-    const wh = Math.round(H * 0.4);
-    g.save();
-    g.beginPath(); g.rect(wx, wy, ww, wh); g.clip();
-    px(wx, wy, ww, wh, '#0a1024');
-    stars(wy + wh * 0.5);
-    drawSkyline(g, city, '#0c1228', 0.95, 40, W, wy + wh + 14);
-    g.restore();
-    for (const [x, y, w, h] of [[wx - 2, wy - 2, ww + 4, 2], [wx - 2, wy + wh, ww + 4, 3], [wx - 2, wy, 2, wh], [wx + ww, wy, 2, wh], [wx + ww / 2, wy, 2, wh]] as const) px(x, y, w, h, '#4a3d52');
-    // A floor lamp and its pool of light.
-    const lx = cx - 52;
-    px(lx, floor - 46, 2, 46, '#15131a');
-    px(lx - 5, floor - 54, 12, 9, '#e9c98a');
-    const flick = 0.92 + Math.sin(clock * 5) * 0.02;
-    for (let r = 44; r > 6; r -= 6) {
-      g.fillStyle = `rgba(255,205,130,${0.03 * flick})`;
-      g.beginPath(); g.arc(lx + 1, floor - 46, r, 0, Math.PI * 2); g.fill();
-    }
-    // A rug, and the sofa's back and arms. The seat goes on after the people.
-    px(cx - 50, floor + 5, 104, 8, '#3d2f3f');
-    px(cx - 50, floor + 5, 104, 1, '#55415a');
-    px(cx - 38, st.seatY - 20, 78, 22, '#5d4a6e');
-    px(cx - 38, st.seatY - 20, 78, 2, '#75608a');
-    px(cx - 44, st.seatY - 10, 8, 19, '#52405f');
-    px(cx + 38, st.seatY - 10, 8, 19, '#52405f');
-  }
-  function sofaFront(st: Stage): void {
-    const cx = Math.round(W * 0.4);
-    px(cx - 36, st.seatY, 74, 5, '#6b567c');
-    px(cx - 36, st.seatY, 74, 1, '#8a72a0');
-    px(cx - 36, st.seatY + 5, 74, 3, '#473652');
+  /** The top of someone's head on the canvas. */
+  function headTop(a: Actor, st: Stage): number {
+    const p = person(a.key);
+    const s = sizeOf(p);
+    const hair = p.look.hairStyle === 6 ? 2 : p.look.hairStyle === 5 || p.look.hairStyle === 7 ? 1 : 0;
+    return Math.round((a.mode === 'sitting' ? st.seatY - 15 * s : st.standY - 22 * s) - (p.look.tall ?? 0) - hair);
   }
 
   function draw(): void {
     const st = stage();
-    const city = ctx.cityAt(view().data.ego.cities, Math.max(0, scene!.week));
-    if (scene!.set === 'steps') steps(st, city);
-    else if (scene!.set === 'sofa') sofa(st, city);
-    else pier(st, city);
-    if (scene!.set === 'sofa') sofaFront(st);
-    actor('them', them, st);
-    actor('you', you, st);
+    const env = { g, W, H, clock, time: scene!.time, props: scene!.props, city: cityNow() };
+    drawBack(scene!.set, env, st);
+    const late = standInFront(scene!.set);
+    for (const a of actors) if (!late || a.mode === 'sitting') actor(a, st);
+    drawFront(scene!.set, env, st);
+    if (late) for (const a of actors) if (a.mode !== 'sitting') actor(a, st);
 
+    for (const a of actors) {
+      if (a.mode === 'away') continue;
+      const x = Math.round(st.cx + a.off);
+      const top = headTop(a, st);
+      // A sign over someone's head: it rises a little and fades.
+      if (a.emote) {
+        const age = clock - a.emote.t0;
+        if (age > a.emote.s) a.emote = null;
+        else if (GLYPHS[a.emote.glyph]) {
+          const rows = GLYPHS[a.emote.glyph];
+          const fade = Math.min(1, age * 4, (a.emote.s - age) * 2);
+          const rise = a.emote.glyph === 'z' ? ((age * 5) % 12) : Math.min(3, age * 6);
+          const c = `rgba(244,241,222,${0.95 * fade})`;
+          drawGlyph(g, a.emote.glyph, x + 4 + (a.emote.glyph === 'z' ? Math.round(rise / 3) : -Math.floor(rows[0].length / 2) - 4), top - rows.length - 3 - Math.round(rise), c);
+          if (a.emote.glyph === 'z' && age > 1.1) drawGlyph(g, 'z', x + 9 + Math.round((((age - 1.1) * 5) % 12) / 3), top - 12 - Math.round(((age - 1.1) * 5) % 12), `rgba(244,241,222,${0.6 * fade})`);
+        }
+      }
+      // Breath in the cold.
+      if (scene!.props.includes('breath') && a.mode !== 'walking') {
+        const ph = (clock * 0.45 + person(a.key).id * 0.31) % 1;
+        if (ph < 0.35) {
+          const dir = facing(a) === 'left' ? -1 : 1;
+          drawGlyph(g, 'puff', x + dir * (5 + Math.round(ph * 12)) - 2, top + 6 - Math.round(ph * 8), `rgba(230,236,244,${0.45 * (1 - ph / 0.35)})`);
+        }
+      }
+    }
     // A small mark over whoever is speaking, so the face in the box has a body in the scene.
-    if (speaking) {
-      const a = speaking === 'you' ? you : them;
-      const s = sizeOf(idOf(speaking));
-      const top = Math.round((a.mode === 'sitting' ? st.seatY - 23 * s : st.standY - 30 * s) - 6);
+    const sp = speaking ? actorOf(speaking) : undefined;
+    if (sp && sp.mode !== 'away') {
+      const x = Math.round(st.cx + sp.off);
+      const top = headTop(sp, st) - 5;
       g.fillStyle = 'rgba(244,241,222,0.85)';
-      g.fillRect(Math.round(a.x) - 2, top, 5, 1);
-      g.fillRect(Math.round(a.x) - 1, top + 1, 3, 1);
-      g.fillRect(Math.round(a.x), top + 2, 1, 1);
+      g.fillRect(x - 2, top, 5, 1);
+      g.fillRect(x - 1, top + 1, 3, 1);
+      g.fillRect(x, top + 2, 1, 1);
     }
     // Dark at the edges, and in and out of black.
     for (let k = 0; k < 18; k += 2) {
@@ -605,15 +552,25 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
     if (!on_ || !scene) return;
     t += dt;
     clock += dt;
-    const st = stage();
+    // Everyone who is walking keeps walking, whatever the script is doing.
+    const speed = film ? 30 : 17;
+    for (const a of actors) {
+      if (a.mode !== 'walking') continue;
+      const dir = a.to >= a.off ? 1 : -1;
+      a.off += dir * dt * speed;
+      if ((a.to - a.off) * dir <= 0) { a.off = a.to; a.mode = a.leaving ? 'away' : 'standing'; a.leaving = false; }
+    }
     if (after === 'fade') {
       afterT += dt;
-      veil = Math.min(1, afterT / 2.2);
-      if (veil >= 1) {
+      veil = Math.min(1, Math.max(veil, afterT / 2.2));
+      if (afterT >= 2.2) {
+        titleEl.classList.remove('on');
         if (si >= list.length - 1) { leave(); return; }
+        if (film) { open(si + 1); return; }
         after = 'between';
         afterT = 0;
         const b = between();
+        titleEl.classList.remove('card');
         titleEl.querySelector('.film-title-text')!.textContent = b.text;
         titleEl.querySelector('.film-title-sub')!.textContent = b.sub;
         titleEl.classList.add('on');
@@ -627,21 +584,20 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
       }
     } else {
       const s = step();
-      if (s.t === 'title') { if (t >= s.hold) advance(); }
+      if (s.t === 'card') veil = Math.min(0.86, veil + dt * 0.7);
+      else if (s.t !== 'end' && veil > 0) veil = Math.max(0, veil - dt * 0.8);
+      if (s.t === 'title' || s.t === 'card') { if (t >= s.hold) advance(); }
       else if (s.t === 'pause') { if (t >= s.s) advance(); }
-      else if (s.t === 'enter') {
-        them.x += dt * 16;
-        if (them.x >= st.them) { them.x = st.them; them.mode = 'standing'; advance(); }
-      } else if (s.t === 'leave') {
-        const a = s.who === 'you' ? you : them;
-        a.x += dt * 18;
-        if (a.x > W + 16) { a.mode = 'away'; advance(); }
-      } else if (s.t === 'sit' || s.t === 'give') { if (t >= 1.2) advance(); }
-      else if (s.t === 'drink') advance();
+      else if (s.t === 'enter' || s.t === 'leave' || s.t === 'walk') { if (!moving(s)) advance(); }
+      else if (s.t === 'sit' || s.t === 'stand' || s.t === 'give') { if (t >= (film ? 0.7 : 1.2)) advance(); }
+      else if (s.t === 'drink' || s.t === 'face' || s.t === 'emote') advance();
       else if (s.t === 'say') {
         const n = Math.min(s.text.length, Math.floor(t * TYPE_RATE));
         if (n !== typed) {
-          if (n > 0) sound.blip(s.who === 'you' ? 0 : s.who === 'them' ? 1 : 2, s.text[n - 1]);
+          if (n > 0) {
+            const voice = s.off ? film?.cast.get(s.who.toUpperCase())?.voice ?? 147 : person(s.as ?? s.who).voice;
+            sound.blip(voice, s.text[n - 1], !!s.off);
+          }
           typed = n;
           lineEl.textContent = s.text.slice(0, n);
         }
@@ -656,7 +612,7 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
           c.el.classList.toggle('on', t >= c.on);
           c.el.classList.toggle('gone', t >= c.off);
         }
-        if (t >= withoutTimes.take && t < withoutTimes.last) withoutLine.textContent = `Take ${nameOf('them')} away.`;
+        if (t >= withoutTimes.take && t < withoutTimes.last) withoutLine.textContent = `Take ${person(themKey()).name} away.`;
         endText.classList.toggle('on', t >= withoutTimes.last);
         endActions.classList.toggle('on', t >= withoutTimes.last + 2.5);
       }
@@ -678,16 +634,17 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
   }
   root.querySelector('.film-skip')!.addEventListener('click', leave);
   root.querySelector('.back')!.addEventListener('click', leave);
-  root.querySelector('.see')!.addEventListener('click', () => { sound.quiet(); on_ = false; root.hidden = true; titleEl.classList.remove('on'); on.without(); });
+  seeBtn.addEventListener('click', () => { sound.quiet(); on_ = false; root.hidden = true; titleEl.classList.remove('on'); on.without(); });
   root.querySelector('.again')!.addEventListener('click', () => open(0));
 
   return {
     active: () => on_,
-    start(scenes, from = 0, rev = false) {
+    start(scenes, from = 0, rev = false, cast) {
       if (!scenes.length) return;
       // Starting from a button is a click, which is what lets the browser play sound.
       sound.unlock();
       list = scenes;
+      film = cast ?? null;
       review = rev;
       on_ = true;
       root.hidden = false;
@@ -707,13 +664,8 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
         const target = Math.min(scene.steps.length - 1, Math.max(0, i + lines));
         open(si);
         clock = 3;
-        for (let k = 0; k < target; k++) {
-          const s = scene.steps[k];
-          const st = stage();
-          if (s.t === 'enter' || s.t === 'sit') { them.mode = s.t === 'enter' ? 'standing' : 'sitting'; them.x = st.them; }
-          else if (s.t === 'give') you.bottle = true;
-          else if (s.t === 'leave') (s.who === 'you' ? you : them).mode = 'away';
-        }
+        const st = stage();
+        for (let k = 0; k < target; k++) act(scene.steps[k], st, true);
         begin(target);
       }
     },

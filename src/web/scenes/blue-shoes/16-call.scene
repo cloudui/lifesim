@@ -1,0 +1,34 @@
+name: The call
+film: blue-shoes
+with: JASON
+set: cafe outside
+year: 2026
+cast: MOMO -24 sitting, ERIC 24 sitting
+city: 0
+props: phone, tea
+status: draft
+notes: Assembled from true pieces. Calvin is on speaker from San Francisco.
+
+TITLE Rockville, Maryland, October 22, 2026 | A tea shop. Calvin on speaker from San Francisco.
+PAUSE 3
+PHONE Calvin: He just left for the airport.
+ERIC: Did you drive him?
+PHONE Calvin: Nah, he took an uber. He told the driver, "I see you drive a Prius."
+ERIC (as JASON): "Ah. I see you drive a Prius."
+MOMO (smile): That's pretty good.
+ERIC: I've had four years.
+MOMO: Did he pick a place for his birthday dinner?
+PHONE Calvin: We had a party at Berek's house. We did eat dinner with Daniel and some guys a few days before.
+MOMO: And?
+ERIC: We went back to some pho restaurant we had like a few weeks ago.
+MOMO (open): There's no way. Why does this guy always want pho.
+ERIC: He was very sure about it. I guess the portion sizes or something. [1.4]
+ERIC (smile): At least he didn't randomly get up to take a phone call.
+EMOTE MOMO note 2
+EMOTE ERIC note 2
+PAUSE 5
+ERIC: I assume he didn't get a date.
+PHONE Calvin: Oh yeah.
+ERIC (smile): Looks like he'll be doing that dance.
+PAUSE 3
+CARD What comes next has not happened yet.

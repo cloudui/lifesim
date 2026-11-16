@@ -6,14 +6,14 @@ This file is the shared brief for any coding agent or person picking the project
 
 ## Status
 
-Last updated 2026-11-14 (a five-scene film for seed 7, in dialogue, as editable script files).
+Last updated 2026-11-16 (a film about the owner and real friends, built from the draft: nineteen scenes with a hand-written cast).
 
 - **Direction (agreed 2026-11-12):** story first, playground second. A short opening story makes you care about a few people; the tabs are for exploring the whole life afterwards. See "The opening story" below.
 - **Done:** the simulation core with endings (falling out, fading when out of sight, death), highlight detection, a retelling by people, a story editor that cuts a life to about 16 beats about one person, a library of invented details for its captions, a what-if rerun (console only), a console highlight reel, a tuning harness, determinism tests, a JSON export, and a full-screen browser game: an opening story, then five tabs: Walk (pixel art), Map (pixel art), Circle, People and Journal.
 - **Branch:** the story editor, the opening story and the film are committed on `story-editor`, not pushed or merged. Everything before that is on `main`. `codex/priya-walk` is a separate Codex experiment (walking through a life with one person); it has not been reviewed or merged.
 - **Not started:** running the sim in the browser, the intake form, a phone layout, music.
-- **In draft:** `drafts/jason-film.md`, a script for a film about the owner and a real friend, written from the owner's account, to test whether real material is what the simulated films lack. It is committed at the owner's request, as a demo among friends, and is to be removed later. Nothing is built from it yet.
-- **Next step:** the owner reviews the film scene by scene (`npm run dev`, then `?seed=7&scene&review`), edits the words in `src/web/scenes/*.scene` and adds `FLAG` lines for what to fix. Then: act on the flags, refine the art (some props and poses look wrong; nobody gestures), sound, and what comes after "without them" (the data side: the same life with and without the person, then changing the starting conditions). Films for other lives come after this one is right. The caption story (`?story`) stays as it is meanwhile. Engine work is paused except where a scene needs a cause. Speed and phone layout stay parked.
+- **Blue Shoes (built, draft):** a film about the owner and real friends, to test whether real material is what the simulated films lack. The script the owner approved is `drafts/jason-film.md`; it is built as nineteen scene files and a cast file in `src/web/scenes/blue-shoes/`. Open it from the title screen or with `?film=blue-shoes`. It is committed at the owner's request, as a demo among friends, and is to be removed later (the folder and the draft). Do not push it to `main`: that would publish it.
+- **Next step:** the owner watches Blue Shoes (`npm run dev`, then `?film=blue-shoes&review`), listens to the sound, and says what to fix in the words, the looks and the sets. The seed 7 film is still waiting for the same review (`?seed=7&scene&review`): edit the words in `src/web/scenes/*.scene` and add `FLAG` lines for what to fix. Then: act on the flags, refine the art (some props and poses look wrong; nobody gestures), sound, and what comes after "without them" (the data side: the same life with and without the person, then changing the starting conditions). Films for other lives come after this one is right. The caption story (`?story`) stays as it is meanwhile. Engine work is paused except where a scene needs a cause. Speed and phone layout stay parked.
 
 ## Run it
 
@@ -33,6 +33,7 @@ npm run export -- --seeds 1,3,5,7     # simulate lives and write public/lives/<s
 npm run dev                           # open the page (Vite); add ?seed=5&tab=walk&week=1100 to jump to a moment
                                       # ?play&advance=2.5 fast-forwards the animation, for screenshots
                                       # ?seed=7&scene plays the film written for seed 7; ?scene=3 starts at scene 3; &review shows file and line
+                                      # ?film=blue-shoes plays the film written from scratch; &scene=3 and &review work the same way
                                       # ?seed=7&without opens the Circle with the story's one person and everyone they led to taken out
                                       # ?story&beat=4 opens the story at a beat; &name=Sam renames the person it is about
 npm test
@@ -106,10 +107,12 @@ src/cli/export.ts      writes public/lives/<seed>.json and index.json
 index.html, src/web/   the page (vanilla TypeScript, SVG and canvas):
   main.ts              game shell: playhead, HUD, dialogue box, timeline scrubber, tabs, title and end screens
   story.ts             the opening story: one pixel scene and a caption per beat
-  film.ts              the film: scenes of two people in one place, dialogue and silence, no narration; the years pass between scenes
+  film.ts              the film player: people in one place, dialogue and silence, no narration; for a simulated life or a hand-written cast
+  sets.ts              the places a scene can happen in, drawn in code: a back layer, sometimes a front layer, and where people sit and stand
   sound.ts             the film's sound, synthesized: ambience per set and a blip per speaker
-  scenes.ts            reads the scene scripts and offers the ones written for the life on screen
+  scenes.ts            reads the scene scripts and cast files; offers the scenes written for the life on screen, and the films written from scratch
   scenes/*.scene       one plain script file per scene, written by hand for one simulated life; format in scenes/README.md
+  scenes/blue-shoes/   a film written from scratch: a cast file and nineteen scenes about real people (to be removed later)
   backdrop.ts          sky, skylines and venue fronts, shared by the story and the Walk
   walk.ts              Walk tab: the pixel-art walk through life
   map.ts               Map tab: where everyone is
@@ -193,7 +196,9 @@ The owner's verdict on the opening story: better, but narration will not make an
 - **Without them.** The film's `END` line is preceded by a short sequence: how many people were ever your friend, then the one person and everyone who reached you through them as portraits with how often you saw each, then "Take Kofi away" and they fade one at a time. Nothing is rerun; it is this life with those people removed. The list is the `without` beat of the caption story.
 - **The comparison.** "See the life without them" at the end of the film (or `?seed=7&without`) opens the Circle with those people taken out: they are drawn as dashed outlines with their names, their ties are not drawn, and a bar under the tabs gives each circle's size with and without them at the playhead ("close 16 → 15"), how many people are gone and how many times you saw one of them. "Put them back" ends it. The playhead starts at the quarter when most of them were friends. `Ctx.without()` gives any view the set of people taken out; only the Circle uses it so far.
 - **Sound** (`sound.ts`) is made in the browser, with no audio files: a bed of filtered noise per set (water at the pier, a room, a street) and a soft blip as each letter is typed, pitched differently for each speaker. It starts after the first click or key press, `M` or the button mutes it, and the choice is remembered. There is no music yet. It was written without being listened to, so levels and character need the owner's ear.
-- **Sets** are drawn in code in `film.ts`: `pier` (night or dusk), `steps` (the front of the family house, dusk or morning) and `sofa` (a flat at night). A set says where people sit and stand; children are the same sprites drawn smaller; hair greys with age; `wearing:` sets the other person's shirt. To add a set, add a drawing function and a case in `stage()`.
+- **Sets** are drawn in code in `sets.ts`: `pier`, `steps`, `sofa`, `car`, `camp`, `hall`, `checkout`, `campus`, `street`, `hill`, `courts`, `bar` and `cafe`, most with a variant (night, dusk, rain) and props. A set has a back layer, sometimes a front layer over the people (a bonnet, a desk, a table, rain), and says where people sit and stand. Children are the same sprites drawn smaller; hair greys with age. To add a set, write its drawing function and add it to `SETS`.
+- **Any number of people.** A scene places each person by pixels from the middle of the set. They can walk in and out (from either side or a door), walk to a place, sit and stand, and carry on walking while the script moves on (`&`). They turn to face whoever is speaking. A small sign can appear over a head (`EMOTE`: z, dots, bang, ring, heart), which is the only gesture so far. A `CARD` closes a scene with a line over the picture as it goes dark.
+- **A film written from scratch** (`scenes/<name>/`) has a `cast` file in place of a simulated life: each person's name, birth year, voice pitch and looks (skin, hair colour and style, clothes, height in pixels), and `wear:` in a scene changes clothes for that scene. Its scenes carry a `year`, there is no card between scenes, and the ending is written in the script: a `WITHOUT` line and `GONE` lines for what goes when the person is taken away. `pixel.ts` has four more hair styles for it (a middle part, short spikes, a mop of curls, a permed mullet), shorts, an open jacket and shoe colour.
 - **Threads through the five scenes:** Zambovia (a country Kofi made up in a flag quiz), the father who sets a place for Kofi, the grey hoodie, "same time tomorrow?".
 - **Where this is going:** the film, then "without them" (take the person and everyone who reached you through them out of the life), then changing the starting conditions. A rerun shows another way a life could have gone, not what one meeting caused, and must be labelled so.
 

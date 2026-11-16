@@ -1,0 +1,33 @@
+name: The theory
+film: blue-shoes
+with: JASON
+set: courts day
+year: 2031
+cast: CALVIN -44 standing, MEI 40 standing, JASON 20 standing, ERIC -20 standing
+city: 1
+props: rackets, players
+status: draft
+notes: Invented. Mei is made up.
+
+TITLE A tennis court, 2031 | Jason has brought someone
+PAUSE 3
+JASON (smile): Guys, this is Mei.
+CALVIN: How did you two meet?
+MEI: He walked up to me and said, "I see you like tennis."
+ERIC: Where were you?
+MEI: On a tennis court. Holding a racket.
+EMOTE ERIC dots 4
+EMOTE CALVIN dots 4
+PAUSE 5
+JASON: What? It worked.
+MEI (smile): It did work.
+ERIC (smile): Enjoy your money while you still have it.
+JASON: Hmm. Coming from personal experience?
+EMOTE JASON ring 2.5
+PAUSE 2
+JASON: Ah. One sec.
+LEAVE JASON right
+PAUSE 2
+MEI: Does he always do that?
+ERIC: Since 2022.
+PAUSE 4

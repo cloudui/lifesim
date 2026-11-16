@@ -1,0 +1,30 @@
+name: The rain
+film: blue-shoes
+with: JASON
+set: campus rain
+year: 2024
+cast: JASON -24 standing, MOMO 24 standing, ERIC 0 standing
+city: 0
+wear: ERIC shorts=yes shirt=#e4572e, MOMO shorts=yes shirt=#f2f2f2, JASON jacket=none
+status: draft
+notes: Real. Spring 2024, a month before Jason graduates.
+
+TITLE College Park, spring 2024 | It is pouring
+PAUSE 4
+JASON: Hmm. It's raining. [1.4]
+ERIC: Yes. It does seem like it is.
+JASON: Sorry guys, I should've checked the weather report. Maybe we can just do it next week instead.
+ERIC: If we run on a nice day you'll have forgotten it by Friday.
+ERIC: Think about it. When you're forty you'll remember: "oh yeah, remember that time we ran in the pouring rain?"
+PAUSE 5
+JASON (smile): I see. Not a bad idea, Eric.
+MOMO: This is the receipt again.
+ERIC (smile): It's always the receipt.
+JASON: Okay. Yeah. Hmm. I guess we can run toward the Xfinity Center?
+ERIC: Loser does forty push-ups.
+LEAVE ERIC right &
+PAUSE 0.5
+LEAVE MOMO right &
+PAUSE 1.2
+LEAVE JASON right
+PAUSE 2

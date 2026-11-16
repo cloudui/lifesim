@@ -1,0 +1,41 @@
+name: Hang back
+film: blue-shoes
+with: JASON
+set: steps night
+year: 2023
+cast: JASON -14 standing, MOMO 12 standing, EMILY 52 standing, ERIC 36 standing
+city: 0
+props: breath
+status: draft
+notes: Real, as far as I understand it. November 2023, after barbecue at Jason's.
+
+TITLE Outside Jason's place, November 2023 | Late, and cold
+PAUSE 3
+ERIC: Can you guys hang back a second? [1]
+WALK EMILY 108 &
+WALK ERIC 92
+PAUSE 2
+JASON: Hmm. It's cold.
+MOMO: Bro, let's go.
+JASON: What's he doing?
+MOMO: What do you think he's doing.
+FACE JASON right
+FACE MOMO right
+PAUSE 4
+JASON: Ah. [1.6]
+JASON: I see. I kind of forgot he was doing that today.
+PAUSE 6
+JASON: At my place, though. That's kind of nice.
+MOMO: Ok.
+PAUSE 2
+EMOTE EMILY heart 4
+PAUSE 2
+WALK ERIC 38
+FACE JASON auto
+FACE MOMO auto
+MOMO: Well? [1.2]
+ERIC (smile): She said yes. [1.6]
+JASON (smile): Looking big, Eric.
+ERIC: That's not what that's for.
+JASON (smile): Ah. Congratulations, then.
+PAUSE 4

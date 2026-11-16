@@ -1,33 +1,56 @@
 # Scene scripts
 
-One file per scene, played in file-name order for a life. Edit the words freely; the page reloads.
+One file per scene, played in file-name order. Edit the words freely; the page reloads.
+
+There are two kinds of film:
+
+- **For a simulated life** (the files in this folder): the header names a `seed` and the other person (`with: 1051 Kofi`). The two people are `YOU` and the other one by first name. The scene hides itself if the life no longer matches.
+- **Written from scratch** (a folder, such as `blue-shoes/`): a `cast` file gives each person a key, a name, a birth year, looks and a voice, and each scene's header names the film (`film: blue-shoes`), the person it is about (`with: JASON`) and a `year`. Nothing comes from the simulation.
 
 ```
 name: The pier            what the scene list calls it
-seed: 7                   the life it was written for
-with: 1051 Kofi           the other person: their id and first name (the scene hides itself if they no longer match)
-set: pier night           pier (night | dusk), steps (dusk | morning), sofa
+seed: 7                   a simulated life ...
+with: 1051 Kofi           ... and the other person: their id and first name
+film: blue-shoes          or: a film written from scratch (its folder) ...
+with: JASON               ... and the person it is about
+year: 2026                ... and the year (a simulated life uses week:)
+set: pier night           the place and its variant; see the list below
 week: 1287                when it happens; weeks before the story starts are negative (52 a year)
-start: you sitting, them away     each of: sitting | standing | away
-props: bottles            any of: bottles, ball, boxes
-wearing: #8b8f98          optional: the other person's shirt colour
+start: you sitting, them away          a simulated life: each of sitting | standing | away
+cast: ERIC -12 sitting, JASON away     a film from scratch: who, pixels from the middle of the set, and a stance
+city: 1                   which skyline: 0 New York, 1 San Francisco, 2 Chicago
+props: bottles            things the set draws; see the list below
+wearing: #8b8f98          a simulated life: the other person's shirt colour
+wear: ERIC shoes=#2f8fff shorts=yes, JASON jacket=none    what differs from the cast file in this scene
 status: draft             draft | reviewed
 notes: anything for the review list
 
 TITLE New York, 2050 | The week after the funeral
 PAUSE 5                   seconds of nothing said
-ENTER                     the other person walks in
-SIT                       the other person sits
-GIVE                      they hand you a bottle
-DRINK them                or: DRINK you
-LEAVE you                 or: LEAVE them
-KOFI: A line.             the other person (THEM: also works)
+KOFI: A line.             someone speaks
 YOU: A line. [2]          optional: seconds of quiet after the line
 KOFI (smile): A line.     optional: the face for the line: smile | sad | open | shut
+ERIC (as JASON): "Ah."    said in someone else's voice
 VOICE Dad: A line.        someone off screen
+PHONE Calvin: A line.     someone on a phone
+ENTER JASON left          walks in from left | right | door, to their place (or: ENTER JASON left -20)
+LEAVE JASON right         walks off to left | right | door
+WALK ERIC 80              walks to a place
+ENTER MOMO right 50 &     "&" at the end of a move: do not wait for it
+SIT ERIC                  also STAND ERIC
+FACE JASON right          left | right | auto (auto: towards whoever is speaking, or the nearest person)
+EMOTE JASON z 8           a sign over their head for some seconds: z dots bang ask note ring heart
+GIVE                      a simulated life: they hand you a bottle
+DRINK them                or: DRINK you
+CARD A line over the scene as it goes dark, to close it.
 FLAG the joke is flat     a review note on the next line; shown in review mode
-END Last words. {seen} and {led} are filled in from the life. Before them the film shows
-                          "without them": the person and everyone who reached you through them, fading out.
+WITHOUT A line.           a film from scratch: the line over the ending
+GONE Calvin | the roommate     ... and what goes when the person is taken away (a portrait if they are in the cast)
+END Last words.           for a simulated life, {seen} and {led} are filled in and "without them" comes from the life
 ```
 
-Review: open `?seed=7&scene&review`. The file and line being played are shown top left; `[` and `]` jump between scenes, left and right arrows between lines.
+In a simulated-life scene the short forms still work: `ENTER`, `SIT` and `THEM:` mean the other person, `LEAVE you`.
+
+Sets: `pier` (night | dusk), `steps` (dusk | morning | night; props ball, boxes, car, breath), `sofa` (props balloons, plates, chair, blanket), `car` (a car park, seen through the windscreen), `camp`, `hall` (a lecture hall; prop laptop), `checkout`, `campus` (rain | awning), `street` (outside the gym), `hill`, `courts` (day | dusk; props bench2, rackets, players), `bar`, `cafe` (inside | outside; props laptops, cups, phone, tea). They are drawn in `../sets.ts`.
+
+Review: open `?seed=7&scene&review`, or `?film=blue-shoes&review` (add `&scene=3` to start at the third). The file and line being played are shown top left; `[` and `]` jump between scenes, left and right arrows between lines.

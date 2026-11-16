@@ -1,0 +1,41 @@
+name: Court three
+film: blue-shoes
+with: JASON
+set: courts day
+year: 2026
+cast: STRANGER 84 sitting, CALVIN -26 sitting, JASON 24 sitting, ERIC -2 sitting
+city: 1
+props: bench2, rackets, players
+status: draft
+notes: Real: Mission Dolores, the waiting, the bets. Assembled.
+
+TITLE Mission Dolores courts, October 2026 | Waiting for a court
+PAUSE 3
+FACE JASON right
+JASON: I see you like tennis. [1.2]
+STRANGER: Yeah?
+JASON (smile): Nice. How long have you been playing?
+EMOTE STRANGER dots 3
+PAUSE 3.5
+FACE JASON auto
+CALVIN: Get any numbers today, Jason?
+ERIC (as JASON): "Ah. I see you like tennis."
+JASON: There's no way I sound like that.
+CALVIN: That was pretty good, Eric.
+JASON: Hmm. He seemed friendly, though.
+ERIC: He's holding a racket. On a tennis court.
+JASON: Right. So he likes tennis.
+PAUSE 4
+JASON: Eric, you should toss the ball more forward.
+ERIC: I swear you told me to do this yesterday.
+JASON: Hmm. I don't think I did. Here, hold it like this.
+CALVIN: The last court said ten more minutes.
+ERIC: Okay. Hope you're ready for this forehand, Jason.
+JASON (smile): Ah. That's what I like to hear. Calvin, I hope you guys are ready for this thirst trap.
+CALVIN: Any progress on that date? You only got two weeks left.
+JASON (sad): It's so cooked, man. I swear all the girls here are dating someone already.
+ERIC (smile): It's ok. You can do an uwu dance instead of a thirst trap.
+JASON: I think I'd rather do the thirst trap.
+CALVIN: It's ok, you might have to do both.
+PAUSE 3
+CARD They lost. The video exists. There are hip thrusts.

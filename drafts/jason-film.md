@@ -1,5 +1,7 @@
 # Blue Shoes: a film about Eric and Jason (draft 3)
 
+**Built on 2026-11-16** as `src/web/scenes/blue-shoes/` (open `?film=blue-shoes`). From here on, edit the scene files there; this file is the script as approved and is not kept in step.
+
 A draft to read and correct before anything is built. Sixteen short scenes, about twelve minutes. Scenes 1 to 13 are things that happened, as you told them; scenes 14 to 16 are invented and say so.
 
 ## What changed from draft 2

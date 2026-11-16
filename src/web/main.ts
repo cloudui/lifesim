@@ -14,7 +14,7 @@ import { createMap } from './map';
 import { createPersonCard } from './person';
 import './style.css';
 import { createFilm } from './film';
-import { scenesFor } from './scenes';
+import { films, scenesFor } from './scenes';
 import { createStory } from './story';
 import type { Ctx, Scene, View } from './types';
 import { createWalk } from './walk';
@@ -529,6 +529,17 @@ function fillTitle(): void {
       return b;
     }),
   );
+  $('written').hidden = !films().length;
+  $('written-list').replaceChildren(
+    ...films().map((f) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'life';
+      b.innerHTML = `<b>▶ ${esc(f.title)}</b><small>${esc(f.about)} · ${f.scenes.length} scenes, draft</small>`;
+      b.addEventListener('click', () => beginWritten(f.id));
+      return b;
+    }),
+  );
   if (friend) $('title-friend-name').textContent = friend.name.split(' ')[0];
   $('lives').replaceChildren(
     ...lives.map((l) => {
@@ -611,6 +622,16 @@ function beginFilm(from = 0, review = false): void {
   $('title-screen').hidden = true;
   $('end-screen').hidden = true;
   film.start(list, from, review);
+}
+/** A film written from scratch, with its own cast: nothing in it comes from the life on screen. */
+function beginWritten(id: string, from = 0, review = false): void {
+  const f = films().find((x) => x.id === id);
+  if (!f) return;
+  setPlaying(false);
+  story.stop();
+  $('title-screen').hidden = true;
+  $('end-screen').hidden = true;
+  film.start(f.scenes, from, review, f);
 }
 function beginStory(beat = 0): void {
   setPlaying(false);
@@ -836,7 +857,7 @@ async function main(): Promise<void> {
 
   // Deep links skip the title screen: ?week=1100, ?play, ?person=<id|closest>, ?advance=2.5,
   // ?story (the opening story; &beat=4 starts at that beat, &name=Sam renames the friend in it).
-  const deep = ['week', 'play', 'person', 'advance', 'story', 'scene', 'without'].some((k) => query.has(k));
+  const deep = ['week', 'play', 'person', 'advance', 'story', 'scene', 'without', 'film'].some((k) => query.has(k));
   await load(seed, !deep);
   // The pixel font changes the HUD's size once it arrives.
   document.fonts.ready.then(layoutAll);
@@ -854,7 +875,9 @@ async function main(): Promise<void> {
   }
   if (query.has('story')) beginStory(Number(query.get('beat') ?? 0) || 0);
   // ?scene plays the film written for this life; ?scene=3 starts at the third scene; &review shows file and line.
-  if (query.has('scene')) beginFilm((Number(query.get('scene')) || 1) - 1, query.has('review'));
+  // ?film=blue-shoes plays a film written from scratch; &scene and &review work the same way.
+  if (query.has('film')) beginWritten(query.get('film')!, (Number(query.get('scene')) || 1) - 1, query.has('review'));
+  else if (query.has('scene')) beginFilm((Number(query.get('scene')) || 1) - 1, query.has('review'));
   // Testing aid: ?play&advance=2.5 runs the animation forward that many seconds before showing it.
   for (let i = 0, n = Math.round(Number(query.get('advance') ?? 0) * 30); i < n; i++) tick(1 / 30);
   lastFrame = performance.now();

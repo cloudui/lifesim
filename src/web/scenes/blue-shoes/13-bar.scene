@@ -1,0 +1,32 @@
+name: The bar
+film: blue-shoes
+with: JASON
+set: bar night
+year: 2026
+cast: CALVIN 36 standing, JASON -10 standing, ERIC 14 standing
+city: 1
+status: draft
+notes: Real, as told. Outside, just after leaving.
+
+TITLE San Francisco, October 2026 | Outside the bar
+PAUSE 3
+JASON (smile): She was really nice.
+ERIC (smile): Tomoka-chan!
+CALVIN: She's thirty.
+JASON: Thirty's not that old.
+PAUSE 4
+JASON: I'm going back in.
+ERIC: To say what?
+JASON: I don't know. I'll think of something.
+LEAVE JASON door
+PAUSE 8
+ENTER JASON door -10
+PAUSE 1
+CALVIN: Well? [1.2]
+JASON: I asked her for a referral for Apple. [1.6]
+ERIC (open): No shot.
+JASON: It's a good opportunity.
+ERIC: She offered me that referral an hour ago.
+JASON: Ah. Yeah. I got her email.
+PAUSE 3
+CARD He emailed twice.

@@ -2,6 +2,16 @@
 
 What was added, when, and why, newest first. `AGENTS.md` describes the project as it is now; this file is the record of how it got there. Add an entry whenever a change alters how the simulation behaves or what the page shows. Commit ids are in brackets.
 
+## 2026-11-16: Blue Shoes, a film about real people
+
+- The owner approved the script in `drafts/jason-film.md` and asked for it to be built. It is nineteen scene files and a cast file in `src/web/scenes/blue-shoes/`, opened from the title screen ("Films about real people") or with `?film=blue-shoes`. The words are the owner's draft; two typos were fixed ("made", "visiting"). The last line of the film (END) is not from the draft and is flagged.
+- The film player was rewritten to hold any number of people. A scene places each one, and they can walk in and out from either side or through a door, walk to a place, sit, stand, turn to the speaker, and show a small sign over their head. Scenes can end on a card. The seed 7 film plays through the same code.
+- A film can now be written from scratch, with a hand-written cast in place of a simulated life. Looks come from the cast file: skin, hair (four new styles), clothes, height. A scene can change what someone wears, which is how the blue shoes are on the right feet in 2022 and 2066.
+- Ten new sets, in a new `sets.ts`: a car in a car park, a campsite, a lecture hall, a supermarket checkout, a campus in the rain and under an awning, Castro Street outside the gym, the hill, tennis courts, the outside of a bar, a café table inside and outside. The steps got a night and a packed car; the sofa got balloons, plates, an armchair and a blanket.
+- Sound: a rain bed, a voice pitch per person, and a line said "as" someone else borrows their pitch (Eric doing Jason).
+- Checked by loading every scene at a fast-forwarded moment and looking at a still, never by watching it play, and the sound has still not been listened to.
+- Kept out of `main` on purpose: pushing there would publish a film about real people.
+
 ## 2026-11-16
 
 ### Sound for the film, and a draft about real people
