@@ -2,6 +2,14 @@
 
 What was added, when, and why, newest first. `AGENTS.md` describes the project as it is now; this file is the record of how it got there. Add an entry whenever a change alters how the simulation behaves or what the page shows. Commit ids are in brackets.
 
+## 2026-11-16: Blue Shoes, second round of looks
+
+- Jason was redrawn from two more photos: softer short hair that fades at the sides, a light grey tee and no jacket (the dark jacket and flat top read as an anime delinquent), and a smile as his resting face (`mood=smile` in the cast file).
+- Mouths no longer move while a line is typed; the owner found it creepy. Expressions stay.
+- The small sprites of Momo and Eric were simplified: glasses are three dots, the mop and the fringe are smaller. Eric wears a white top.
+- The sound and leave buttons sit in one row and no longer overlap.
+- The bar along the bottom is a timeline: numbered pieces, and the scene's name and year above the pointer.
+
 ## 2026-11-16: Blue Shoes, after the owner's first watch
 
 The owner watched it and sent a list, with photos of the four friends.

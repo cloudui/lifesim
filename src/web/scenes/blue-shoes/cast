@@ -7,8 +7,8 @@ about: A film about Eric and Jason
 you: ERIC
 city: 1
 
-ERIC     | Eric   | born=2002 tall=0 skin=#e6b98e hair=#16151a style=fringe glasses=#c9a86a shirt=#22252b jacket=#f2f0e8 pants=#2d3142 voice=196
-JASON    | Jason  | born=2002 tall=1 skin=#e2b086 hair=#131217 style=flat shirt=#2f3440 jacket=#27407a pants=#22252b shorts=yes voice=165
+ERIC     | Eric   | born=2002 tall=0 skin=#e6b98e hair=#16151a style=fringe glasses=#c9a86a shirt=#f2f0e8 pants=#2d3142 voice=196
+JASON    | Jason  | born=2002 tall=1 skin=#e8b78c hair=#1c1814 style=flat shirt=#b9b6b2 pants=#22252b shorts=yes mood=smile voice=165
 MOMO     | Momo   | born=2002 tall=0 skin=#c7996c hair=#17130f style=mop glasses=#101014 heavy=yes shirt=#3a3b40 pants=#1c1d21 voice=233
 CALVIN   | Calvin | born=2002 tall=1 skin=#e0ae84 hair=#1d1712 style=wavy shirt=#1c1d21 pants=#2d3142 voice=147
 EMILY    | Emily  | born=2002 tall=0 skin=#efc7a0 hair=#1f1a17 style=long shirt=#f2f2f2 pants=#5b4636 voice=330

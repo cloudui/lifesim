@@ -13,7 +13,7 @@ export const FACE_H = 26;
 
 type G = CanvasRenderingContext2D;
 
-export interface FaceState { mood: Mood; blink: boolean; talking: boolean; grey: number }
+export interface FaceState { mood: Mood; blink: boolean; grey: number }
 
 export function drawFace(g: G, look: Look, st: FaceState): void {
   const px = (x: number, y: number, w: number, h: number, c: string) => { g.fillStyle = c; g.fillRect(x, y, w, h); };
@@ -52,9 +52,10 @@ export function drawFace(g: G, look: Look, st: FaceState): void {
 
   // Brows and eyes.
   const sad = st.mood === 'sad';
-  px(11, sad ? 10 : 11, 4, 1, dark);
-  px(17, sad ? 10 : 11, 4, 1, dark);
-  if (sad) { px(11, 10, 1, 1, skin); px(11, 11, 2, 1, dark); px(20, 10, 1, 1, skin); px(19, 11, 2, 1, dark); }
+  const brow = mix(skin, '#2a1512', 0.5);
+  px(11, sad ? 10 : 11, 3, 1, brow);
+  px(18, sad ? 10 : 11, 3, 1, brow);
+  if (sad) { px(11, 10, 1, 1, skin); px(11, 11, 1, 1, brow); px(20, 10, 1, 1, skin); px(20, 11, 1, 1, brow); }
   if (st.blink || st.mood === 'shut') {
     px(11, 14, 3, 1, dark);
     px(18, 14, 3, 1, dark);
@@ -65,13 +66,12 @@ export function drawFace(g: G, look: Look, st: FaceState): void {
     px(19, 13, 2, 2, '#1a1418');
     px(12, 13, 1, 1, '#3d3540');
     px(19, 13, 1, 1, '#3d3540');
-    if (st.mood === 'smile') { px(11, 14, 1, 1, skin); px(20, 14, 1, 1, skin); }
   }
   // Nose and mouth.
   px(15, 15, 1, 2, shade);
   px(15, 17, 2, 1, shade);
   const lip = mix(skin, '#8a2f2a', 0.55);
-  const open = st.mood === 'open' || st.talking;
+  const open = st.mood === 'open';
   if (open) {
     const tall = st.mood === 'open' ? 2 : 1;
     px(14, 19, 4, 1 + tall, '#4a1c1c');
@@ -123,9 +123,11 @@ export function drawFace(g: G, look: Look, st: FaceState): void {
     for (const [x, y] of [[12, 4], [18, 5], [21, 3]]) px(x, y, 2, 1, curl);
   } else if (hs === 9) {
     // Short and dense with a flat top, close at the sides.
-    px(9, 2, 14, 5, hair); px(10, 1, 12, 1, hair);
-    px(8, 5, 1, 5, hair); px(23, 5, 1, 5, hair);
-    px(10, 7, 12, 1, hair); px(11, 8, 9, 1, hair);
+    const fade = mix(hair, skin, 0.5);
+    px(11, 2, 10, 1, hair); px(9, 3, 14, 4, hair); px(10, 2, 1, 1, hair); px(21, 2, 1, 1, hair);
+    px(8, 6, 1, 5, fade); px(23, 6, 1, 5, fade); px(9, 7, 1, 3, fade); px(22, 7, 1, 3, fade);
+    px(11, 7, 3, 1, hair); px(16, 7, 4, 1, hair);
+    for (const [x, y] of [[12, 3], [17, 4], [20, 3]]) px(x, y, 2, 1, curl);
   } else if (hs === 10) {
     // Parted in the middle, wavy, in front of the ears.
     px(9, 3, 14, 4, hair); px(10, 2, 12, 1, hair);

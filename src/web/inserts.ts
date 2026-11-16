@@ -53,7 +53,7 @@ export function drawInsert(g: G, name: string, x: number, y: number, clock: numb
     px(20, 5, 32, 36, '#8fb0cf');
     px(20, 27, 32, 14, '#5c946e');
     faceBuf ??= Object.assign(document.createElement('canvas'), { width: FACE_W, height: FACE_H });
-    drawFace(faceBuf.getContext('2d')!, look, { mood: 'smile', blink: false, talking: false, grey: 0 });
+    drawFace(faceBuf.getContext('2d')!, look, { mood: 'smile', blink: false, grey: 0 });
     g.drawImage(faceBuf, x + 20, y + 15);
     px(33, 3, 6, 1, '#2a2d33');
   } else if (name === 'cake') {

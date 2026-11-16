@@ -181,11 +181,10 @@ function paint(g: CanvasRenderingContext2D, look: Look, outfit: Outfit, pose: Po
     px(6, by + 1, 1, 2, hair);
     for (const x of [7, 9, 11, 12]) px(x, by - 1, 1, 1, hair);
   } else if (look.hairStyle === 6) {
-    px(6, by - 2, 8, 2, hair);
-    px(5, by - 1, 10, 3, hair);
-    px(5, by + 2, 2, 3, hair);
-    px(14, by + 1, 1, 2, hair);
-    for (const [x, y] of [[7, -2], [10, -1], [12, -2], [6, 0], [13, 0], [9, 1], [5, 3]]) px(x, by + y, 1, 1, curl);
+    px(7, by - 2, 6, 1, hair);
+    px(6, by - 1, 8, 3, hair);
+    px(6, by + 2, 1, 2, hair);
+    for (const [x, y] of [[8, -2], [11, -1], [7, 0], [12, 1]]) px(x, by + y, 1, 1, curl);
   } else if (look.hairStyle === 7) {
     px(6, by - 1, 8, 3, hair);
     px(6, by + 2, 1, 2, hair);
@@ -195,17 +194,15 @@ function paint(g: CanvasRenderingContext2D, look: Look, outfit: Outfit, pose: Po
   } else if (look.hairStyle === 8) {
     // A messy fringe down to the brows, with bits standing up.
     px(7, by, 6, 2, hair);
-    px(6, by + 1, 1, 4, hair);
+    px(6, by + 1, 1, 3, hair);
     px(8, by + 2, 5, 1, hair);
-    px(9, by + 3, 1, 1, hair);
-    px(12, by + 3, 1, 1, hair);
-    for (const [x, y] of [[8, -1], [10, -2], [11, -1], [12, -1], [13, 0], [6, 0]]) px(x, by + y, 1, 1, hair);
+    for (const [x, y] of [[9, -1], [11, -1]]) px(x, by + y, 1, 1, hair);
   } else if (look.hairStyle === 9) {
     // Short and dense, flat on top, close at the sides.
-    px(7, by - 1, 6, 3, hair);
-    px(6, by, 1, 2, hair);
-    px(13, by, 1, 1, hair);
-    px(9, by + 2, 4, 1, hair);
+    // Short and soft: a rounded top, fading at the sides.
+    px(7, by, 6, 2, hair);
+    px(8, by - 1, 4, 1, hair);
+    px(6, by + 1, 1, 2, mix(hair, look.skin, 0.45));
   } else if (look.hairStyle === 10) {
     // Parted in the middle and wavy down to the shoulders.
     px(7, by, 6, 2, hair);
@@ -219,12 +216,11 @@ function paint(g: CanvasRenderingContext2D, look: Look, outfit: Outfit, pose: Po
     px(7, by, 6, 3, hair);
     px(6, by + 1, 1, 3, hair);
   }
-  if (look.hairStyle === 6) { px(7, by - 3, 6, 1, hair); px(8, by + 2, 4, 1, hair); px(9, by - 3, 1, 1, curl); }
   if (look.glasses) {
     // A frame round both eyes, and an arm back to the ear.
+    // At this size glasses are three dots between and beside the eyes; a heavy frame adds the arm.
     for (const x of [9, 11, 13]) px(x, by + 4, 1, 1, look.glasses);
-    px(7, by + 4, 2, 1, look.glasses);
-    if (look.heavyGlasses) { px(9, by + 3, 5, 1, look.glasses); px(9, by + 5, 5, 1, look.glasses); }
+    if (look.heavyGlasses) px(7, by + 4, 2, 1, look.glasses);
   }
   if (look.hairStyle === 1) px(5, by + 1, 2, 8, hair);
   if (look.hairStyle === 2) px(5, by - 1, 3, 3, hair);

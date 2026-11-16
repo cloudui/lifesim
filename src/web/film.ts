@@ -57,9 +57,12 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
   root.innerHTML = `
     <canvas class="pixel-canvas"></canvas>
     <div class="film-title"><div class="film-title-text"></div><div class="film-title-sub"></div></div>
-    <button class="film-skip" type="button" title="Leave the film">Leave ▸▸</button>
-    <button class="film-sound" type="button" title="Sound on or off (M)"></button>
-    <div class="film-scrub" title="Jump to a scene"></div>
+    <div class="film-top">
+      <button class="film-sound" type="button" title="Sound on or off (M)"></button>
+      <button class="film-skip" type="button" title="Leave the film">Leave ▸▸</button>
+    </div>
+    <div class="film-scrub-label"></div>
+    <div class="film-scrub"></div>
     <div class="film-hint">it plays by itself · space or click to go sooner</div>
     <div class="film-review" hidden></div>
     <div class="film-box" hidden>
@@ -105,6 +108,7 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
     soundBtn.setAttribute('aria-label', sound.isMuted() ? 'Sound is off' : 'Sound is on');
   };
   const scrubEl = root.querySelector<HTMLElement>('.film-scrub')!;
+  const scrubLabel = root.querySelector<HTMLElement>('.film-scrub-label')!;
   showSound();
   soundBtn.addEventListener('click', () => { sound.unlock(); sound.setMuted(!sound.isMuted()); showSound(); });
   const scratch = document.createElement('canvas');
@@ -247,7 +251,7 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
       titleEl.querySelector('.film-title-sub')!.textContent = s.t === 'title' ? s.sub ?? '' : '';
     } else if (s.t === 'say') {
       const key = s.off ? 'off' : `${s.who}${si}`;
-      faceMood = s.mood ?? 'flat';
+      faceMood = s.mood ?? (s.off ? 'flat' : film?.cast.get(s.who)?.mood ?? 'flat');
       if (faceKey !== key) {
         faceKey = key;
         faceCanvas = s.off ? null : faceFor();
@@ -335,18 +339,11 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
     c.style.imageRendering = 'pixelated';
     return c;
   }
-  /** Redraw the face: its expression, a blink now and then, and the mouth moving while the line is typed. */
+  /** Redraw the face: its expression, and a blink now and then. */
   function paintFace(): void {
     if (!faceCanvas || !faceWho) return;
     const p = person(faceWho);
-    const s = scene!.steps[i];
-    const typing = s.t === 'say' && t * TYPE_RATE < s.text.length;
-    drawFace(faceCanvas.getContext('2d')!, p.look, {
-      mood: faceMood,
-      blink: (clock + p.id * 0.37) % 4.2 < 0.14,
-      talking: typing && Math.floor(clock * 7) % 2 === 0,
-      grey: greyOf(p),
-    });
+    drawFace(faceCanvas.getContext('2d')!, p.look, { mood: faceMood, blink: (clock + p.id * 0.37) % 4.2 < 0.14, grey: greyOf(p) });
   }
 
   /** The bar along the bottom: one piece per scene, filled as far as the film has got. */
@@ -354,8 +351,9 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
     scrubEl.replaceChildren(...list.map((sc, k) => {
       const seg = document.createElement('i');
       seg.style.flexGrow = String(Math.max(4, sc.steps.length));
-      seg.title = `${k + 1}. ${sc.name}`;
-      seg.append(document.createElement('b'));
+      const num = document.createElement('span');
+      num.textContent = String(k + 1);
+      seg.append(document.createElement('b'), num);
       return seg;
     }));
   }
@@ -386,8 +384,20 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
     const to = Math.floor(((ev.clientX - r.left) / r.width) * list[k].steps.length);
     if (k !== si || to !== i) seek(k, to);
   }
-  scrubEl.addEventListener('pointerdown', (ev) => { sound.unlock(); scrubEl.setPointerCapture(ev.pointerId); scrubTo(ev); });
-  scrubEl.addEventListener('pointermove', (ev) => { if (ev.buttons & 1) scrubTo(ev); });
+  /** The name of the scene under the pointer, above the bar. */
+  function labelAt(ev: PointerEvent): void {
+    const segs = [...scrubEl.children] as HTMLElement[];
+    const k = segs.findIndex((seg) => { const r = seg.getBoundingClientRect(); return ev.clientX >= r.left && ev.clientX <= r.right; });
+    if (k < 0) return;
+    const sc = list[k];
+    scrubLabel.textContent = `${k + 1}. ${sc.name}${film && sc.year ? ` · ${sc.year}` : ''}`;
+    const box = root.getBoundingClientRect();
+    scrubLabel.style.left = `${Math.min(box.width - 140, Math.max(140, ev.clientX - box.left))}px`;
+    scrubLabel.classList.add('on');
+  }
+  scrubEl.addEventListener('pointerdown', (ev) => { sound.unlock(); scrubEl.setPointerCapture(ev.pointerId); scrubTo(ev); labelAt(ev); });
+  scrubEl.addEventListener('pointermove', (ev) => { labelAt(ev); if (ev.buttons & 1) scrubTo(ev); });
+  scrubEl.addEventListener('pointerleave', () => scrubLabel.classList.remove('on'));
 
   function open(k: number): void {
     si = k;

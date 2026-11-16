@@ -83,7 +83,7 @@ export interface FilmScene {
   gone: { name: string; note: string }[];
 }
 
-export interface CastMember { key: string; name: string; born: number; look: Look; scale: number; voice: number }
+export interface CastMember { key: string; name: string; born: number; look: Look; scale: number; voice: number; /** The face they wear when a line does not say. */ mood: Mood }
 export interface Film {
   id: string;
   title: string;
@@ -98,7 +98,7 @@ export interface Film {
 const STYLES: Record<string, number> = { short: 0, long: 1, bun: 2, cropped: 3, swoop: 4, spiky: 5, mop: 6, mullet: 7, fringe: 8, flat: 9, wavy: 10 };
 
 /** "shirt=#fff shorts=yes tall=1" -> look fields. */
-function lookFields(text: string): Partial<Look> & { born?: number; scale?: number; voice?: number } {
+function lookFields(text: string): Partial<Look> & { born?: number; scale?: number; voice?: number; mood?: Mood } {
   const out: Record<string, unknown> = {};
   for (const part of text.split(/\s+/)) {
     const [k, v] = part.split('=');
@@ -122,9 +122,9 @@ function parseCast(id: string, src: string): Film {
     if (text.includes('|')) {
       const [key, name, rest] = text.split('|').map((x) => x.trim());
       const f = lookFields(rest ?? '');
-      const { born = 2000, scale = 1, voice = 220, ...look } = f;
+      const { born = 2000, scale = 1, voice = 220, mood = 'flat', ...look } = f;
       film.cast.set(key.toUpperCase(), {
-        key: key.toUpperCase(), name, born, scale, voice,
+        key: key.toUpperCase(), name, born, scale, voice, mood,
         look: { skin: '#eab98f', hair: '#1a1a22', hairStyle: 0, shirt: '#3d5a80', pants: '#2d3142', formal: 'suit', ...look },
       });
       continue;
