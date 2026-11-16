@@ -508,7 +508,8 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
     sg.clearRect(0, 0, 48, 56);
     // In the scratch canvas the hip of someone sitting, or the feet of someone standing, is at (24, 40).
     if (a.mode === 'sitting') {
-      const breathe = Math.sin(clock * 0.9 + p.id * 2) > 0.96 ? 1 : 0;
+      // No bob while sitting: lifting the body a pixel off the thighs shows a sliver of the legs underneath.
+      const breathe = 0;
       sg.save();
       sg.beginPath();
       sg.rect(0, 0, 48, 40);
