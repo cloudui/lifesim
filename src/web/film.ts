@@ -513,13 +513,21 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
       const base = 47 + (lk.tall ?? 0);
       const breathe = !a.slump && Math.sin(clock * 0.9 + p.id * 2) > 0.96 ? 1 : 0;
       const opts = { pose: 'stand' as const, frame: 0, outfit: 'casual' as const, grey: greyOf(p), flip: left, shut: a.slump, call: a.hold === 'call' };
+      // The bob: everything above the waist rises a pixel, and the bottom row of the torso stays where it
+      // is, so the body stretches by a row and nothing is drawn twice or opens up underneath.
+      // Slumped: forward and down, head on the desk.
+      if (breathe) {
+        sg.save();
+        sg.beginPath();
+        sg.rect(0, 39, 48, 1);
+        sg.clip();
+        drawPerson(sg, 24, base, lk, opts);
+        sg.restore();
+      }
       sg.save();
       sg.beginPath();
-      sg.rect(0, 0, 48, 40);
+      sg.rect(0, 0, 48, 40 - breathe);
       sg.clip();
-      // The bob: the body is drawn in place first and again a pixel up, so nothing opens under it.
-      // Slumped: forward and down, head on the desk.
-      if (breathe) drawPerson(sg, 24, base, lk, opts);
       drawPerson(sg, 24 + (a.slump ? (left ? -4 : 4) : 0), base - breathe + (a.slump ? 6 : 0), lk, opts);
       sg.restore();
       if (st.legs > 0) {
