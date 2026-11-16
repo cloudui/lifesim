@@ -13,4 +13,4 @@ music: none               no music
 
 In Blue Shoes: `morning` (the shoes, the campsite, the call), `study` (the seat), `muzak` (H Mart), `tender` (hang back), `run` (the rain), `rainy` (the awning), `club` (the party; muffled outside the bar), `late-night` (the couch, the night before), `evening` (Castro Street, the hill), `courts` (court three, the theory), `cafe` (the café), `leaving` (the lanyard), `bench` (2066).
 
-**Licences.** These files were added by the owner for a private demo, and at least one may not be free to publish. They must not reach `main`, which deploys the site. Before anything is published, replace them with CC0 or otherwise cleared tracks.
+**Licences.** These files were found by the owner for a film made for one friend. They were published with it on 2026-11-16, at the owner's decision, on a site nobody else knows; at least one may not be free to publish. Before the site is shared more widely, replace them with CC0 or otherwise cleared tracks.

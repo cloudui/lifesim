@@ -2,6 +2,21 @@
 
 What was added, when, and why, newest first. `AGENTS.md` describes the project as it is now; this file is the record of how it got there. Add an entry whenever a change alters how the simulation behaves or what the page shows. Commit ids are in brackets.
 
+## 2026-11-16: Blue Shoes published
+
+The owner said the film looks right and asked for everything to be written up and pushed, keeping it all, so that Jason can watch it: "nobody knows the site". `story-editor` was merged into `main`, which deploys the site.
+
+What Blue Shoes is, at this point:
+
+- **The film:** nineteen scenes from fall 2022 to an invented 2066, in the owner's words, about Eric and Jason, with Momo, Calvin and Emily. Thirteen scenes happened; three are invented and say so. It ends on "Take Jason away".
+- **Made in one day**, in rounds: a draft script corrected by the owner three times; a first build; then eight rounds of watching and fixing (the cast redrawn from photos twice, portraits for the dialogue box, a timeline, the sets corrected and filled with people, seated poses, music found by the owner for every scene, skipping, and the words tidied).
+- **What the player gained for any future film:** any number of people who walk, run, sit, sleep, hold things and turn to the speaker; thirteen sets with props and background people; a cast file with hand-picked looks; close-ups; signs in bubbles; cards; a timeline to scrub; music per scene from a file or synthesized.
+- **The life after it:** Jason's, written by hand (`life.json`, built by `npm run handlife`), so the tabs have something to explore.
+- **Never checked by an agent:** how it plays at real speed, and all of the sound. Everything was verified from stills.
+- **Accepted for now and to be revisited** before the site is shared: found music that may not be cleared, real names (one of someone met once), and no phone layout. `AGENTS.md` has the list under "Before the site is shared".
+
+The question this was built to answer is still open: whether a film about people you know lands in a way the simulated ones did not. Jason's reaction is the answer.
+
 ## 2026-11-16: Blue Shoes, after a full watch
 
 - Skipping: space or the right arrow during a walk finishes the walk and moves on. The left arrow goes back to the previous line that is said or shown, never to a pause, a walk or a sign over a head (which only played again), and steps back into the previous scene from a scene's first line.
