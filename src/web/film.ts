@@ -508,14 +508,19 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
     sg.clearRect(0, 0, 48, 56);
     // In the scratch canvas the hip of someone sitting, or the feet of someone standing, is at (24, 40).
     if (a.mode === 'sitting') {
-      // No bob while sitting: lifting the body a pixel off the thighs shows a sliver of the legs underneath.
-      const breathe = 0;
+      // A taller person's extra height is in the legs, so their torso ends a row higher. Drawn that much
+      // lower, the torso meets the thighs; otherwise a row of the narrow standing legs shows in between.
+      const base = 47 + (lk.tall ?? 0);
+      const breathe = !a.slump && Math.sin(clock * 0.9 + p.id * 2) > 0.96 ? 1 : 0;
+      const opts = { pose: 'stand' as const, frame: 0, outfit: 'casual' as const, grey: greyOf(p), flip: left, shut: a.slump, call: a.hold === 'call' };
       sg.save();
       sg.beginPath();
       sg.rect(0, 0, 48, 40);
       sg.clip();
+      // The bob: the body is drawn in place first and again a pixel up, so nothing opens under it.
       // Slumped: forward and down, head on the desk.
-      drawPerson(sg, 24 + (a.slump ? (left ? -4 : 4) : 0), 47 - breathe + (a.slump ? 6 : 0), lk, { pose: 'stand', frame: 0, outfit: 'casual', grey: greyOf(p), flip: left, shut: a.slump, call: a.hold === 'call' });
+      if (breathe) drawPerson(sg, 24, base, lk, opts);
+      drawPerson(sg, 24 + (a.slump ? (left ? -4 : 4) : 0), base - breathe + (a.slump ? 6 : 0), lk, opts);
       sg.restore();
       if (st.legs > 0) {
         const hang = scene!.set === 'pier' || scene!.set === 'steps';
