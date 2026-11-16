@@ -218,9 +218,12 @@ function paint(g: CanvasRenderingContext2D, look: Look, outfit: Outfit, pose: Po
   }
   if (look.glasses) {
     // A frame round both eyes, and an arm back to the ear.
-    // At this size glasses are three dots between and beside the eyes; a heavy frame adds the arm.
-    for (const x of [9, 11, 13]) px(x, by + 4, 1, 1, look.glasses);
-    if (look.heavyGlasses) px(7, by + 4, 2, 1, look.glasses);
+    // At this size a frame drawn in full joins up with the eyes into one line. So the eyes stay
+    // two separate dots, with a paler mark outside each one and a hint of the rim above.
+    const rim = mix(look.glasses, look.skin, look.heavyGlasses ? 0.45 : 0.2);
+    px(9, by + 4, 1, 1, rim);
+    px(13, by + 4, 1, 1, rim);
+    if (look.heavyGlasses) { px(10, by + 3, 1, 1, mix(look.glasses, look.skin, 0.65)); px(12, by + 3, 1, 1, mix(look.glasses, look.skin, 0.65)); }
   }
   if (look.hairStyle === 1) px(5, by + 1, 2, 8, hair);
   if (look.hairStyle === 2) px(5, by - 1, 3, 3, hair);
