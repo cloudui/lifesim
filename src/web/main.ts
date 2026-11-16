@@ -803,6 +803,7 @@ async function main(): Promise<void> {
       } else if (ev.code === 'Escape') { film.stop(); showTitle(true); }
       else if (ev.code === 'ArrowLeft') film.jump(-1, 0);
       else if (ev.code === 'BracketLeft') film.jump(0, -1);
+      else if (ev.code === 'KeyM') film.toggleSound();
       else if (ev.code === 'BracketRight') film.jump(0, 1);
       return;
     }

@@ -2,6 +2,15 @@
 
 What was added, when, and why, newest first. `AGENTS.md` describes the project as it is now; this file is the record of how it got there. Add an entry whenever a change alters how the simulation behaves or what the page shows. Commit ids are in brackets.
 
+## 2026-11-16
+
+### Sound for the film, and a draft about real people
+
+- **Why:** the owner said the film feels decent but lacks two things: sound, and characters you know enough about to believe. They proposed a test: a film about themselves and a real friend, sent to that friend, to find out whether realness or craft is the gap.
+- **Sound:** `src/web/sound.ts` synthesizes a bed of noise per set and a blip per typed letter with a pitch per speaker (the Stardew and Undertale device, which also helps tell two sprites apart). No music. It was built without being heard; treat every level in it as a guess.
+- **The draft:** `drafts/jason-film.md`, eleven scenes from the owner's account plus three invented ones set in the future, with a list of facts to confirm and what building it needs (eight new sets, a third person on screen, a hand-written life in place of a simulated one). Not built yet, and kept out of git.
+- **What the draft already shows about characterization:** the real material came with voices (who teases, who deflects), a want, a running complaint and shared objects. Axel and Kofi have a made-up country and a hoodie and nothing else.
+
 ## 2026-11-14
 
 ### The life with and without them, in the Circle

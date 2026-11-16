@@ -10,6 +10,7 @@ import { drawSkyline } from './backdrop';
 import { drawPerson, hash, lookFor, mix, portrait, type Look } from './pixel';
 import type { Mood } from './scenes';
 import type { FilmScene, Stance, Step, Who } from './scenes';
+import * as sound from './sound';
 import type { Ctx } from './types';
 
 export interface FilmPlayer {
@@ -19,6 +20,7 @@ export interface FilmPlayer {
   stop(): void;
   frame(dt: number): void;
   next(): void;
+  toggleSound(): void;
   /** Review: move by lines (±1) or by scenes (±1). */
   jump(lines: number, scenes: number): void;
   resize(): void;
@@ -37,6 +39,7 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
     <canvas class="pixel-canvas"></canvas>
     <div class="film-title"><div class="film-title-text"></div><div class="film-title-sub"></div></div>
     <button class="film-skip" type="button" title="Leave the film">Leave ▸▸</button>
+    <button class="film-sound" type="button" title="Sound on or off (M)"></button>
     <div class="film-hint">it plays by itself · space or click to go sooner</div>
     <div class="film-review" hidden></div>
     <div class="film-box" hidden>
@@ -72,6 +75,10 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
   let faceCanvas: HTMLCanvasElement | null = null;
   let faceMood: Mood = 'flat';
   let faceId = -1;
+  const soundBtn = root.querySelector<HTMLElement>('.film-sound')!;
+  const showSound = () => { soundBtn.textContent = sound.isMuted() ? 'Sound: off' : 'Sound: on'; };
+  showSound();
+  soundBtn.addEventListener('click', () => { sound.unlock(); sound.setMuted(!sound.isMuted()); showSound(); });
   const scratch = document.createElement('canvas');
   scratch.width = 48;
   scratch.height = 56;
@@ -278,6 +285,7 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
     veil = 0;
     after = 'none';
     faceKey = '';
+    sound.ambience(scene.set === 'pier' ? 'water' : scene.set === 'sofa' ? 'room' : 'street');
     endEl.hidden = true;
     const bottles = scene.props.includes('bottles');
     const put = (w: Who, seat: number): Actor => ({ mode: scene!.start[w], x: seat, bottle: bottles && scene!.start[w] !== 'away' || (bottles && w === 'them'), sip: -9 });
@@ -333,6 +341,8 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
   /** Draw one of the two at their place: sitting on the set's edge, or on their feet. */
   function actor(w: Who, a: Actor, st: Stage): void {
     if (a.mode === 'away') return;
+    // Anyone not walking is at their place on the set, wherever the window's size now puts it.
+    if (a.mode === 'sitting' || a.mode === 'standing') a.x = st[w];
     const id = idOf(w);
     const lk = look(id);
     const s = sizeOf(id);
@@ -630,7 +640,11 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
       else if (s.t === 'drink') advance();
       else if (s.t === 'say') {
         const n = Math.min(s.text.length, Math.floor(t * TYPE_RATE));
-        if (n !== typed) { typed = n; lineEl.textContent = s.text.slice(0, n); }
+        if (n !== typed) {
+          if (n > 0) sound.blip(s.who === 'you' ? 0 : s.who === 'them' ? 1 : 2, s.text[n - 1]);
+          typed = n;
+          lineEl.textContent = s.text.slice(0, n);
+        }
         paintFace();
         // A line stays up long enough to read twice, then the quiet after it.
         const read = s.text.length / TYPE_RATE + Math.max(1.4, s.text.split(' ').length * 0.3) + (s.after ?? 1);
@@ -651,10 +665,12 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
   }
 
   root.addEventListener('click', (ev) => {
+    sound.unlock();
     if ((ev.target as HTMLElement).closest('button')) return;
     next();
   });
   function leave(): void {
+    sound.quiet();
     on_ = false;
     root.hidden = true;
     titleEl.classList.remove('on');
@@ -662,13 +678,15 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
   }
   root.querySelector('.film-skip')!.addEventListener('click', leave);
   root.querySelector('.back')!.addEventListener('click', leave);
-  root.querySelector('.see')!.addEventListener('click', () => { on_ = false; root.hidden = true; titleEl.classList.remove('on'); on.without(); });
+  root.querySelector('.see')!.addEventListener('click', () => { sound.quiet(); on_ = false; root.hidden = true; titleEl.classList.remove('on'); on.without(); });
   root.querySelector('.again')!.addEventListener('click', () => open(0));
 
   return {
     active: () => on_,
     start(scenes, from = 0, rev = false) {
       if (!scenes.length) return;
+      // Starting from a button is a click, which is what lets the browser play sound.
+      sound.unlock();
       list = scenes;
       review = rev;
       on_ = true;
@@ -676,9 +694,10 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
       titleEl.classList.remove('on');
       open(Math.min(scenes.length - 1, Math.max(0, from)));
     },
-    stop() { on_ = false; root.hidden = true; },
+    stop() { sound.quiet(); on_ = false; root.hidden = true; },
     frame,
-    next,
+    next() { sound.unlock(); next(); },
+    toggleSound() { sound.unlock(); sound.setMuted(!sound.isMuted()); showSound(); },
     jump(lines, scenes) {
       if (!on_ || !scene) return;
       titleEl.classList.remove('on');
