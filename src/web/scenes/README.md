@@ -22,6 +22,7 @@ city: 1                   which skyline: 0 New York, 1 San Francisco, 2 Chicago
 props: bottles            things the set draws; see the list below
 wearing: #8b8f98          a simulated life: the other person's shirt colour
 wear: ERIC shoes=#2f8fff shorts=yes, JASON jacket=none    what differs from the cast file in this scene
+take: ERIC                a film from scratch: who is taken away at the end, if not the person the scene is with
 music: quiet              warm | quiet | late | none, or the name of an .mp3 in public/music (default: warm)
 status: draft             draft | reviewed
 notes: anything for the review list

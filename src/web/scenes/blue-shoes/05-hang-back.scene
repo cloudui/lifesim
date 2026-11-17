@@ -17,6 +17,7 @@ PAUSE 3
 ERIC: Can you guys hang back a second? [1]
 WALK EMILY 108 &
 WALK ERIC 92
+FACE ERIC right
 PAUSE 2
 JASON: Hmm. It's cold.
 MOMO: Bro, let's go.
@@ -38,6 +39,7 @@ MOMO: Ok buddy.
 PAUSE 2
 EMOTE EMILY heart 4
 PAUSE 2
+FACE ERIC auto
 WALK ERIC 38
 FACE JASON auto
 FACE MOMO auto

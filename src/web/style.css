@@ -208,6 +208,7 @@ button.big:hover { filter: brightness(1.1); background: var(--accent); }
 .overlay .hint { color: var(--text-3); font-size: 17px; margin-top: 10px; }
 .lives-pick { margin-top: 34px; }
 #lives { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 8px; }
+#written-list { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 14px; }
 .life { text-align: left; background: var(--panel); }
 .life b { display: block; font-weight: 400; }
 .life small { color: var(--text-3); font-size: 15px; }

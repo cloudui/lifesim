@@ -151,6 +151,8 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
   /** The person the film is told from, and the one it is about. */
   const youKey = () => (film ? film.you : 'YOU');
   const themKey = () => (film ? scene!.otherName.toUpperCase() : 'THEM');
+  /** Who is taken away at the end: the person the scene is with, unless the script names someone else. */
+  const takenKey = () => (film && scene!.take ? scene!.take : themKey());
   const yearNow = () => (film ? scene!.year : ctx.yearOf(scene!.week));
   const cityNow = () => (film ? scene!.city ?? film.city : ctx.cityAt(view().data.ego.cities, Math.max(0, scene!.week)));
   function person(key: string): Person {
@@ -321,7 +323,7 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
   }
   /** Without them, for a film written from scratch: the list is in the script (GONE lines). */
   function endFilm(text: string): void {
-    const them = person(themKey());
+    const them = person(takenKey());
     schedule(
       [
         card(portraitOf(them.look, 5, greyOf(them)), them.name, '', true),
@@ -791,7 +793,7 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
           c.el.classList.toggle('on', t >= c.on);
           c.el.classList.toggle('gone', t >= c.off);
         }
-        if (t >= withoutTimes.take && t < withoutTimes.last) withoutLine.textContent = `Take ${person(themKey()).name} away.`;
+        if (t >= withoutTimes.take && t < withoutTimes.last) withoutLine.textContent = `Take ${person(takenKey()).name} away.`;
         endText.classList.toggle('on', t >= withoutTimes.last);
         endActions.classList.toggle('on', t >= withoutTimes.last + 2.5);
       }

@@ -6,7 +6,7 @@
 // add it to SETS with its stage, and name it in a scene's `set:` line.
 
 import { drawSkyline } from './backdrop';
-import { drawPerson, hash, lookFor, mix } from './pixel';
+import { drawPerson, hash, lookFor, mix, type Look } from './pixel';
 import type { Ambience } from './sound';
 
 type G = CanvasRenderingContext2D;
@@ -116,9 +116,9 @@ function tree(x: number, ground: number, h: number, c: string): void {
   px(x - h * 0.3 + 2, ground - h + 3, 3, 2, mix(c, '#ffffff', 0.12));
 }
 /** Someone in the background: an invented person, standing about, sometimes with a cup. */
-function folk(x: number, y: number, seed: number, o: { flip?: boolean; cup?: boolean; walk?: boolean; alpha?: number } = {}): void {
+function folk(x: number, y: number, seed: number, o: { flip?: boolean; cup?: boolean; walk?: boolean; alpha?: number; look?: Look } = {}): void {
   const bob = !o.walk && Math.sin(clock * 0.8 + seed * 1.7) > 0.93 ? 1 : 0;
-  drawPerson(g, x, y - bob, lookFor(seed * 31 + 5), { pose: o.walk ? 'walk' : 'stand', frame: Math.floor(clock * 5 + seed), outfit: 'casual', flip: o.flip, alpha: o.alpha ?? 1 });
+  drawPerson(g, x, y - bob, o.look ?? lookFor(seed * 31 + 5), { pose: o.walk ? 'walk' : 'stand', frame: Math.floor(clock * 5 + seed), outfit: 'casual', flip: o.flip, alpha: o.alpha ?? 1 });
   if (o.cup) {
     const sip = (clock * 0.25 + seed * 0.37) % 1 < 0.08;
     px(x + (o.flip ? -7 : 6), y - (sip ? 16 : 11) - bob, 2, 3, seed % 2 ? '#c44536' : '#8a5a2a');
@@ -412,14 +412,15 @@ function tower(st: Stage): void {
   px(cx - 37, ground - 60, 62, 13, '#14162a');
   px(cx - 37, ground - 60, 62, 1, '#4a4d66');
   label('THE VARSITY', cx - 6, ground - 54, '#ffd98a');
-  if (props.includes('people')) {
-    // Everyone else who was at the barbecue, on their way out.
-    folk(cx - 96, ground, 71, { cup: false });
-    folk(cx - 82, ground, 72, { flip: true });
-    folk(cx - 60, ground, 73, {});
-    folk(cx - 132, ground, 74, { flip: true });
-  }
   for (const x of [cx - 52, cx + 30]) { px(x, ground - 8, 12, 8, '#3a3d50'); px(x + 1, ground - 15, 10, 8, '#1f3a2c'); }
+  if (props.includes('people')) {
+    // Everyone else from the barbecue, come down together and standing in one group by Jason and Momo.
+    const friend = (skin: string, hairStyle: number, shirt: string, pants: string, formal: Look['formal']): Look => ({ skin, hair: '#18151a', hairStyle, shirt, pants, formal });
+    folk(cx - 70, ground, 71, { look: friend('#e8bb90', 0, '#3d5a80', '#2d3142', 'suit') });
+    folk(cx - 58, ground, 72, { flip: true, look: friend('#efc7a0', 1, '#e8e2d6', '#5b4636', 'gown') });
+    folk(cx - 46, ground, 73, { look: friend('#e6b98e', 8, '#2a2d33', '#1f2933', 'suit') });
+    folk(cx - 33, ground, 74, { look: friend('#ecc49c', 2, '#9b5d73', '#2d3142', 'gown') });
+  }
   px(0, ground, W, 4, '#55586a');
   px(0, ground + 4, W, H - ground, '#2a2c38');
   px(cx - 32, ground, 56, 4, 'rgba(255,217,138,0.16)');

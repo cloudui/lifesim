@@ -81,6 +81,8 @@ export interface FilmScene {
   /** The ending of a film written from scratch: a line, then what goes when the person is taken away. */
   endLine: string;
   gone: { name: string; note: string }[];
+  /** A film from scratch: who is taken away at the end, when it is not the person the scene is with. */
+  take: string;
 }
 
 export interface CastMember { key: string; name: string; born: number; look: Look; scale: number; voice: number; /** The face they wear when a line does not say. */ mood: Mood }
@@ -147,7 +149,7 @@ function parseCast(id: string, src: string): Film {
 function parse(file: string, src: string): FilmScene {
   const sc: FilmScene = {
     file, name: file, seed: -1, other: -1, otherName: '', film: '', set: 'pier', time: 'night', week: 0, year: 0, city: null,
-    places: [], props: [], wear: {}, music: '', status: 'draft', notes: '', steps: [], endLine: '', gone: [],
+    places: [], props: [], wear: {}, music: '', status: 'draft', notes: '', steps: [], endLine: '', gone: [], take: '',
   };
   let body = false;
   let flag: string | undefined;
@@ -169,6 +171,7 @@ function parse(file: string, src: string): FilmScene {
       if (hk === 'name') sc.name = v;
       else if (hk === 'seed') sc.seed = Number(v);
       else if (hk === 'film') sc.film = v;
+      else if (hk === 'take') sc.take = v.toUpperCase();
       else if (hk === 'with') {
         if (/^\d/.test(v)) { sc.other = Number(v.split(' ')[0]); sc.otherName = v.split(' ').slice(1).join(' '); }
         else sc.otherName = v;
