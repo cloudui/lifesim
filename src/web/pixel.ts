@@ -86,6 +86,8 @@ export interface SpriteOptions {
   shut?: boolean;
   /** On a call: the back arm is bent up with a phone at the ear, and does not swing. */
   call?: boolean;
+  /** Looking at a phone: the front arm is bent, the phone held up at chest height, eyes down on it. */
+  phone?: boolean;
   /** Mid-change between outfits: the new outfit and progress 0 to 1. */
   melt?: { to: Outfit; t: number };
 }
@@ -101,7 +103,7 @@ function scratch(): [HTMLCanvasElement, CanvasRenderingContext2D] {
 let buffers: ReturnType<typeof scratch>[] | undefined;
 
 /** Paint one person, facing right, feet on the bottom row. */
-function paint(g: CanvasRenderingContext2D, look: Look, outfit: Outfit, pose: Pose, frame: number, grey: number, shut = false, call = false): void {
+function paint(g: CanvasRenderingContext2D, look: Look, outfit: Outfit, pose: Pose, frame: number, grey: number, shut = false, call = false, phone = false): void {
   g.clearRect(0, 0, SW, SH);
   const px = (x: number, y: number, w: number, h: number, c: string) => {
     g.fillStyle = c;
@@ -171,6 +173,13 @@ function paint(g: CanvasRenderingContext2D, look: Look, outfit: Outfit, pose: Po
     const wiggle = (frame >> 1) & 1;
     px(13, by + 4, 1, 6, sleeve);
     px(13 + wiggle, by + 2, 2, 2, look.skin);
+  } else if (phone) {
+    // Upper arm down to the elbow, forearm forward and up, the phone in the hand with its screen to the face.
+    px(13, by + 8, 1, 3, sleeve);
+    px(14, by + 10, 1, 1, sleeve);
+    px(15, by + 6, 2, 4, '#0c0d12');
+    px(15, by + 7, 1, 2, frame % 5 ? '#9fd0e6' : '#e6f4fa');
+    px(15, by + 9, 2, 1, look.skin);
   } else {
     px(13 + swing, by + 8, 1, 6, sleeve);
     px(13 + swing, by + 14, 1, 1, look.skin);
@@ -180,8 +189,9 @@ function paint(g: CanvasRenderingContext2D, look: Look, outfit: Outfit, pose: Po
   px(9, by + 7, 2, 1, look.skin);
   px(7, by + 1, 6, 6, look.skin);
   const eye = shut ? mix(look.skin, '#3a1f1a', 0.4) : '#1a1a1a';
-  px(10, by + 4, 1, 1, eye);
-  px(12, by + 4, 1, 1, eye);
+  // Looking down at a phone, the eyes drop a row.
+  px(10, by + (phone ? 5 : 4), 1, 1, eye);
+  px(12, by + (phone ? 5 : 4), 1, 1, eye);
   const curl = mix(look.hair, '#ffffff', 0.16);
   if (look.hairStyle === 3) px(7, by, 6, 2, hair);
   else if (look.hairStyle === 4) {
@@ -258,7 +268,7 @@ function paint(g: CanvasRenderingContext2D, look: Look, outfit: Outfit, pose: Po
 export function drawPerson(ctx: CanvasRenderingContext2D, x: number, y: number, look: Look, o: SpriteOptions): void {
   buffers ??= [scratch(), scratch(), scratch()];
   const [[c0, g0], [, g1], [c2, g2]] = buffers;
-  paint(g0, look, o.outfit, o.pose, o.frame, o.grey ?? 0, o.shut, o.call);
+  paint(g0, look, o.outfit, o.pose, o.frame, o.grey ?? 0, o.shut, o.call, o.phone);
   let src = c0;
   if (o.melt && o.melt.t > 0 && o.melt.t < 1) {
     // The new outfit pours down from the top through a ragged, sparkling edge.

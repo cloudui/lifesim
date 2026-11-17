@@ -512,7 +512,7 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
       // lower, the torso meets the thighs; otherwise a row of the narrow standing legs shows in between.
       const base = 47 + (lk.tall ?? 0);
       const breathe = !a.slump && Math.sin(clock * 0.9 + p.id * 2) > 0.96 ? 1 : 0;
-      const opts = { pose: 'stand' as const, frame: 0, outfit: 'casual' as const, grey: greyOf(p), flip: left, shut: a.slump, call: a.hold === 'call' };
+      const opts = { pose: 'stand' as const, frame: Math.floor(clock * 2), outfit: 'casual' as const, grey: greyOf(p), flip: left, shut: a.slump, call: a.hold === 'call', phone: a.hold === 'phone' };
       // The bob: everything above the waist rises a pixel, and the bottom row of the torso stays where it
       // is, so the body stretches by a row and nothing is drawn twice or opens up underneath.
       // Slumped: forward and down, head on the desk.
@@ -580,7 +580,7 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
       held(a, left, 33);
       g.drawImage(scratch, 0, 0, 48, 56, Math.round(x - 24 * s), Math.round(st.seatY - (40 + lift(st)) * s), Math.round(48 * s), Math.round(56 * s));
     } else {
-      drawPerson(sg, 24, 40, lk, { pose: a.mode === 'walking' ? 'walk' : 'stand', frame: Math.floor(clock * (a.fast ? 12 : 6)), outfit: 'casual', grey: greyOf(p), flip: left, call: a.hold === 'call' });
+      drawPerson(sg, 24, 40, lk, { pose: a.mode === 'walking' ? 'walk' : 'stand', frame: Math.floor(clock * (a.fast ? 12 : 6)), outfit: 'casual', grey: greyOf(p), flip: left, call: a.hold === 'call', phone: a.hold === 'phone' });
       if (a.bottle && a.key === 'THEM') {
         sg.fillStyle = '#4f8a63';
         sg.fillRect(29, 31, 2, 4);
@@ -595,15 +595,9 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
     if (!a.hold) return;
     const d = left ? -1 : 1;
     const hx = 24 + d * 7;
-    if (a.hold === 'phone') {
-      // Held out in front, screen lit, at chest height.
-      sg.fillStyle = a.key && person(a.key).look.skin;
-      sg.fillRect(hx - (d > 0 ? 2 : -1), y - 5, 3, 2);
-      sg.fillStyle = '#0c0d12';
-      sg.fillRect(hx, y - 10, 4, 6);
-      sg.fillStyle = Math.floor(clock * 2) % 5 ? '#9fd0e6' : '#e6f4fa';
-      sg.fillRect(hx + 1, y - 9, 2, 4);
-    } else if (a.hold === 'racket') {
+    // A phone is part of the sprite (the arm has to bend to hold it), so nothing is added here.
+    if (a.hold === 'phone') return;
+    if (a.hold === 'racket') {
       sg.fillStyle = '#2a2d33';
       sg.fillRect(hx, y - 3, 1, 7);
       sg.fillStyle = '#c44536';
