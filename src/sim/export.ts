@@ -21,6 +21,8 @@ export interface PersonExport {
   ctx: Ctx;
   /** Where they met, or null. */
   venue: string | null;
+  /** Looks written by hand, in the format of a film's cast file ("skin=#e8b78c style=bun"); only a life written by hand has them. */
+  look?: string;
   /** Name of whoever introduced them, or null. */
   via: string | null;
   /** The model's chance they met in that particular week. */

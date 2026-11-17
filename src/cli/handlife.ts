@@ -16,7 +16,7 @@ import type { StoryBeat, StoryLead } from '../sim/story';
 type Pt = [number, number];
 interface HandPerson {
   name: string; born: number; trait: string; tag: string; label?: string; kin?: string; role?: ArcExport['role']; shape?: string;
-  met?: number; ctx?: PersonExport['ctx']; venue?: string; via?: string; p?: number; partner?: number; main?: boolean; cast?: boolean;
+  met?: number; ctx?: PersonExport['ctx']; venue?: string; via?: string; p?: number; partner?: number; main?: boolean; cast?: boolean; look?: string;
   cities: Pt[]; curve: Pt[]; group: string[]; visits?: number[]; beats: [number, string][];
 }
 interface HandLife {
@@ -61,6 +61,7 @@ const people: PersonExport[] = src.people.map((p) => {
     ctx: p.kin ? 'family' : p.ctx ?? 'hangout', venue: p.venue ?? null, via: p.via ?? null, p: p.kin ? 1 : p.p ?? 0.05,
     peak, depth: peak * 0.85, compat: 0.5 + peak * 0.4,
     cities: p.cities.map(([y, c]): [number, number] => [wk(y), c]), died: null,
+    ...(p.look ? { look: p.look } : {}),
   };
 });
 

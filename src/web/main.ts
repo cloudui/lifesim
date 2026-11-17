@@ -9,12 +9,12 @@ import '@fontsource/vt323';
 import { createCircle } from './circle';
 import { createJournal } from './journal';
 import { createPeople } from './people';
-import { portrait, chooseLooks, type Look } from './pixel';
+import { portrait, chooseLooks, lookFor, type Look } from './pixel';
 import { createMap } from './map';
 import { createPersonCard } from './person';
 import './style.css';
 import { createFilm } from './film';
-import { films, scenesFor } from './scenes';
+import { films, scenesFor, lookFields } from './scenes';
 import { createStory } from './story';
 import type { Ctx, Scene, View } from './types';
 import { createWalk } from './walk';
@@ -753,6 +753,13 @@ async function load(seed: number, title = false): Promise<void> {
   const people = new Map(data.people.map((p) => [p.id, p]));
   // A life that goes with a film: the people the film drew look the same here.
   const looks = new Map<number, Look>();
+  chooseLooks(looks);
+  // A life written by hand may say how people look; whatever it leaves out comes from their id as usual.
+  for (const p of data.people) {
+    if (!p.look) continue;
+    const { born: _b, scale: _s, voice: _v, mood: _m, ...f } = lookFields(p.look);
+    looks.set(p.id, { ...lookFor(p.id), ...f });
+  }
   const drawn = films().find((f) => f.life === seed);
   if (drawn) {
     for (const m of drawn.cast.values()) {

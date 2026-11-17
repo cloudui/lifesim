@@ -100,7 +100,7 @@ export interface Film {
 const STYLES: Record<string, number> = { short: 0, long: 1, bun: 2, cropped: 3, swoop: 4, spiky: 5, mop: 6, mullet: 7, fringe: 8, flat: 9, wavy: 10 };
 
 /** "shirt=#fff shorts=yes tall=1" -> look fields. */
-function lookFields(text: string): Partial<Look> & { born?: number; scale?: number; voice?: number; mood?: Mood } {
+export function lookFields(text: string): Partial<Look> & { born?: number; scale?: number; voice?: number; mood?: Mood } {
   const out: Record<string, unknown> = {};
   for (const part of text.split(/\s+/)) {
     const [k, v] = part.split('=');
