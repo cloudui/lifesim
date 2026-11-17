@@ -166,7 +166,7 @@ JASON: I see. I kind of forgot he was doing that today.
 
 JASON: At my place, though. That's kind of nice.
 
-MOMO: Ok.
+MOMO: Ok buddy.
 
 *(Eric comes back up the path.)*
 
