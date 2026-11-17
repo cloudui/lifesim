@@ -604,6 +604,22 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
       sg.fillRect(hx - 2, y - 11, 5, 8);
       sg.fillStyle = '#e9e2d2';
       sg.fillRect(hx - 1, y - 10, 3, 6);
+    } else if (a.hold === 'flowers') {
+      // A small bouquet in brown paper, held at the bottom of the paper, the heads up by the chest.
+      const fx = 24 + d * 4;
+      const fy = y + 2;
+      sg.fillStyle = '#4f8a63';
+      sg.fillRect(fx, fy - 2, 1, 2);
+      sg.fillRect(fx - d, fy - 3, 1, 2);
+      sg.fillStyle = '#c9a77c';
+      sg.fillRect(fx - 1, fy, 3, 2);
+      sg.fillRect(fx, fy + 2, 1, 1);
+      sg.fillStyle = '#e0607e';
+      sg.fillRect(fx - 1, fy - 4, 2, 2);
+      sg.fillStyle = '#f7f1e6';
+      sg.fillRect(fx + 1, fy - 5, 2, 2);
+      sg.fillStyle = '#d93b4a';
+      sg.fillRect(fx - d * 2, fy - 5, 2, 2);
     } else if (a.hold === 'cup') {
       sg.fillStyle = '#c44536';
       sg.fillRect(hx, y, 2, 3);

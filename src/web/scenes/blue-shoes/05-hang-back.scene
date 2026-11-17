@@ -6,11 +6,13 @@ year: 2023
 cast: JASON -14 standing, MOMO 12 standing, EMILY 52 standing, ERIC 36 standing
 city: -1
 props: breath, people
+wear: EMILY shirt=#f4c3cf
 music: tender
 status: draft
 notes: Real, as far as I understand it. The Varsity is Jason's apartment building in College Park. Others from the barbecue are leaving too.
 
 TITLE Outside the Varsity, November 2023 | Late, and cold, after barbecue at Jason's
+HOLD ERIC flowers
 PAUSE 3
 ERIC: Can you guys hang back a second? [1]
 WALK EMILY 108 &
@@ -22,7 +24,10 @@ JASON: What's he doing?
 MOMO: What do you think he's doing?
 FACE JASON right
 FACE MOMO right
-PAUSE 4
+PAUSE 2
+HOLD ERIC none
+HOLD EMILY flowers
+PAUSE 2
 JASON: Ah. [1.6]
 JASON: I see. [0.6]
 JASON: I kind of forgot he was doing that today.
@@ -39,6 +44,6 @@ FACE MOMO auto
 MOMO: Well? [1.2]
 ERIC (smile): She said yes. [1.6]
 JASON (smile): Looking big, Eric.
-ERIC: That's not what that's for.
+ERIC: This is not the time for that.
 JASON (smile): Ah. Congratulations, then.
 PAUSE 4
