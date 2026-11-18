@@ -59,6 +59,6 @@ In a simulated-life scene the short forms still work: `ENTER`, `SIT` and `THEM:`
 
 `city: -1` is a town with no skyline: apartment blocks in a window, hills behind a house.
 
-Sets: `pier` (night | dusk), `steps` (dusk | morning | night; props ball, boxes, car, breath), `tower` (the foot of a high-rise at night; prop breath), `sofa` (props balloons, plates, chair, blanket, crowd), `car` (a car park, seen through the windscreen), `camp`, `hall` (a lecture hall; prop laptop), `checkout` (prop people), `campus` (rain | awning), `street` (outside the gym; prop people), `hill`, `courts` (day | dusk; props bench2, rackets, players), `bar`, `cafe` (inside | outside; props laptops, cups, phone, tea, people). They are drawn in `../sets.ts`.
+Sets: `pier` (night | dusk), `steps` (dusk | morning | night; props ball, boxes, car, breath), `tower` (the foot of a high-rise at night; prop breath), `sofa` (props balloons, plates, chair, blanket, crowd, flag), `car` (a car park, seen through the windscreen), `camp`, `hall` (a lecture hall; prop laptop), `checkout` (prop people), `campus` (rain | awning), `street` (outside the gym; prop people), `hill`, `courts` (day | dusk; props bench2, rackets, players), `bar`, `cafe` (inside | outside; props laptops, cups, phone, tea, people). They are drawn in `../sets.ts`.
 
 Review: open `?seed=7&scene&review`, or `?film=blue-shoes&review` (add `&scene=3` to start at the third). The file and line being played are shown top left; `[` and `]` jump between scenes, left and right arrows between lines.

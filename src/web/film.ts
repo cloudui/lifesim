@@ -678,7 +678,7 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
           // Sleep drifts, a phone shakes, the rest hold still.
           const wob = a.emote.glyph === 'ring' ? Math.round(Math.sin(age * 40)) : 0;
           const drift = a.emote.glyph === 'z' ? Math.floor(age * 1.5) % 2 : 0;
-          const ink = a.emote.glyph === 'heart' ? '#d6455a' : a.emote.glyph === 'idea' ? '#e0a100' : a.emote.glyph === 'sweat' ? '#3b7fb0' : '#1b1d2a';
+          const ink = a.emote.glyph === 'heart' ? '#d6455a' : a.emote.glyph === 'idea' ? '#ffd23f' : a.emote.glyph === 'sweat' ? '#3b7fb0' : '#1b1d2a';
           drawGlyph(g, a.emote.glyph, bx + 3 + wob, by + 2 - drift, ink);
           g.globalAlpha = 1;
         }
@@ -693,8 +693,9 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
       }
     }
     // A small mark over whoever is speaking, so the face in the box has a body in the scene.
+    // Not while a sign is over their head: the sign's bubble already marks them, and the two would overlap.
     const sp = speaking ? actorOf(speaking) : undefined;
-    if (sp && sp.mode !== 'away') {
+    if (sp && sp.mode !== 'away' && !sp.emote) {
       const x = Math.round(st.cx + sp.off);
       const top = headTop(sp, st) - 6;
       // Light with a dark edge, so it shows on a pale wall as well as a night sky.

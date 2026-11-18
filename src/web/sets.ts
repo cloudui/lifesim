@@ -305,6 +305,8 @@ function sofa(st: Stage): void {
   else blocks(wx - 6, wx + ww, wy + wh, true);
   g.restore();
   for (const [x, y, w, h] of [[wx - 2, wy - 2, ww + 4, 2], [wx - 2, wy + wh, ww + 4, 3], [wx - 2, wy, 2, wh], [wx + ww, wy, 2, wh], [wx + ww / 2, wy, 2, wh]] as const) px(x, y, w, h, '#4a3d52');
+  // The flag on the wall above the sofa, behind the lamp and the balloons.
+  if (props.includes('flag')) wallFlag(Math.max(4, cx - 47), st.seatY - 20 - 52 - 6, 2);
   // A floor lamp and its pool of light.
   const lx = cx - 52;
   px(lx, floor - 46, 2, 46, '#15131a');
@@ -350,6 +352,47 @@ function sofa(st: Stage): void {
     px(cx + 16, floor - 4, 3, 5, '#e4572e');
     px(cx - 3, floor - 3, 3, 2, '#eda100');
   }
+}
+/** A flag pinned to the wall: stars and stripes, with a girl in a denim top in front of it throwing up both hands. */
+function wallFlag(ox: number, oy: number, scale: number): void {
+  g.save();
+  g.translate(Math.round(ox), Math.round(oy));
+  g.scale(scale, scale);
+  const x = 0;
+  const y = 0;
+  const fw = 46;
+  // Thirteen stripes, a pixel and a half each, and the blue corner with rows of stars.
+  for (let k = 0; k < 13; k++) px(x, y + Math.round(k * 2), fw, 2, k % 2 ? '#f2efe8' : '#b8323f');
+  px(x, y, 20, 14, '#23365f');
+  for (let r = 0; r < 5; r++) for (let q = 0; q < 6; q++) if ((r + q) % 2 === 0) px(x + 2 + q * 3, y + 2 + r * 2.5, 1, 1, '#f2efe8');
+  // A fold down the middle and grommets at the corners.
+  px(x + Math.round(fw / 2), y, 1, 26, 'rgba(0,0,0,0.08)');
+  for (const [gx, gy] of [[x + 1, y + 1], [x + fw - 2, y + 1], [x + 1, y + 24], [x + fw - 2, y + 24]]) px(gx, gy, 1, 1, '#d8b24a');
+  // The girl, waist up, slightly right of the middle.
+  const gx = x + 22;
+  const skin = '#f0d2b8';
+  const hair = '#17141a';
+  px(gx + 2, y + 2, 6, 2, hair);
+  px(gx + 1, y + 3, 1, 6, hair);
+  px(gx + 8, y + 3, 1, 6, hair);
+  px(gx + 2, y + 4, 6, 4, skin);
+  px(gx + 2, y + 4, 6, 1, hair);
+  px(gx + 3, y + 5, 1, 1, '#2a2020');
+  px(gx + 6, y + 5, 1, 1, '#5a4040');
+  px(gx + 4, y + 8, 2, 1, skin);
+  px(gx + 2, y + 9, 6, 4, '#a9c6dc');
+  px(gx + 2, y + 13, 6, 1, '#15151a');
+  px(gx + 3, y + 14, 4, 4, skin);
+  px(gx + 2, y + 18, 6, 1, '#f2efe8');
+  px(gx + 2, y + 19, 6, 6, '#b7cfe0');
+  // Arms out and up, a hand by each shoulder.
+  px(gx, y + 10, 2, 1, skin);
+  px(gx - 1, y + 7, 1, 3, skin);
+  px(gx + 8, y + 10, 2, 1, skin);
+  px(gx + 10, y + 7, 1, 3, skin);
+  px(gx - 1, y + 6, 1, 1, skin);
+  px(gx + 10, y + 6, 1, 1, skin);
+  g.restore();
 }
 /** The seat cushions: behind the people, so that their legs lie over them. */
 function sofaSeat(st: Stage): void {

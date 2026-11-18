@@ -314,18 +314,26 @@ export const GLYPHS: Record<string, string[]> = {
   note: ['0011', '0010', '0010', '1110', '1110'],
   dots: ['00000', '00000', '10101', '00000'],
   z: ['1111', '0010', '0100', '1111'],
-  idea: ['01110', '11111', '11111', '01110', '01110', '00100'],
+  // A lightbulb: glass outlined in brown with a shine on it (2 outline, 4 shine), and a grey screw base (3).
+  idea: ['0022200', '0211120', '2141112', '2141112', '2111112', '0211120', '0021200', '0033300', '0022200', '0033300'],
   sweat: ['010', '010', '111', '111', '010'],
   ask: ['0110', '1001', '0010', '0100', '0000', '0100'],
   ring: ['001111100', '101000101', '001000100', '101000101', '001000100', '101010101', '001111100'],
   puff: ['0110', '1111', '0110'],
 };
 
+/** Colours other than the glyph's own: 1 is the colour passed in, and these are the same for every glyph. */
+const GLYPH_INK: Record<string, string> = { '2': '#6b4a12', '3': '#8f959e', '4': '#fffbe6' };
+
 export function drawGlyph(ctx: CanvasRenderingContext2D, name: string, x: number, y: number, color: string): void {
   const rows = GLYPHS[name];
-  ctx.fillStyle = color;
   rows.forEach((row, j) => {
-    for (let i = 0; i < row.length; i++) if (row[i] === '1') ctx.fillRect(Math.round(x) + i, Math.round(y) + j, 1, 1);
+    for (let i = 0; i < row.length; i++) {
+      const c = row[i];
+      if (c === '0') continue;
+      ctx.fillStyle = c === '1' ? color : GLYPH_INK[c] ?? color;
+      ctx.fillRect(Math.round(x) + i, Math.round(y) + j, 1, 1);
+    }
   });
 }
 

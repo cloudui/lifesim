@@ -5,7 +5,7 @@ set: sofa night
 year: 2024
 cast: ERIC 44 standing, CALVIN away, JASON away
 city: -1
-props: balloons, plates, crowd
+props: balloons, plates, crowd, flag
 music: club
 status: draft
 notes: Real. Eric's birthday, May 2024. Jason brings Calvin.
@@ -22,6 +22,6 @@ JASON: Ah. Looking lean, then. [0.8]
 JASON: Oh yeah, this is Calvin. We play volleyball together.
 CALVIN: I was told there'd be some drinks.
 ERIC (smile): "There are drinks" is probably underselling it a bit.
-JASON (smile): That's what I like to hear.
+CALVIN (smile): That's what I like to hear.
 PAUSE 3
 CARD Fifteen months later, Eric and Calvin share an apartment in San Francisco.
