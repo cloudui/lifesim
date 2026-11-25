@@ -427,6 +427,12 @@ button.big:hover { filter: brightness(1.1); background: var(--accent); }
 .film-sound { background: var(--panel); opacity: 0.55; display: inline-flex; align-items: center; justify-content: center; width: 40px; padding: 0; }
 .film-skip, .film-sound { height: 32px; box-sizing: border-box; margin: 0; }
 .film-sound:hover { opacity: 1; }
+.film-pause, .film-full { background: var(--panel); opacity: 0.55; display: inline-flex; align-items: center; justify-content: center; width: 40px; padding: 0; height: 32px; box-sizing: border-box; margin: 0; }
+.film-pause:hover, .film-full:hover { opacity: 1; }
+.film-full[hidden] { display: none; }
+.film-paused { position: absolute; left: 50%; top: 22%; transform: translate(-50%, -50%); z-index: 2; pointer-events: none; text-align: center; font-size: clamp(30px, 3vw, 44px); letter-spacing: 0.2em; text-transform: uppercase; background: rgb(8 10 18 / 0.8); padding: 10px 26px; border: 2px solid rgb(244 241 222 / 0.55); }
+.film-paused small { display: block; font-size: 16px; letter-spacing: 0.04em; text-transform: none; color: var(--text-3); }
+.film-paused[hidden] { display: none; }
 
 /* A card at the end of a scene: smaller than a title, over the scene as it goes dark. */
 .film-title.card .film-title-text { font-size: clamp(26px, 2.8vw, 42px); letter-spacing: 0.02em; text-transform: none; max-width: 30ch; line-height: 1.15; text-wrap: pretty; }

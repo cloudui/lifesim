@@ -25,6 +25,9 @@ export interface FilmPlayer {
   frame(dt: number): void;
   next(): void;
   toggleSound(): void;
+  /** Pause or carry on. */
+  togglePause(): void;
+  toggleFullscreen(): void;
   /** Review: move by lines (±1) or by scenes (±1). */
   jump(lines: number, scenes: number): void;
   resize(): void;
@@ -62,12 +65,15 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
     <canvas class="pixel-canvas"></canvas>
     <div class="film-title"><div class="film-title-text"></div><div class="film-title-sub"></div></div>
     <div class="film-top">
+      <button class="film-pause" type="button" title="Pause or play (P)"></button>
       <button class="film-sound" type="button" title="Sound on or off (M)"></button>
+      <button class="film-full" type="button" title="Full screen (F)"></button>
       <button class="film-skip" type="button" title="Leave the film">Leave ▸▸</button>
     </div>
     <div class="film-scrub-label"></div>
     <div class="film-scrub"></div>
-    <div class="film-hint">it plays by itself · space or click to go sooner</div>
+    <div class="film-hint">it plays by itself · space or click to go sooner · P to pause</div>
+    <div class="film-paused" hidden>paused<small>click or press P to carry on</small></div>
     <div class="film-review" hidden></div>
     <div class="film-box" hidden>
       <div class="film-face"></div>
@@ -115,6 +121,73 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
   const scrubLabel = root.querySelector<HTMLElement>('.film-scrub-label')!;
   showSound();
   soundBtn.addEventListener('click', () => { sound.unlock(); sound.setMuted(!sound.isMuted()); showSound(); });
+
+  // Pause: time stops for the script, the people and the sound; the picture stays.
+  let paused = false;
+  const pauseBtn = root.querySelector<HTMLElement>('.film-pause')!;
+  const pausedEl = root.querySelector<HTMLElement>('.film-paused')!;
+  const showPause = () => {
+    pauseBtn.innerHTML = paused
+      ? '<svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M4 2.5v11l9-5.5z"/></svg>'
+      : '<svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M3.5 2.5h3v11h-3zM9.5 2.5h3v11h-3z"/></svg>';
+    pauseBtn.setAttribute('aria-label', paused ? 'Play' : 'Pause');
+    pausedEl.hidden = !paused;
+  };
+  function setPaused(p: boolean): void {
+    if (p === paused) return;
+    paused = p;
+    sound.hold(p);
+    showPause();
+    keepAwake();
+  }
+  showPause();
+  pauseBtn.addEventListener('click', () => { sound.unlock(); setPaused(!paused); });
+
+  // Full screen, where the browser allows it (not on an iPhone).
+  const fullBtn = root.querySelector<HTMLElement>('.film-full')!;
+  const doc = document as Document & { webkitFullscreenElement?: Element; webkitExitFullscreen?: () => void };
+  const page = document.documentElement as HTMLElement & { webkitRequestFullscreen?: () => void };
+  const isFull = () => !!(doc.fullscreenElement ?? doc.webkitFullscreenElement);
+  const canFull = !!(page.requestFullscreen ?? page.webkitRequestFullscreen) && (doc.fullscreenEnabled ?? true);
+  fullBtn.hidden = !canFull;
+  const showFull = () => {
+    fullBtn.innerHTML = isFull()
+      ? '<svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 2v4H2M10 2v4h4M6 14v-4H2M10 14v-4h4"/></svg>'
+      : '<svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M2 6V2h4M14 6V2h-4M2 10v4h4M14 10v4h-4"/></svg>';
+    fullBtn.setAttribute('aria-label', isFull() ? 'Leave full screen' : 'Full screen');
+  };
+  function toggleFull(): void {
+    if (!canFull) return;
+    if (isFull()) void (doc.exitFullscreen ? doc.exitFullscreen() : doc.webkitExitFullscreen?.());
+    else if (page.requestFullscreen) void page.requestFullscreen().catch(() => { /* refused */ });
+    else page.webkitRequestFullscreen?.();
+  }
+  showFull();
+  document.addEventListener('fullscreenchange', showFull);
+  document.addEventListener('webkitfullscreenchange', showFull);
+  fullBtn.addEventListener('click', toggleFull);
+
+  // Keep the screen on while the film plays, where the browser allows it. The browser lets go of the
+  // lock when the tab is hidden, so it is asked for again when the tab comes back.
+  type Lock = { release(): Promise<void>; released: boolean };
+  const wake = (navigator as Navigator & { wakeLock?: { request(kind: 'screen'): Promise<Lock> } }).wakeLock;
+  let lock: Lock | null = null;
+  let asking = false;
+  function keepAwake(): void {
+    if (!wake) return;
+    const want = on_ && !paused && document.visibilityState === 'visible';
+    if (want && (!lock || lock.released) && !asking) {
+      asking = true;
+      wake.request('screen')
+        .then((l) => { lock = l; if (!(on_ && !paused)) void l.release(); })
+        .catch(() => { /* refused, or battery saver */ })
+        .finally(() => { asking = false; });
+    } else if (!want && lock && !lock.released) {
+      void lock.release();
+      lock = null;
+    }
+  }
+  document.addEventListener('visibilitychange', keepAwake);
   const scratch = document.createElement('canvas');
   scratch.width = 48;
   scratch.height = 56;
@@ -730,6 +803,7 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
 
   function frame(dt: number): void {
     if (!on_ || !scene) return;
+    if (paused) { draw(); return; }
     t += dt;
     clock += dt;
     // Everyone who is walking keeps walking, whatever the script is doing.
@@ -805,11 +879,14 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
   root.addEventListener('click', (ev) => {
     sound.unlock();
     if ((ev.target as HTMLElement).closest('button, .film-scrub')) return;
+    if (paused) { setPaused(false); return; }
     next();
   });
   function leave(): void {
+    setPaused(false);
     sound.quiet();
     on_ = false;
+    keepAwake();
     root.hidden = true;
     titleEl.classList.remove('on');
     on.done();
@@ -818,9 +895,9 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
   root.querySelector('.back')!.addEventListener('click', leave);
   seeBtn.addEventListener('click', () => {
     if (film) { leave(); return; }
-    sound.quiet(); on_ = false; root.hidden = true; titleEl.classList.remove('on'); on.without();
+    setPaused(false); sound.quiet(); on_ = false; keepAwake(); root.hidden = true; titleEl.classList.remove('on'); on.without();
   });
-  root.querySelector('.again')!.addEventListener('click', () => open(0));
+  root.querySelector('.again')!.addEventListener('click', () => { setPaused(false); open(0); });
 
   return {
     active: () => on_,
@@ -832,14 +909,18 @@ export function createFilm(root: HTMLElement, ctx: Ctx, on: { done(): void; with
       film = cast ?? null;
       review = rev;
       on_ = true;
+      setPaused(false);
+      keepAwake();
       root.hidden = false;
       titleEl.classList.remove('on');
       buildScrub();
       open(Math.min(scenes.length - 1, Math.max(0, from)));
     },
-    stop() { sound.quiet(); on_ = false; root.hidden = true; },
+    stop() { setPaused(false); sound.quiet(); on_ = false; keepAwake(); root.hidden = true; },
     frame,
-    next() { sound.unlock(); next(); },
+    next() { sound.unlock(); if (paused) setPaused(false); else next(); },
+    togglePause() { sound.unlock(); setPaused(!paused); },
+    toggleFullscreen: toggleFull,
     toggleSound() { sound.unlock(); sound.setMuted(!sound.isMuted()); showSound(); },
     jump(lines, scenes) {
       if (!on_ || !scene) return;

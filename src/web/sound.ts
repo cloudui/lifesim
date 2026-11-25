@@ -276,6 +276,15 @@ export function music(spec: string): void {
   }, 200);
 }
 
+/** Pausing the film: everything made here stops where it is, and a music file pauses with it. */
+export function hold(on: boolean): void {
+  if (ac) void (on ? ac.suspend() : ac.resume());
+  if (tune) {
+    if (on) tune.pause();
+    else void tune.play().catch(() => { /* not allowed yet */ });
+  }
+}
+
 /** Leaving the film: let the bed and the music fade out. */
 export function quiet(): void {
   ambience('none');

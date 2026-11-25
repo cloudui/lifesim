@@ -2,6 +2,10 @@
 
 What was added, when, and why, newest first. `AGENTS.md` describes the project as it is now; this file is the record of how it got there. Add an entry whenever a change alters how the simulation behaves or what the page shows. Commit ids are in brackets.
 
+## 2026-11-25: Pause, full screen and keeping the screen on in the film
+
+Asked for by the owner for watching Blue Shoes. Every film (simulated or written from scratch) now has a pause button (or `P`/`K`): the script, the people and all sound stop where they are, a music file pauses with them, and a click or the key carries on. A full-screen button (or `F`) puts the whole page in full screen where the browser allows it; it is hidden where it does not (an iPhone). While a film plays and is not paused, the page asks the browser to keep the screen on (the Screen Wake Lock API), and asks again when the tab comes back into view. Full screen could not be tried in the app's own browser pane, which refuses it.
+
 ## 2026-11-16: Blue Shoes published
 
 The owner said the film looks right and asked for everything to be written up and pushed, keeping it all, so that Jason can watch it: "nobody knows the site". `story-editor` was merged into `main`, which deploys the site.
